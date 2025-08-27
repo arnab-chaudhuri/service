@@ -34,7 +34,7 @@ module.exports = function (app) {
 
       // Create the email options
       const mailOptions = {
-        from: senderEmail,
+        from: "ImmeDine " + senderEmail,
         to: recipientEmail,
         subject: subject,
         html: body,
