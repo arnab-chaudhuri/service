@@ -24,7 +24,17 @@ module.exports = function(app, mongoose) {
     createdByAdmin: {
       type: Boolean,
       default: false
-    } 
+    },
+    config: {
+      hideCardView: {
+        type: Boolean,
+        default: false
+      },
+      hideMenuDetails: {
+        type: Boolean,
+        default: false
+      }
+    }
   }, {
     versionKey: false,
     timestamps: true,

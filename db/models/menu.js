@@ -32,7 +32,7 @@ module.exports = function (app, mongoose) {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'RestaurantOwner'
     },
-    isCreatedByImmedine: {
+    isCreatedByImmeDine: {
       type: Boolean,
     },
     categoryRef: {
