@@ -3,7 +3,7 @@ block content
   div(style='padding:0 30px')
     h2(style="margin:0;margin-bottom:30px;font-family:'Open Sans','Helvetica Neue','Helvetica',Helvetica,Arial,sans-serif;font-weight:300;line-height:1.5;font-size:22px;color:#294661!important") #{greeting} 
       span(style="text-transform: capitalize;")
-        | #{firstName}
+        | #{firstName},
     p(style="margin:0;margin-bottom:30px;color:#294661;font-family:'Open Sans','Helvetica Neue','Helvetica',Helvetica,Arial,sans-serif;font-size:16px;font-weight:300")
     | #{message}
     br
@@ -18,5 +18,10 @@ block content
     br
     div(style="display: block;font-family:'Open Sans','Helvetica Neue','Helvetica',Helvetica,Arial,sans-serif;font-size:16px;font-weight:300;")  Password: #{password}
     br
-    br    
+    p(style="margin:0;margin-bottom:0px;color:#294661;font-family:'Open Sans','Helvetica Neue','Helvetica',Helvetica,Arial,sans-serif;font-size:16px;font-weight:300")
+    | #{note}
+    p(style="margin:0;margin-bottom:30px;color:#294661;font-family:'Open Sans','Helvetica Neue','Helvetica',Helvetica,Arial,sans-serif;font-size:16px;font-weight:300")
+    | Thank you,
+    p(style="margin:0;color:#294661;font-family:'Open Sans','Helvetica Neue','Helvetica',Helvetica,Arial,sans-serif;font-size:16px;font-weight:300")
+    | The ImmeDine Team    
   include includes/foot.pug

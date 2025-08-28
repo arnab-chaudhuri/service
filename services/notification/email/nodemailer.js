@@ -40,12 +40,12 @@ module.exports = function (app) {
         html: body,
       };
 
-      console.log("mailOptions ",mailOptions)
+      // console.log("mailOptions ",mailOptions)
 
       // Send the email
       const info = await transporter.sendMail(mailOptions);
-      console.log('Email sent successfully.');
-      console.log('Info object:', info);
+      // console.log('Email sent successfully.');
+      // console.log('Info object:', info);
 
       // Append the sent email to the "Sent" folder using IMAP
       const imap = new Imap({
@@ -72,7 +72,7 @@ module.exports = function (app) {
             if (appendErr) {
               console.error('Error appending email to "Sent" folder:', appendErr);
             } else {
-              console.log('Email appended to "Sent" folder.');
+              // console.log('Email appended to "Sent" folder.');
             }
             imap.end();
           });

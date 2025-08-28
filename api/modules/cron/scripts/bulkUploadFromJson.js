@@ -39,9 +39,10 @@ const bulkUpload = async (app) => {
       obj[each.name] = each.items;
     });
 
-    console.log("obj ", obj);
+    // console.log("obj ", obj);
 
     if (Object.keys(obj).length) {
+      let catOrder = 0;
       for (const categoryName in obj) {
         let categoryDoc = await Category.findOne({
           name: categoryName,
@@ -49,7 +50,9 @@ const bulkUpload = async (app) => {
           createdBy: "68adcd84b8e132d1c300aa14"
         });
         if (!categoryDoc) {
+          catOrder++;
           categoryDoc = await Category.create({
+            order: catOrder,
             name: categoryName,
             restaurantRef: "68adcd84b8e132d1c300aa11",
             createdBy: "68adcd84b8e132d1c300aa14",
@@ -58,11 +61,16 @@ const bulkUpload = async (app) => {
         }
 
         const menuItems = obj[categoryName];
+        let menuOrder = 0;
         for (const menuItem of menuItems) {
-          const { name, price } = menuItem;
+          menuOrder++;
+          const { name, price, isVeg, description } = menuItem;
 
           await Menu.insertMany([{
+            order: menuOrder,
             name,
+            isVeg,
+            description: description || "",
             price,
             categoryRef: categoryDoc._id,
             restaurantRef: "68adcd84b8e132d1c300aa11",
@@ -73,6 +81,7 @@ const bulkUpload = async (app) => {
         }
       }
     }
+    console.log("completed ");
 
 
     // if (files && files.length) {

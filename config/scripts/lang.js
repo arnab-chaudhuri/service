@@ -38,28 +38,32 @@ module.exports = {
         subject: 'ImmeDine - Reset Password',
         greeting: 'Hi',
         message:
-          'You recently requested to reset your password for your ImmeDine account. Click on the button below to reset your password.',
+          'We received a request to reset the password for your ImmeDine account. If you made this request, please click the button below to set a new password:',
         otpText: 'OTP',
+        note: 'If you did not request a password reset, you can safely ignore this email. Your account will remain secure.'
       },
       sendVerificationLink: {
         subject: 'ImmeDine - Verify Account',
         greeting: 'Hi',
         message:
-          'You recently requested to send the verification link for your ImmeDine account. Click on the button below to verify your account.',
+          'You recently requested a verification link for your ImmeDine account. Please click the button below to verify your account:',
         otpText: 'OTP',
+        note: 'If you did not request this verification, please ignore this email.'
       },
       userSignupRequest: {
         subject: `ImmeDine - Signup Verification`,
         greeting: 'Hi',
-        message: 'You recently requested to signup for your ImmeDine account. Click on the button below to verify your account.',
+        message: 'Thank you for signing up with ImmeDine! To complete your registration and activate your account, please click the button below:',
         otpText: 'OTP',
+        note: 'If you did not create this account, you can safely ignore this email.'
       },
       restaurantOwnerAddedByAdmin: {
         subject: `ImmeDine - Owner Created`,
         greeting: 'Hi',
-        message: 'You have been added as a Restaurant Owner for your restaurant in ImmeDine. To access your account please click on the button below and use below credentials to login.',
+        message: 'You have been successfully added as a Restaurant Owner for your restaurant on ImmeDine. To access your account, please click the button below and use the login credentials provided:',
         emailText: "Email",
         passwordText: "Password",
+        note: 'For security reasons, we recommend changing your password after your first login.'
       },
       owner: {
         signupConfirmation: {

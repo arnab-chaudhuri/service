@@ -214,6 +214,7 @@ module.exports = function (app, mongoose /*, plugins*/) {
               firstName: restaurantOwnerDoc.personalInfo.fullName,
               message: multilangConfig.email.sendVerificationLink.message,
               resendVerificationLink: `https://immedine.com/auth/verify-token?token=${restaurantOwnerDoc.authenticationInfo.link.token}&type=register`,
+              note: multilangConfig.email.sendVerificationLink.note
             },
             function (err, renderedText) {
               if (err) {
@@ -337,6 +338,7 @@ module.exports = function (app, mongoose /*, plugins*/) {
               firstName: restaurantOwnerDoc.personalInfo.fullName,
               message: multilangConfig.email.forgotPassword.message,
               resetPasswordLink: `https://immedine.com/auth/verify-token?token=${restaurantOwnerDoc.authenticationInfo.link.token}&type=reset`,
+              note: multilangConfig.email.forgotPassword.note
             },
             function (err, renderedText) {
               if (err) {
@@ -602,7 +604,8 @@ module.exports = function (app, mongoose /*, plugins*/) {
                   email: updatedRestaurantOwnerObj.personalInfo.email,
                   passwordText: multilangConfig.email.restaurantOwnerAddedByAdmin.passwordText,
                   password: password,
-                  loginLink: 'https://immedine.com/auth/sign-in'
+                  loginLink: 'https://immedine.com/auth/sign-in',
+                  note: multilangConfig.email.restaurantOwnerAddedByAdmin.note
                 },
                 function (err, renderedText) {
                   if (err) {
@@ -655,6 +658,7 @@ module.exports = function (app, mongoose /*, plugins*/) {
                       firstName: user.personalInfo.fullName,
                       message: multilangConfig.email.userSignupRequest.message,
                       verificationLink: `https://immedine.com/auth/verify-token?token=${user.authenticationInfo.link.token}&type=register`,
+                      note: multilangConfig.email.userSignupRequest.note
                     },
                     function (err, renderedText) {
                       if (err) {
