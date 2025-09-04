@@ -6,24 +6,27 @@ const path = require('path');
 const fs = require('fs');
 const { MenuMock } = require('./menu');
 
-const updateCity = (data, city) => {
-  const obj = data.reduce((acc, item) => {
-    if (item.cityRef) {
-      acc[item.cityRef] = (acc[item.cityRef] || 0) + 1;
-    }
-    return acc;
-  }, {});
-  Object.keys(obj).forEach((item) => {
-    if (item) {
-      city.updateStoryCount(item, obj[item]);
-    }
-  });
-};
+function cleanAndTag(str) {
+  // List of prepositions to remove (extend as needed)
+  const stopWords = ["and", "or", "the", "of", "in", "on", "with", "a", "an"];
+
+  // Extract only words with alphabets
+  const words = str.match(/[A-Za-z]+/g) || [];
+
+  // Filter out prepositions (case-insensitive)
+  const filtered = words.filter(
+    (w) => !stopWords.includes(w.toLowerCase())
+  );
+
+  return filtered.map((w) => w.toLowerCase());
+}
 
 const bulkUpload = async (app) => {
   console.log('bulk upload cron job started');
   const Category = app.models.Category;
   const Menu = app.models.Menu;
+  const ImageByAI = app.models.ImageByAI;
+
   // const uploadDir = path.join(__dirname, 'public', 'uploads');
   const uploadDir = path.join(__dirname, '../../../../public/uploads');
   // console.log('uploads directory', uploadDir);
@@ -54,6 +57,7 @@ const bulkUpload = async (app) => {
           categoryDoc = await Category.create({
             order: catOrder,
             name: categoryName,
+            filterText: categoryName.split(' ').slice(0, 2).join(' '),
             restaurantRef: "68adcd84b8e132d1c300aa11",
             createdBy: "68adcd84b8e132d1c300aa14",
             totalMenu: obj[categoryName].length
@@ -66,10 +70,24 @@ const bulkUpload = async (app) => {
           menuOrder++;
           const { name, price, isVeg, description } = menuItem;
 
+          const cleaned = cleanAndTag(name);
+          
+          const results = await ImageByAI.find({
+            $expr: {
+              $gte: [
+                { $size: { $setIntersection: ["$tags", cleaned] } }, 
+                2 // <-- at least 2 matches required
+              ]
+            }
+          });
+
+          // console.log("results ", results.map(r => r.url).slice(0, 2))
+
           await Menu.insertMany([{
             order: menuOrder,
             name,
             isVeg,
+            images: results.length ? results.map(r => r.url).slice(0, 2) : [],
             description: description || "",
             price,
             categoryRef: categoryDoc._id,

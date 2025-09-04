@@ -65,6 +65,11 @@ module.exports = function (app, options) {
     controllers.bulkAdd
   ]);
 
+  router.post('/get-menu-images', [
+    options.validateBody(schemaValidator.getMenuImages),
+    controllers.getMenuImages
+  ]);
+
   /**
    * Fetches a menu, edits a menu and removes a menu
    */

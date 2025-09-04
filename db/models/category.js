@@ -23,6 +23,12 @@ module.exports = function(app, mongoose) {
       ref: 'RestaurantOwner',
       required: true
     },
+    filterText: {
+      type: String
+    },
+    image: {
+      type: String
+    },
     totalMenu: {
       type: Number,
       default: 0

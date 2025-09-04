@@ -96,6 +96,8 @@ module.exports = function(app) {
   const editCategory = (req, res, next) => {
     req.categoryId.name = req.body.name;
     req.categoryId.order = req.body.order;
+    req.categoryId.filterText = req.body.filterText;
+    req.categoryId.image = req.body.image;
     category.edit(req.categoryId, req.session.user)
       .then(output => {
         req.workflow.outcome.data = output;

@@ -250,7 +250,7 @@ module.exports = function (app, mongoose /*, plugins*/) {
         $ne: app.config.user.accountStatus.restaurantOwner.deleted,
       },
     })
-      .populate('roleInfo.roleId')
+      .populate('restaurantRef')
       .exec()
       .then((restaurantOwnerDoc) =>
         restaurantOwnerDoc
@@ -420,7 +420,9 @@ module.exports = function (app, mongoose /*, plugins*/) {
   };
 
   restaurantOwnerSchema.statics.socialLoginValidate = async function (socialId, socialType, fullName, email) {
-    let userDoc = await this.findOne({ 'personalInfo.email': email }).exec();
+    let userDoc = await this.findOne({ 'personalInfo.email': email })
+    .populate('restaurantRef')
+    .exec();
 
     if (userDoc) {
       if (userDoc.accountStatus === app.config.user.accountStatus.restaurantOwner.deleted) {

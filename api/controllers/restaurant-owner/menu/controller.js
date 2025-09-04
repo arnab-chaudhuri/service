@@ -11,6 +11,7 @@ module.exports = function(app) {
    */
   const menu = app.module.menu;
   const category = app.module.category;
+  const imageByAI = app.module.imageByAI;
 
   /**
    * Adds a menu
@@ -147,13 +148,23 @@ module.exports = function(app) {
     
   };
 
+  const getMenuImages = (req, res, next) => {
+    imageByAI.list(req.body.name)
+      .then(output => {
+        req.workflow.outcome.data = output;
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+
   return {
     add: addMenu,
     get: getMenu,
     edit: editMenu,
     list: getMenuList,
     delete: deleteMenu,
-    bulkAdd: bulkAdd
+    bulkAdd: bulkAdd,
+    getMenuImages: getMenuImages
   };
 
 };

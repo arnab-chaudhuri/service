@@ -130,12 +130,21 @@ module.exports = function(app) {
     }
   };
 
+  const getMenuImages = {
+    name: {
+      type: 'string',
+      allowEmpty:false,
+      required: true
+    }
+  };
+
   return {
     add: addMenu,
     edit: editMenu,
     listQuery: listQuery,
     param: param,
     list: list, 
+    getMenuImages: getMenuImages
   };
 
 };

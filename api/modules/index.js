@@ -15,6 +15,7 @@ module.exports = function(app) {
   const restaurant = require('./restaurant')(app);
   const faq = require('./faq')(app);
   const menu = require('./menu')(app);
+  const imageByAI = require('./imageByAI')(app);
   const cron = require('./cron')(app)();
 
   return {
@@ -32,6 +33,7 @@ module.exports = function(app) {
     category,
     faq,
     cron,
+    imageByAI,
     menu
   };
 };
