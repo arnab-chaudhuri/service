@@ -87,7 +87,7 @@ const bulkUpload = async (app) => {
             order: menuOrder,
             name,
             isVeg,
-            images: results.length ? results.map(r => r.url).slice(0, 2) : [],
+            images: results.length ? results.map(r => r.url).slice(0, 1) : [],
             description: description || "",
             price,
             categoryRef: categoryDoc._id,

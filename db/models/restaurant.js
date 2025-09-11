@@ -33,6 +33,10 @@ module.exports = function(app, mongoose) {
       hideMenuDetails: {
         type: Boolean,
         default: false
+      },
+      showBanner: {
+        type: Boolean,
+        default: false
       }
     }
   }, {
