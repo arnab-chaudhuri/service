@@ -23,5 +23,31 @@ module.exports = {
   faq: {
     active: 1,
     deleted: 2
+  },
+  order: {
+    active: 1,
+    completed: 4,
+    deleted: 5 // need to be changed -> cancelled
+  },
+  orderType: {
+    inStore: 1,
+    swiggy: 2,
+    zomato: 3,
+    other: 4
+  },
+  paymentStatus: {
+    pending: 1,
+    paid: 2,
+    refund: 3,
+    failed: 4
+  },
+  paymentMode: {
+    offline: 1,
+    online: 2
+  },
+  paymentSubMode: {
+    upi: 1,
+    card: 2,
+    other: 3
   }
 };

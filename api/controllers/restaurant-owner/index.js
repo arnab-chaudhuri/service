@@ -48,6 +48,7 @@ const controllers = {
    */
   category: require("./category/route"),
   menu: require("./menu/route"),
+  order: require("./order/route"),
   /**
    * User Route
    */
@@ -141,6 +142,7 @@ module.exports = function(app) {
    */
   privateRouter.use('/global-config', controllers.globalConfig(app, options));
   privateRouter.use('/restaurant', controllers.restaurant(app, options));
+  privateRouter.use('/order', controllers.order(app, options));
 
   // /**
   //  * Admin User Route

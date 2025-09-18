@@ -85,5 +85,9 @@ module.exports = function (/*app*/) {
 
     MENU_ALREADY_EXISTS: 1600,
     MENU_NOT_FOUND: 1601,
+
+    // ORDER
+    ORDER_ALREADY_EXISTS: 1650,
+    ORDER_NOT_FOUND: 1651,
   };
 };

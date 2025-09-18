@@ -56,6 +56,7 @@ module.exports = function(app) {
     Role: db.model('Role', require('./models/role')(app, mongoose, plugins)),
     Menu: db.model('Menu', require('./models/menu')(app, mongoose, plugins)),
     ImageByAI: db.model('ImageByAI', require('./models/imageByAI')(app, mongoose, plugins)),
+    Order: db.model('Order', require('./models/order')(app, mongoose, plugins)),
   };
 
   return db;
