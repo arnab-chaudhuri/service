@@ -89,5 +89,10 @@ module.exports = function (/*app*/) {
     // ORDER
     ORDER_ALREADY_EXISTS: 1650,
     ORDER_NOT_FOUND: 1651,
+
+    // INVENTORY
+    INVENTORY_ALREADY_EXISTS: 1700,
+    INVENTORY_NOT_FOUND: 1701,
+    NOT_ENOUGH_STOCK: 1702
   };
 };

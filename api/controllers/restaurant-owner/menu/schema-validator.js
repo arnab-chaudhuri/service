@@ -40,7 +40,18 @@ module.exports = function(app) {
     ingredients: {
       type: 'array',
       items: {
-        type: 'string'
+        type: 'object',
+        properties: {
+          'name': {
+            type: 'string',
+          },
+          'unit': {
+            type: 'number'
+          },
+          'quantity': {
+            type: 'number'
+          }
+        }
       }
     }
   };
@@ -79,7 +90,18 @@ module.exports = function(app) {
     ingredients: {
       type: 'array',
       items: {
-        type: 'string'
+        type: 'object',
+        properties: {
+          'name': {
+            type: 'string',
+          },
+          'unit': {
+            type: 'number'
+          },
+          'quantity': {
+            type: 'number'
+          }
+        }
       }
     }
   };

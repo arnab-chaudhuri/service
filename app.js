@@ -129,6 +129,8 @@ const db = require('./db')(app);
 
 app.models = db.models;
 
+app.db = db;
+
 ////////////////////////////
 // Attaching the services //
 ////////////////////////////

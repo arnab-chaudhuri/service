@@ -7,6 +7,10 @@ module.exports = {
     active: 1,
     deleted: 2
   },
+  inventory: {
+    active: 1,
+    deleted: 2
+  },
   menu: {
     active: 1,
     deleted: 2

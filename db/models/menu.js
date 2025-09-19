@@ -72,7 +72,13 @@ module.exports = function (app, mongoose) {
       type: String
     },
     ingredients: [{
-      type: String
+      name: String,
+      quantity: Number,
+      unit: Number,
+      inventoryRef: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Inventory'
+      }
     }],
     isAvailable: {
       type: Boolean,
