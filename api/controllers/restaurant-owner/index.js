@@ -49,6 +49,7 @@ const controllers = {
   category: require("./category/route"),
   menu: require("./menu/route"),
   order: require("./order/route"),
+  bill: require("./bill/route"),
   inventory: require("./inventory/route"),
   /**
    * User Route
@@ -144,6 +145,7 @@ module.exports = function(app) {
   privateRouter.use('/global-config', controllers.globalConfig(app, options));
   privateRouter.use('/restaurant', controllers.restaurant(app, options));
   privateRouter.use('/order', controllers.order(app, options));
+  privateRouter.use('/bill', controllers.bill(app, options));
   privateRouter.use('/inventory', controllers.inventory(app, options));
 
   // /**

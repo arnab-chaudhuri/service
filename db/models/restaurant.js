@@ -37,6 +37,10 @@ module.exports = function(app, mongoose) {
       showBanner: {
         type: Boolean,
         default: false
+      },
+      chargePerParcel: {
+        type: Number,
+        default: 0
       }
     }
   }, {

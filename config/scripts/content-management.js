@@ -39,6 +39,11 @@ module.exports = {
     zomato: 3,
     other: 4
   },
+  bill: {
+    active: 1,
+    completed: 4,
+    deleted: 5 // need to be changed -> cancelled
+  },
   paymentStatus: {
     pending: 1,
     paid: 2,

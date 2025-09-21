@@ -32,6 +32,10 @@ module.exports = function (app) {
    */
   const findMenuById = function (menuId, userRef) {
     return Menu.findById(menuId)
+      .populate({
+        path: 'ingredients.inventoryRef',
+        select: 'name quantity unit'
+      })
       .then(menuDetails => {
         if (!menuDetails || (menuDetails && userRef &&
           menuDetails.restaurantRef.toString() !== userRef.restaurantRef.toString())) {
@@ -138,12 +142,21 @@ module.exports = function (app) {
     });
   }
 
+  const removeInventoryItem = async (inventoryId) => {
+    await Menu.updateMany(
+      {},
+      { $pull: { ingredients: { inventoryRef: inventoryId } } }
+    );
+    return Promise.resolve({});
+  }
+
   return {
     'create': createMenu,
     'get': findMenuById,
     'edit': editMenu,
     'list': getList,
     'remove': removeMenu,
-    'listFromApp': listFromApp
+    'listFromApp': listFromApp,
+    'removeInventoryItem': removeInventoryItem
   };
 };

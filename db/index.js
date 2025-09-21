@@ -58,6 +58,7 @@ module.exports = function(app) {
     ImageByAI: db.model('ImageByAI', require('./models/imageByAI')(app, mongoose, plugins)),
     Order: db.model('Order', require('./models/order')(app, mongoose, plugins)),
     Inventory: db.model('Inventory', require('./models/inventory')(app, mongoose, plugins)),
+    Bill: db.model('Bill', require('./models/bill')(app, mongoose, plugins)),
   };
 
   return db;

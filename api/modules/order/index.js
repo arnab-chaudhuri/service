@@ -36,6 +36,9 @@ module.exports = function (app) {
    */
   const findOrderById = function (orderId, userRef) {
     return Order.findById(orderId)
+    .populate({
+      path: 'billRef'
+    })
     .then(orderDetails => {
       if(!orderDetails || (orderDetails && 
         orderDetails.restaurantRef.toString() !== userRef.restaurantRef.toString())) {
@@ -101,12 +104,42 @@ module.exports = function (app) {
     });
   };
 
+  const updateBillDetails = (orderId, billDetails) => {
+    return Order.findOne({
+      _id: orderId
+    })
+    .then(order =>{
+      if (order) {
+        order.billRef = billDetails._id;
+        return order.save(); 
+      } else {
+        return Promise.resolve(null);
+      }
+    });
+  };
+
+  const updateStatus = (orderId) => {
+    return Order.findOne({
+      _id: orderId
+    })
+    .then(order =>{
+      if (order) {
+        order.status = app.config.contentManagement.order.completed;
+        return order.save(); 
+      } else {
+        return Promise.resolve(null);
+      }
+    });
+  };
+
   return {
     'create': createOrder,
     'get': findOrderById,
     'edit': editOrder,
     'list': getList,
     'remove': removeOrder,
-    'updateMenuCount': updateMenuCount
+    'updateMenuCount': updateMenuCount,
+    'updateBillDetails': updateBillDetails,
+    'updateStatus': updateStatus
   };
 };

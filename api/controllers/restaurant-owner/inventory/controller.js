@@ -10,6 +10,7 @@ module.exports = function(app) {
    * @type {Object}
    */
   const inventory = app.module.inventory;
+  const menu = app.module.menu;
 
   /**
    * Adds a inventory
@@ -113,6 +114,7 @@ module.exports = function(app) {
     req.inventoryId.status = app.config.contentManagement.inventory.deleted;
     inventory.edit(req.inventoryId, req.session.user)
       .then(output => {
+        menu.removeInventoryItem(req.inventoryId._id);
         req.workflow.emit('response');
       })
       .catch(next);

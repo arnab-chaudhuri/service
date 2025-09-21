@@ -3,13 +3,14 @@
  * This Controller handles all functionality of admin order
  * @module Controllers/Admin/order
  */
-module.exports = function(app) {
+module.exports = function (app) {
 
   /**
    * order module
    * @type {Object}
    */
   const order = app.module.order;
+  const bill = app.module.bill;
   const inventory = app.module.inventory;
 
   /**
@@ -23,11 +24,24 @@ module.exports = function(app) {
     inventory.updateInventoryCount(req.body.cart)
       .then(output1 => {
         order.create(req.body, req.session.user)
-        .then(output => {
-          req.workflow.outcome.data = output;
-          req.workflow.emit('response');
-        })
-        .catch(next);
+          .then(output => {
+            bill.create({
+              billNo: output.orderId,
+              orderRef: output._id,
+              subTotal: req.body.subTotal,
+              total: req.body.total,
+              gstDetails: req.body.gstDetails,
+              paymentDetails: req.body.paymentDetails
+            }, req.session.user)
+            .then(output2 => {
+              output.billDetails = output2;
+
+              order.updateBillDetails(output._id, output2);
+              req.workflow.outcome.data = output;
+              req.workflow.emit('response');
+            }).catch(next);
+          })
+          .catch(next);
       })
       .catch(next);
   };
@@ -40,7 +54,7 @@ module.exports = function(app) {
    * @return {Promise}       The Promise
    */
   const getOrder = (req, res, next) => {
-    order.get(req.params.orderId,req.session.user)
+    order.get(req.params.orderId, req.session.user)
       .then(output => {
         req.workflow.outcome.data = output;
         req.workflow.emit('response');
@@ -65,6 +79,10 @@ module.exports = function(app) {
         },
         restaurantRef: req.session.user.restaurantRef
       },
+      populate: [{
+        path: 'billRef',
+        select: 'paymentDetails total'
+      }],
       sort: {
         createdAt: -1
       }
@@ -77,11 +95,11 @@ module.exports = function(app) {
       }
     }
     if (req.body.sortConfig) {
-      let { name,order } = req.body.sortConfig;
+      let { name, order } = req.body.sortConfig;
       if (name) {
-        query.sort = {name};
+        query.sort = { name };
       } else if (order) {
-        query.sort = {order};
+        query.sort = { order };
       }
     }
 
@@ -108,17 +126,25 @@ module.exports = function(app) {
       }
     }
 
-    order.edit(req.orderId, req.session.user)
-      .then(output => {
-        req.workflow.outcome.data = output;
-        req.workflow.emit('response');
+    inventory.rollbackInventory(req.orderId._id, req.body.cart)
+      .then(output1 => {
+        order.edit(req.orderId, req.session.user)
+          .then(output => {
+            bill.updateBillFromOrder(req.orderId.billRef, {
+              subTotal: req.body.subTotal,
+              total: req.body.total,
+            });
+            req.workflow.outcome.data = output;
+            req.workflow.emit('response');
+          })
+          .catch(next);
       })
       .catch(next);
   };
 
   const changeStatus = (req, res, next) => {
     req.orderId.status = req.body.status;
-    
+
     order.edit(req.orderId, req.session.user)
       .then(output => {
         req.workflow.outcome.data = output;

@@ -93,6 +93,8 @@ module.exports = function (/*app*/) {
     // INVENTORY
     INVENTORY_ALREADY_EXISTS: 1700,
     INVENTORY_NOT_FOUND: 1701,
-    NOT_ENOUGH_STOCK: 1702
+    NOT_ENOUGH_STOCK: 1702,
+
+    BILL_NOT_FOUND: 1750
   };
 };

@@ -16,6 +16,7 @@ module.exports = function(app) {
   const faq = require('./faq')(app);
   const menu = require('./menu')(app);
   const order = require('./order')(app);
+  const bill = require('./bill')(app);
   const inventory = require('./inventory')(app);
   const imageByAI = require('./imageByAI')(app);
   const cron = require('./cron')(app)();
@@ -38,6 +39,7 @@ module.exports = function(app) {
     inventory,
     imageByAI,
     menu,
-    order
+    order,
+    bill
   };
 };

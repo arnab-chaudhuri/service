@@ -31,16 +31,6 @@ module.exports = function (app, mongoose) {
         ref: 'Menu'
       }
     }],
-    subTotal: {
-      type: Number,
-      required: true,
-      default: 0
-    },
-    total: {
-      type: Number,
-      required: true,
-      default: 0
-    },
     tableRef: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Restaurant',
@@ -48,37 +38,23 @@ module.exports = function (app, mongoose) {
     tableId: {
       type: String
     },
-    gstDetails: {
-      cgst: {
-        type: Number,
-        default: 0
-      },
-      sgst: {
-        type: Number,
-        default: 0
-      }
-    },
     // in Store: 1, Swiggy: 2, Zomato: 3, other: 4
     orderType: {
       type: Number,
       default: app.config.contentManagement.orderType.inStore
     },
-    paymentDetails: {
-      // online: 1, offline: 2
-      mode: {
-        type: Number
-      },
-      // UPI: 1, card: 2, other: 3 - only for online
-      subMode: {
-        type: Number
-      },
-      otherMode: {
-        type: String
-      },
-      // pending: 1, paid: 2, refund: 3, failed: 4
-      status: {
+    billRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Bill',
+    },
+    parcelDetails: {
+      count: {
         type: Number,
-        default: app.config.contentManagement.paymentStatus.pending
+        default: 0
+      },
+      totalCost: {
+        type: Number,
+        default: 0
       }
     }
   }, {

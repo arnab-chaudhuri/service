@@ -61,6 +61,10 @@ module.exports = function(app) {
         status: app.config.contentManagement.menu.active,
         restaurantRef: req.session.user.restaurantRef
       },
+      populate: [{
+        path: 'ingredients.inventoryRef',
+        select: 'name unit quantity'
+      }],
       sort: {
         order: 1
       }
