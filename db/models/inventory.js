@@ -29,6 +29,9 @@ module.exports = function (app, mongoose) {
     unit: {
       type: Number
     },
+    saveAsUnit: {
+      type: Number
+    },
     inAppDisplayable: {
       type: Boolean,
       default: false
@@ -76,8 +79,6 @@ module.exports = function (app, mongoose) {
   schema.statics.removeInventory = function (_id) {
     return this.findByIdAndRemove(_id).exec();
   };
-
-  schema.index({ name: 1, restaurantRef: 1, status: app.config.contentManagement.inventory.active }, { unique: true });
 
   return schema;
 };

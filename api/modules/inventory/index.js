@@ -116,45 +116,46 @@ module.exports = function (app) {
       const bulkUpdates = [];
 
       for (const orderItem of orderItems) {
-        const menu = await Menu.findById(orderItem.menuRef).populate("ingredients.inventoryRef");
+        if (orderItem.menuRef) {
+          const menu = await Menu.findById(orderItem.menuRef).populate("ingredients.inventoryRef");
 
-        if (!menu) {
-          await session.abortTransaction();
-          session.endSession();
-          return Promise.reject({
-            'errCode': 'MENU_NOT_FOUND'
-          });
-        }
+          if (!menu) {
+            await session.abortTransaction();
+            session.endSession();
+            return Promise.reject({
+              'errCode': 'MENU_NOT_FOUND'
+            });
+          }
 
-        if (menu.ingredients && menu.ingredients.length) {
-          for (const ing of menu.ingredients) {
-            const requiredQty = ing.quantity * orderItem.quantity;
+          if (menu.ingredients && menu.ingredients.length) {
+            for (const ing of menu.ingredients) {
+              const requiredQty = ing.quantity * orderItem.quantity;
 
-            if (ing.inventoryRef.quantity < requiredQty) {
-              await session.abortTransaction();
-              session.endSession();
-              return Promise.reject({
-                'errCode': 'NOT_ENOUGH_STOCK'
+              if (ing.inventoryRef.quantity < requiredQty) {
+                await session.abortTransaction();
+                session.endSession();
+                return Promise.reject({
+                  'errCode': 'NOT_ENOUGH_STOCK'
+                });
+              }
+
+              // Push to bulk update list
+              bulkUpdates.push({
+                updateOne: {
+                  filter: { _id: ing.inventoryRef._id },
+                  update: { $inc: { quantity: -requiredQty } }
+                }
               });
             }
-
-            // Push to bulk update list
-            bulkUpdates.push({
-              updateOne: {
-                filter: { _id: ing.inventoryRef._id },
-                update: { $inc: { quantity: -requiredQty } }
-              }
-            });
+          }
+          // Perform all inventory updates in bulk
+          if (bulkUpdates.length > 0) {
+            await Inventory.bulkWrite(bulkUpdates, { session });
           }
         }
 
       }
 
-
-      // Perform all inventory updates in bulk
-      if (bulkUpdates.length > 0) {
-        await Inventory.bulkWrite(bulkUpdates, { session });
-      }
 
       await session.commitTransaction();
       session.endSession();
@@ -192,65 +193,75 @@ module.exports = function (app) {
       // Step 2: Restore inventory from old order
       const restoreUsage = {};
       existingOrder.cart.forEach(item => {
-        item.menuRef.ingredients.forEach(ing => {
-          const qty = ing.quantity * item.quantity;
-          if (!restoreUsage[ing.inventoryRef._id]) {
-            restoreUsage[ing.inventoryRef._id] = 0;
-          }
-          restoreUsage[ing.inventoryRef._id] += qty;
-        });
+        if (item.menuRef) {
+          item.menuRef.ingredients.forEach(ing => {
+            const qty = ing.quantity * item.quantity;
+            if (!restoreUsage[ing.inventoryRef._id]) {
+              restoreUsage[ing.inventoryRef._id] = 0;
+            }
+            restoreUsage[ing.inventoryRef._id] += qty;
+          });
+        }
       });
 
-      const restoreOps = Object.entries(restoreUsage).map(([invId, qty]) => ({
-        updateOne: { filter: { _id: invId }, update: { $inc: { quantity: qty } } }
-      }));
+      if (restoreUsage && Object.keys(restoreUsage).length) {
+        const restoreOps = Object.entries(restoreUsage).map(([invId, qty]) => ({
+          updateOne: { filter: { _id: invId }, update: { $inc: { quantity: qty } } }
+        }));
 
-      if (restoreOps.length > 0) {
-        await Inventory.bulkWrite(restoreOps, { session });
+        if (restoreOps.length > 0) {
+          await Inventory.bulkWrite(restoreOps, { session });
+        }
       }
+      
 
       // Step 3: Deduct inventory for new items
       const newIngredientUsage = {};
       for (const item of updatedItems) {
-        const menu = await Menu.findById(item.menuRef).populate("ingredients.inventoryRef").session(session);
-        if (!menu) {
-          await session.abortTransaction();
-          session.endSession();
-          return Promise.reject({
-            'errCode': 'MENU_NOT_FOUND'
+        if (item.menuRef) {
+          const menu = await Menu.findById(item.menuRef).populate("ingredients.inventoryRef").session(session);
+          if (!menu) {
+            await session.abortTransaction();
+            session.endSession();
+            return Promise.reject({
+              'errCode': 'MENU_NOT_FOUND'
+            });
+          }
+
+          menu.ingredients.forEach(ing => {
+            const qty = ing.quantity * item.quantity;
+            if (!newIngredientUsage[ing.inventoryRef._id]) {
+              newIngredientUsage[ing.inventoryRef._id] = 0;
+            }
+            newIngredientUsage[ing.inventoryRef._id] += qty;
           });
         }
 
-        menu.ingredients.forEach(ing => {
-          const qty = ing.quantity * item.quantity;
-          if (!newIngredientUsage[ing.inventoryRef._id]) {
-            newIngredientUsage[ing.inventoryRef._id] = 0;
-          }
-          newIngredientUsage[ing.inventoryRef._id] += qty;
-        });
       }
 
       // Step 3a: Validate stock before deduction
-      for (const [invId, qty] of Object.entries(newIngredientUsage)) {
-        const inv = await Inventory.findById(invId).session(session);
-        if (!inv || inv.quantity < qty) {
-          await session.abortTransaction();
-          session.endSession();
-          // throw new Error(`Insufficient stock for ingredient ${inv?.name || invId}`);
-          return Promise.reject({
-            'errCode': 'NOT_ENOUGH_STOCK'
-          });
+      if (newIngredientUsage && Object.keys(newIngredientUsage).length) {
+        for (const [invId, qty] of Object.entries(newIngredientUsage)) {
+          const inv = await Inventory.findById(invId).session(session);
+          if (!inv || inv.quantity < qty) {
+            await session.abortTransaction();
+            session.endSession();
+            // throw new Error(`Insufficient stock for ingredient ${inv?.name || invId}`);
+            return Promise.reject({
+              'errCode': 'NOT_ENOUGH_STOCK'
+            });
+          }
+        }
+
+        const deductOps = Object.entries(newIngredientUsage).map(([invId, qty]) => ({
+          updateOne: { filter: { _id: invId }, update: { $inc: { quantity: -qty } } }
+        }));
+
+        if (deductOps.length > 0) {
+          await Inventory.bulkWrite(deductOps, { session });
         }
       }
-
-      const deductOps = Object.entries(newIngredientUsage).map(([invId, qty]) => ({
-        updateOne: { filter: { _id: invId }, update: { $inc: { quantity: -qty } } }
-      }));
-
-      if (deductOps.length > 0) {
-        await Inventory.bulkWrite(deductOps, { session });
-      }
-
+      
       await session.commitTransaction();
       session.endSession();
 

@@ -94,6 +94,7 @@ module.exports = function(app) {
     req.inventoryId.name = req.body.name;
     req.inventoryId.quantity = req.body.quantity;
     req.inventoryId.unit = req.body.unit;
+    req.inventoryId.saveAsUnit = req.body.saveAsUnit;
     req.inventoryId.image = req.body.image;
     inventory.edit(req.inventoryId, req.session.user)
       .then(output => {

@@ -29,7 +29,12 @@ module.exports = function (app, mongoose) {
       menuRef: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Menu'
-      }
+      },
+      subItems: [{
+        name: String,
+        quantity: Number,
+        price: Number
+      }]
     }],
     tableRef: {
       type: mongoose.Schema.Types.ObjectId,
