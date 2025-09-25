@@ -39,30 +39,75 @@ module.exports = function (app) {
     let query = {
       skip: Number(req.query.skip) || app.config.page.defaultSkip,
       limit: Number(req.query.limit) || app.config.page.defaultLimit,
-      filters: {
-        restaurantRef: req.session.user.restaurantRef
-      },
-      populate: [{
-        path: 'orderRef',
-        select: 'tableId tableRef'
-      }],
+      filters: {},
       sort: {
         createdAt: -1
       }
     };
 
-    // if (req.body.filters) {
-    //   let { name } = req.body.filters;
-    //   if (name) {
-    //     query.filters.name = new RegExp(`^${name}`, 'ig');
-    //   }
-    // }
+    if (req.body.filters) {
+      let { paymentStatus, startDate, endDate, search } = req.body.filters;
+      let andFilters = [{
+        restaurantRef: req.session.user.restaurantRef
+      }];
+
+      if (search && search.trim().length) {
+        andFilters.push({
+          $or: [
+            { "billNo": new RegExp(`^${search.trim()}`, 'ig') },
+            { "orderRef.tableId": new RegExp(`^${search.trim()}`, 'ig') }
+          ]
+        });
+      }
+
+      if (paymentStatus) {
+        andFilters.push({ "paymentDetails.status": Number(paymentStatus)});
+      }
+
+      if (startDate && endDate) {
+        andFilters.push({
+          createdAt: {
+            $gte: new Date(startDate),
+            $lte: new Date(endDate)
+          }
+        });
+      } else if (startDate) {
+        andFilters.push({
+          createdAt: {
+            $gte: new Date(startDate)
+          }
+        });
+      } else if (endDate) {
+        andFilters.push({
+          createdAt: {
+            $lte: new Date(endDate)
+          }
+        });
+      }
+
+      if (andFilters.length > 0) {
+        query.filters = { $and: andFilters };
+      }
+
+      query.select = {
+        billNo: 1,
+        total: 1,
+        "orderRef.tableId": 1,
+        "orderRef.cart": 1,
+        "orderRef.status": 1,
+        "orderRef.orderType": 1,
+        createdAt: 1,
+        _id: 1,
+        paymentDetails: 1,
+        discountDetails: 1
+      };
+    }
     // if (req.body.sortConfig) {
-    //   let { name, bill } = req.body.sortConfig;
+    //   let { name, uploadDateTime } = req.body.sortConfig;
     //   if (name) {
-    //     query.sort = { name };
-    //   } else if (bill) {
-    //     query.sort = { bill };
+    //     query.sort.name = name;
+    //   } else if (uploadDateTime) {
+    //     query.sort.uploadDateTime = uploadDateTime;
     //   }
     // }
 

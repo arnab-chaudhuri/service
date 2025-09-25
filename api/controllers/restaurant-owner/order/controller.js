@@ -70,38 +70,81 @@ module.exports = function (app) {
    * @return {Promise}       The Promise
    */
   const getOrderList = (req, res, next) => {
+
     let query = {
       skip: Number(req.query.skip) || app.config.page.defaultSkip,
       limit: Number(req.query.limit) || app.config.page.defaultLimit,
-      filters: {
-        status: {
-          $ne: app.config.contentManagement.order.deleted
-        },
-        restaurantRef: req.session.user.restaurantRef
-      },
-      populate: [{
-        path: 'billRef',
-        select: 'paymentDetails total'
-      }],
+      filters: {},
       sort: {
         createdAt: -1
       }
     };
 
     if (req.body.filters) {
-      let { name } = req.body.filters;
-      if (name) {
-        query.filters.name = new RegExp(`^${name}`, 'ig');
+      let { paymentStatus, orderStatus, startDate, endDate, search } = req.body.filters;
+      let andFilters = [{
+        status: {
+          $ne: app.config.contentManagement.order.deleted
+        },
+        restaurantRef: req.session.user.restaurantRef
+      }];
+
+      if (search && search.trim().length) {
+        andFilters.push({ "orderId": new RegExp(`^${search.trim()}`, 'ig') });
       }
-    }
-    if (req.body.sortConfig) {
-      let { name, order } = req.body.sortConfig;
-      if (name) {
-        query.sort = { name };
-      } else if (order) {
-        query.sort = { order };
+
+      if (paymentStatus) {
+        andFilters.push({ "billRef.paymentDetails.status": Number(paymentStatus)});
       }
+
+      if (orderStatus) {
+        andFilters.push({ "status": Number(orderStatus)});
+      }
+
+      if (startDate && endDate) {
+        andFilters.push({
+          createdAt: {
+            $gte: new Date(startDate),
+            $lte: new Date(endDate)
+          }
+        });
+      } else if (startDate) {
+        andFilters.push({
+          createdAt: {
+            $gte: new Date(startDate)
+          }
+        });
+      } else if (endDate) {
+        andFilters.push({
+          createdAt: {
+            $lte: new Date(endDate)
+          }
+        });
+      }
+
+      if (andFilters.length > 0) {
+        query.filters = { $and: andFilters };
+      }
+
+      query.select = {
+        tableId: 1,
+        orderId: 1,
+        cart: 1,
+        status: 1,
+        "billRef.paymentDetails": 1,
+        "billRef.total": 1,
+        createdAt: 1,
+        _id: 1
+      };
     }
+    // if (req.body.sortConfig) {
+    //   let { name, uploadDateTime } = req.body.sortConfig;
+    //   if (name) {
+    //     query.sort.name = name;
+    //   } else if (uploadDateTime) {
+    //     query.sort.uploadDateTime = uploadDateTime;
+    //   }
+    // }
 
     order.list(query)
       .then(output => {

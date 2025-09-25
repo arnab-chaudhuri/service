@@ -72,9 +72,9 @@ module.exports = function (app) {
    * @param  {Object} options  The options object
    * @return {Promise}        The promise
    */
-  const getList = function (options) {
-    return Order.pagedFind(options);
-  };
+  // const getList = function (options) {
+  //   return Order.pagedFind(options);
+  // };
 
   /**
    * Removes a order
@@ -131,6 +131,59 @@ module.exports = function (app) {
       }
     });
   };
+
+  const getList = async (options) => {
+    const limit = options.limit;     // from API query params
+    const skip = options.skip;
+
+    const aggArr = [{
+      $lookup: {
+        from: "bills",              // collection name
+        localField: "billRef",
+        foreignField: "_id",
+        as: "billRef"
+      }
+    }, { $unwind: "$billRef" },];
+
+    if (options.filters) {
+      aggArr.push({
+        $match: options.filters
+      })
+    }
+
+    aggArr.push({
+      $facet: {
+        totalCount: [{ $count: "count" }],
+
+        data: [
+          {
+            $project: options.select,
+          }
+        ]
+      }
+    });
+
+    if (options.sort) {
+
+      if (options.sort.createdAt) {
+        aggArr[aggArr.length - 1].$facet.data.push({
+          $sort: { "createdAt": options.sort.createdAt }
+        });
+      }
+
+    }
+
+    aggArr[aggArr.length - 1].$facet.data.push({ $skip: skip });
+    aggArr[aggArr.length - 1].$facet.data.push({ $limit: limit });
+
+    const orders = await Order.aggregate(aggArr).exec();
+    return Promise.resolve({
+      data: orders[0]?.data || [],
+      total: orders[0]?.totalCount[0]?.count || 0,
+      limit: limit,
+      skip: skip
+    });
+  }
 
   return {
     'create': createOrder,
