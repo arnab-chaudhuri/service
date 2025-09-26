@@ -46,18 +46,15 @@ module.exports = function (app) {
     };
 
     if (req.body.filters) {
-      let { paymentStatus, startDate, endDate, search } = req.body.filters;
+      let { paymentStatus, startDate, endDate, search, searchType } = req.body.filters;
       let andFilters = [{
         restaurantRef: req.session.user.restaurantRef
       }];
 
-      if (search && search.trim().length) {
-        andFilters.push({
-          $or: [
-            { "billNo": new RegExp(`^${search.trim()}`, 'ig') },
-            { "orderRef.tableId": new RegExp(`^${search.trim()}`, 'ig') }
-          ]
-        });
+      if (searchType && search && search.trim().length) {
+        const obj = {};
+        obj[searchType] = new RegExp(`^${search.trim()}`, 'ig');
+        andFilters.push(obj);
       }
 
       if (paymentStatus) {
