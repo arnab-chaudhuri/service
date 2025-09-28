@@ -41,7 +41,11 @@ module.exports = function(app, mongoose) {
       chargePerParcel: {
         type: Number,
         default: 0
-      }
+      },
+      parcels: [{
+        name: String,
+        price: Number
+      }]
     }
   }, {
     versionKey: false,

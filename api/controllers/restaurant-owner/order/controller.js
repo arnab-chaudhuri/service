@@ -133,6 +133,7 @@ module.exports = function (app) {
         status: 1,
         "billRef.paymentDetails": 1,
         "billRef.total": 1,
+        "billRef._id": 1,
         createdAt: 1,
         _id: 1
       };

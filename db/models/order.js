@@ -53,6 +53,11 @@ module.exports = function (app, mongoose) {
       ref: 'Bill',
     },
     parcelDetails: {
+      items: [{
+        name: String,
+        count: Number,
+        price: Number
+      }],
       count: {
         type: Number,
         default: 0
