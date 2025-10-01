@@ -64,7 +64,7 @@ module.exports = function (app) {
   const logout = (req, res, next) => {
     restaurantOwner.profile
       .logout({
-        token: req.headers['x-auth-token'],
+        token: req.token,
         deviceType: req.headers['x-auth-devicetype'],
         deviceId: req.headers['x-auth-deviceid'],
       })

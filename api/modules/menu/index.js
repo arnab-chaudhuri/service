@@ -13,6 +13,7 @@ module.exports = function (app) {
    * @type {Mongoose.Model}
    */
   const Menu = app.models.Menu;
+  const Order = app.models.Order;
 
   /**
    * Creates a Menu
@@ -150,6 +151,26 @@ module.exports = function (app) {
     return Promise.resolve({});
   }
 
+  const updateOrderCount = async (orderId) => {
+    const order = await Order.findById(orderId).select("cart.menuRef cart.quantity");
+
+    if (!order) throw new Error("Order not found");
+
+    // Prepare bulk operations
+    const bulkOps = order.cart
+      .filter(item => item.menuRef) // only if menuRef is present
+      .map(item => ({
+        updateOne: {
+          filter: { _id: item.menuRef },
+          update: { $inc: { noOfOrders: item.quantity } } // increase by quantity
+        }
+      }));
+
+    if (bulkOps.length > 0) {
+      await Menu.bulkWrite(bulkOps);
+    }
+  };
+
   return {
     'create': createMenu,
     'get': findMenuById,
@@ -157,6 +178,7 @@ module.exports = function (app) {
     'list': getList,
     'remove': removeMenu,
     'listFromApp': listFromApp,
-    'removeInventoryItem': removeInventoryItem
+    'removeInventoryItem': removeInventoryItem,
+    'updateOrderCount': updateOrderCount
   };
 };

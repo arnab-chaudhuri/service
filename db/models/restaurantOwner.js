@@ -135,7 +135,7 @@ module.exports = function (app, mongoose /*, plugins*/) {
       /**
        * Session Information
        */
-      sessionInfo: {
+      sessionInfo: [{
         deviceId: {
           type: String,
         },
@@ -154,7 +154,7 @@ module.exports = function (app, mongoose /*, plugins*/) {
         notificationKey: {
           type: String,
         },
-      },
+      }],
     },
     {
       versionKey: false,
@@ -740,10 +740,13 @@ module.exports = function (app, mongoose /*, plugins*/) {
     if (notificationKey) {
       sessionInfo.notificationKey = notificationKey;
     }
-    userDoc.sessionInfo = sessionInfo;
+    if (userDoc.sessionInfo && userDoc.sessionInfo.length) {
+      userDoc.sessionInfo.push(sessionInfo);
+    } else {
+      userDoc.sessionInfo = [sessionInfo];
+    }
 
     return this.removeSessionByDeviceId(deviceId)
-      .then(() => this.removeSessionByUserId(userDoc._id))
       .then(() => userDoc.save())
       .then((savedUser) => {
         return Promise.resolve({
@@ -774,9 +777,16 @@ module.exports = function (app, mongoose /*, plugins*/) {
       }
     }
     return this.findOne({
-      'sessionInfo.accessToken': decryptedToken.token,
-      'sessionInfo.deviceId': deviceId,
-      'sessionInfo.deviceType': deviceType,
+      'sessionInfo': {
+        '$elemMatch': {
+          'accessToken': decryptedToken.token,
+          'deviceId': deviceId,
+          'deviceType': deviceType,
+          // 'destroyTime': {
+          //   '$gt': new Date()
+          // }
+        }
+      }
     })
       .exec()
       .then((userDoc) => {
@@ -795,14 +805,17 @@ module.exports = function (app, mongoose /*, plugins*/) {
             errCode: 'RESTAURANT_OWNER_HAS_BEEN_DELETED',
           });
         }
+        let sessionIndex = userDoc.sessionInfo.findIndex(eachSession => {
+          return (eachSession.deviceId.toString() === deviceId.toString() && eachSession.deviceType.toString() === deviceType.toString());
+        });
         if (notificationKey) {
-          userDoc.sessionInfo.notificationKey = notificationKey;
+          userDoc.sessionInfo[sessionIndex].notificationKey = notificationKey;
         }
         return userDoc.save().then((savedUser) => {
           return Promise.resolve({
             userType: app.config.user.role.restaurantOwner,
             userId: savedUser,
-            deviceId: savedUser.sessionInfo.deviceId,
+            deviceId: savedUser.sessionInfo[sessionIndex].deviceId,
           });
         });
       });
@@ -817,9 +830,16 @@ module.exports = function (app, mongoose /*, plugins*/) {
       }
     }
     return this.findOne({
-      'sessionInfo.refreshToken': decryptedToken.token,
-      'sessionInfo.deviceId': deviceId,
-      'sessionInfo.deviceType': deviceType,
+      'sessionInfo': {
+        '$elemMatch': {
+          'refreshToken': decryptedToken.token,
+          'deviceId': deviceId,
+          'deviceType': deviceType,
+          // 'destroyTime': {
+          //   '$gt': new Date()
+          // }
+        }
+      }
     })
       .exec()
       .then((userDoc) => {
@@ -838,18 +858,21 @@ module.exports = function (app, mongoose /*, plugins*/) {
             errCode: 'RESTAURANT_OWNER_HAS_BEEN_DELETED',
           });
         }
+        let sessionIndex = userDoc.sessionInfo.findIndex(eachSession => {
+          return (eachSession.deviceId.toString() === deviceId.toString() && eachSession.deviceType.toString() === deviceType.toString());
+        });
         if (notificationKey) {
-          userDoc.sessionInfo.notificationKey = notificationKey;
+          userDoc.sessionInfo[sessionIndex].notificationKey = notificationKey;
         }
         let jwtAccessToken = jwtTokenGenerator('30d');
         let jwtRefreshToken = jwtTokenGenerator('300d');
-        userDoc.sessionInfo.accessToken = jwtAccessToken.token;
-        userDoc.sessionInfo.refreshToken = jwtRefreshToken.token;
+        userDoc.sessionInfo[sessionIndex].accessToken = jwtAccessToken.token;
+        userDoc.sessionInfo[sessionIndex].refreshToken = jwtRefreshToken.token;
         return userDoc.save().then((savedUser) => {
           return Promise.resolve({
             userType: app.config.user.role.restaurantOwner,
             userId: savedUser,
-            deviceId: savedUser.sessionInfo.deviceId,
+            deviceId: savedUser.sessionInfo[sessionIndex].deviceId,
             accessToken: jwtAccessToken.jwt,
             refreshToken: jwtRefreshToken.jwt,
           });
@@ -882,25 +905,42 @@ module.exports = function (app, mongoose /*, plugins*/) {
       },
       {
         $unset: {
-          sessionInfo: 1,
+          sessionInfo: {
+            deviceId: deviceId
+          },
         },
       }
     ).exec();
   };
 
   restaurantOwnerSchema.statics.removeSession = function (token, deviceType, deviceId) {
-    return this.updateOne(
-      {
-        'sessionInfo.deviceId': deviceId,
-        'sessionInfo.token': token,
-        'sessionInfo.deviceType': deviceType,
-      },
-      {
-        $unset: {
-          sessionInfo: 1,
-        },
+    console.log(token, deviceType, deviceId)
+    let decryptedToken = decryptJwtToken(token);
+    if (decryptedToken.err) {
+      if (decryptedToken.message && decryptedToken.message === 'jwt expired') {
+        return Promise.reject({ errCode: 'ACCESS_TOKEN_EXPIRED' });
+      } else {
+        return Promise.reject({ errCode: 'SESSION_NOT_FOUND' });
       }
-    ).exec();
+    }
+    return this.updateOne({
+        'sessionInfo': {
+          $elemMatch: {
+            'deviceId': deviceId,
+            'accessToken': decryptedToken.token,
+            'deviceType': deviceType,
+          }
+        }
+      }, {
+        $pull: {
+          sessionInfo: {
+            'deviceId': deviceId,
+            'accessToken': decryptedToken.token,
+            'deviceType': deviceType
+          }
+        }
+      })
+      .exec();
   };
 
   return restaurantOwnerSchema;

@@ -53,7 +53,7 @@ module.exports = function (app, mongoose) {
         type: String,
         default: 'en',
       },
-      sessionInfo: {
+      sessionInfo: [{
         deviceId: {
           type: String,
         },
@@ -72,7 +72,7 @@ module.exports = function (app, mongoose) {
         notificationKey: {
           type: String,
         },
-      },
+      }],
     },
     {
       autoIndex: true,
@@ -549,12 +549,15 @@ module.exports = function (app, mongoose) {
     if (notificationKey) {
       sessionInfo.notificationKey = notificationKey;
     }
+
+    if (userDoc.sessionInfo && userDoc.sessionInfo.length) {
+      userDoc.sessionInfo.push(sessionInfo);
+    } else {
+      userDoc.sessionInfo = [sessionInfo];
+    }
+
     return this.removeSessionByDeviceId(deviceId)
-      .then(() => this.removeSessionByUserId(userDoc._id))
-      .then(() => {
-        userDoc.sessionInfo = sessionInfo;
-        return userDoc.save();
-      })
+      .then(() => (userDoc.save()))
       .then((savedUser) => {
         return Promise.resolve({
           userId: savedUser,
@@ -584,9 +587,16 @@ module.exports = function (app, mongoose) {
       }
     }
     return this.findOne({
-      'sessionInfo.accessToken': accessToken,
-      'sessionInfo.deviceId': deviceId,
-      'sessionInfo.deviceType': deviceType,
+      'sessionInfo': {
+        '$elemMatch': {
+          'accessToken': decryptedToken.token,
+          'deviceId': deviceId,
+          'deviceType': deviceType,
+          // 'destroyTime': {
+          //   '$gt': new Date()
+          // }
+        }
+      }
     })
       .exec()
       .then((userDoc) => {
@@ -604,14 +614,17 @@ module.exports = function (app, mongoose) {
             errCode: 'USER_HAS_BEEN_DELETED',
           });
         }
+        let sessionIndex = userDoc.sessionInfo.findIndex(eachSession => {
+          return (eachSession.deviceId.toString() === deviceId.toString() && eachSession.deviceType.toString() === deviceType.toString());
+        });
         if (notificationKey) {
-          userDoc.sessionInfo.notificationKey = notificationKey;
+          userDoc.sessionInfo[sessionIndex].notificationKey = notificationKey;
         }
         return userDoc.save().then((savedUser) => {
           return Promise.resolve({
             userType: app.config.user.role.user,
             userId: savedUser,
-            deviceId: savedUser.sessionInfo.deviceId,
+            deviceId: savedUser.sessionInfo[sessionIndex].deviceId,
           });
         });
       });
@@ -626,9 +639,16 @@ module.exports = function (app, mongoose) {
       }
     }
     return this.findOne({
-      'sessionInfo.refreshToken': refreshToken,
-      'sessionInfo.deviceId': deviceId,
-      'sessionInfo.deviceType': deviceType,
+      'sessionInfo': {
+        '$elemMatch': {
+          'refreshToken': decryptedToken.token,
+          'deviceId': deviceId,
+          'deviceType': deviceType,
+          // 'destroyTime': {
+          //   '$gt': new Date()
+          // }
+        }
+      }
     })
       .exec()
       .then((userDoc) => {
@@ -647,18 +667,21 @@ module.exports = function (app, mongoose) {
             errCode: 'USER_HAS_BEEN_DELETED',
           });
         }
+         let sessionIndex = userDoc.sessionInfo.findIndex(eachSession => {
+          return (eachSession.deviceId.toString() === deviceId.toString() && eachSession.deviceType.toString() === deviceType.toString());
+        });
         if (notificationKey) {
-          userDoc.sessionInfo.notificationKey = notificationKey;
+          userDoc.sessionInfo[sessionIndex].notificationKey = notificationKey;
         }
         let jwtAccessToken = jwtTokenGenerator('30d');
         let jwtRefreshToken = jwtTokenGenerator('300d');
-        userDoc.sessionInfo.accessToken = jwtAccessToken.token;
-        userDoc.sessionInfo.refreshToken = jwtRefreshToken.token;
+        userDoc.sessionInfo[sessionIndex].accessToken = jwtAccessToken.token;
+        userDoc.sessionInfo[sessionIndex].refreshToken = jwtRefreshToken.token;
         return userDoc.save().then((savedUser) => {
           return Promise.resolve({
             userType: app.config.user.role.user,
             userId: savedUser,
-            deviceId: savedUser.sessionInfo.deviceId,
+            deviceId: savedUser.sessionInfo[sessionIndex].deviceId,
             accessToken: jwtAccessToken.jwt,
             refreshToken: jwtRefreshToken.jwt,
           });
@@ -691,25 +714,33 @@ module.exports = function (app, mongoose) {
       },
       {
         $unset: {
-          sessionInfo: 1,
+          sessionInfo: {
+            deviceId: deviceId
+          },
         },
       }
     ).exec();
   };
 
   schema.statics.removeSession = function (token, deviceType, deviceId) {
-    return this.updateOne(
-      {
-        'sessionInfo.deviceId': deviceId,
-        'sessionInfo.accessToken': token,
-        'sessionInfo.deviceType': deviceType,
-      },
-      {
-        $unset: {
-          sessionInfo: 1,
-        },
-      }
-    ).exec();
+    return this.updateOne({
+        'sessionInfo': {
+          $elemMatch: {
+            'deviceId': deviceId,
+            'accessToken': token,
+            'deviceType': deviceType,
+          }
+        }
+      }, {
+        $pull: {
+          sessionInfo: {
+            'deviceId': deviceId,
+            'accessToken': token,
+            'deviceType': deviceType
+          }
+        }
+      })
+      .exec();
   };
 
   const sendEmailOtp = ({ otp, userId, userType, emailId, firstName, emailName }) => {
