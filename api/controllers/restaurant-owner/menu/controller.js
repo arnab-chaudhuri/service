@@ -71,12 +71,15 @@ module.exports = function(app) {
     };
 
     if (req.body.filters) {
-      let { name, categoryRef } = req.body.filters;
+      let { name, categoryRef, isVeg } = req.body.filters;
       if (name) {
         query.filters.name = new RegExp(`^${name}`, 'ig');
       }
       if (categoryRef) {
         query.filters.categoryRef = categoryRef;
+      }
+      if (isVeg !== null && isVeg !== undefined) {
+        query.filters.isVeg = isVeg;
       }
     }
     if (req.body.sortConfig) {
