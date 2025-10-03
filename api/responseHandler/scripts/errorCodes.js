@@ -95,6 +95,12 @@ module.exports = function (/*app*/) {
     INVENTORY_NOT_FOUND: 1701,
     NOT_ENOUGH_STOCK: 1702,
 
-    BILL_NOT_FOUND: 1750
+    BILL_NOT_FOUND: 1750,
+
+    TABLE_ALREADY_EXISTS: 1800,
+    TABLE_NOT_FOUND: 1801,
+
+    TABLE_SESSION_NOT_FOUND: 1850,
+
   };
 };

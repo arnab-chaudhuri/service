@@ -18,6 +18,7 @@ module.exports = function(app) {
   const order = require('./order')(app);
   const bill = require('./bill')(app);
   const inventory = require('./inventory')(app);
+  const table = require('./table')(app);
   const imageByAI = require('./imageByAI')(app);
   const cron = require('./cron')(app)();
 
@@ -37,6 +38,7 @@ module.exports = function(app) {
     faq,
     cron,
     inventory,
+    table,
     imageByAI,
     menu,
     order,

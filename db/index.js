@@ -59,6 +59,8 @@ module.exports = function(app) {
     Order: db.model('Order', require('./models/order')(app, mongoose, plugins)),
     Inventory: db.model('Inventory', require('./models/inventory')(app, mongoose, plugins)),
     Bill: db.model('Bill', require('./models/bill')(app, mongoose, plugins)),
+    Table: db.model('Table', require('./models/table')(app, mongoose, plugins)),
+    TableSession: db.model('TableSession', require('./models/tableSession')(app, mongoose, plugins)),
   };
 
   return db;

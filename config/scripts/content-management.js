@@ -58,5 +58,14 @@ module.exports = {
     upi: 1,
     card: 2,
     other: 3
-  }
+  },
+  table: {
+    active: 1,
+    inActive: 2,
+    deleted: 3
+  },
+  tableSession: {
+    active: 1,
+    closed: 2
+  },
 };

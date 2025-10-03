@@ -1,0 +1,126 @@
+'use strict';
+/**
+ * This Controller handles all functionality of admin table
+ * @module Controllers/Admin/table
+ */
+module.exports = function(app) {
+
+  /**
+   * table module
+   * @type {Object}
+   */
+  const table = app.module.table;
+
+  /**
+   * Adds a table
+   * @param  {Object}   req  Request 
+   * @param  {Object}   res  Response
+   * @param  {Function} next Next is used to pass control to the next middleware function
+   * @return {Promise}       The Promise
+   */
+  const addTable = (req, res, next) => {
+    table.create(req.body, req.session.user)
+      .then(output => {
+        req.workflow.outcome.data = output;
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+
+  /**
+   * Fetches a table
+   * @param  {Object}   req  Request 
+   * @param  {Object}   res  Response
+   * @param  {Function} next Next is used to pass control to the next middleware function
+   * @return {Promise}       The Promise
+   */
+  const getTable = (req, res, next) => {
+    table.get(req.params.tableId,req.session.user)
+      .then(output => {
+        req.workflow.outcome.data = output;
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+
+  /**
+   * Fetches a list of Inventories
+   * @param  {Object}   req  Request 
+   * @param  {Object}   res  Response
+   * @param  {Function} next Next is used to pass control to the next middleware function
+   * @return {Promise}       The Promise
+   */
+  const getTableList = (req, res, next) => {
+    let query = {
+      skip: Number(req.query.skip) || app.config.page.defaultSkip,
+      limit: Number(req.query.limit) || app.config.page.defaultLimit,
+      filters: {
+        status: {
+          '$ne': app.config.contentManagement.table.deleted
+        },
+        restaurantRef: req.session.user.restaurantRef
+      },
+      sort: {}
+    };
+
+    if (req.body.filters) {
+      let { tableId } = req.body.filters;
+      if (tableId) {
+        query.filters.tableId = new RegExp(`^${tableId}`, 'ig');
+      }
+    }
+
+    table.list(query)
+      .then(output => {
+        req.workflow.outcome.data = output;
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+
+  /**
+   * Edits a table
+   * @param  {Object}   req  Request 
+   * @param  {Object}   res  Response
+   * @param  {Function} next Next is used to pass control to the next middleware function
+   * @return {Promise}       The Promise
+   */
+  const editTable = (req, res, next) => {
+    if (req.body && Object.keys(req.body).length) {
+      for (let prop in req.body) {
+        req.tableId[prop] = req.body[prop];
+      }
+    }
+    table.edit(req.tableId, req.session.user)
+      .then(output => {
+        req.workflow.outcome.data = output;
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+
+  /**
+   * Deletes a table
+   * @param  {Object}   req  Request 
+   * @param  {Object}   res  Response
+   * @param  {Function} next Next is used to pass control to the next middleware function
+   * @return {Promise}       The Promise
+   */
+  const deleteTable = (req, res, next) => {
+    req.tableId.status = app.config.contentManagement.table.deleted;
+    table.edit(req.tableId, req.session.user)
+      .then(output => {
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+
+  return {
+    add: addTable,
+    get: getTable,
+    edit: editTable,
+    list: getTableList,
+    delete: deleteTable
+  };
+
+};
