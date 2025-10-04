@@ -46,6 +46,20 @@ module.exports = function (app) {
       .catch(next);
   };
 
+  const acceptOrder = (req, res, next) => {
+    req.orderId.status = app.config.contentManagement.order.active;
+    inventory.updateInventoryCount(req.orderId.cart)
+      .then(output1 => {
+        order.edit(req.orderId, req.session.user)
+          .then(output => {
+            req.workflow.outcome.data = output;
+            req.workflow.emit('response');
+          })
+          .catch(next);
+      })
+      .catch(next);
+  };
+
   /**
    * Fetches a order
    * @param  {Object}   req  Request 
@@ -219,7 +233,8 @@ module.exports = function (app) {
     edit: editOrder,
     list: getOrderList,
     delete: deleteOrder,
-    changeStatus: changeStatus
+    changeStatus: changeStatus,
+    acceptOrder: acceptOrder
   };
 
 };

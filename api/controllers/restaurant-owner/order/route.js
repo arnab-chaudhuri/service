@@ -63,6 +63,15 @@ module.exports = function (app, options) {
       controllers.changeStatus
     ]);
 
+  router.route('/accept/:orderId')
+    .all([
+      options.validateParams(schemaValidator.param),
+      commonMiddlewares.validateId('Order', 'orderId')
+    ])
+    .put([
+      controllers.acceptOrder
+    ]);
+
   /**
    * Fetches a order, edits a order and removes a order
    */

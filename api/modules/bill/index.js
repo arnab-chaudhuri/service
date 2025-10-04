@@ -19,9 +19,12 @@ module.exports = function (app) {
    * @return {Promise}        The promise
    */
   const createBill = async (config, userRef) => {
-    config.restaurantRef = userRef.restaurantRef;
-    config.createdBy = userRef._id;
-    config.addedByOwner = true;
+    if (userRef) {
+      config.restaurantRef = userRef.restaurantRef;
+      config.createdBy = userRef._id;
+      config.addedByOwner = true;
+    }
+    
     return Bill.createBill(config);
   };
 

@@ -12,6 +12,7 @@ module.exports = function (app) {
    * @type {Mongoose.Model}
    */
   const Order = app.models.Order;
+  const Table = app.models.Table;
 
   /**
    * Creates a Order
@@ -19,11 +20,22 @@ module.exports = function (app) {
    * @return {Promise}        The promise
    */
   const createOrder = async (config, userRef) => {
-    config.restaurantRef = userRef.restaurantRef;
-    config.createdBy = userRef._id;
-    config.addedByOwner = true;
+    if (userRef) {
+      config.createdBy = userRef._id;
+      config.addedByOwner = true;
+      config.restaurantRef = userRef.restaurantRef;
+
+    }
+
+    if (config.tableRef) {
+      const tableDetails = await Table.findById(config.tableRef);
+      if (tableDetails) {
+        config.tableId = tableDetails.tableId;
+      }
+    }
+    
     const totalOrders = await Order.countDocuments({
-        restaurantRef: userRef.restaurantRef
+        restaurantRef: userRef ? userRef.restaurantRef : config.restaurantRef
     });
     config.orderId = totalOrders ? (totalOrders + 1).toString(): "1";
     return Order.createOrder(config);
@@ -40,7 +52,7 @@ module.exports = function (app) {
       path: 'billRef'
     })
     .then(orderDetails => {
-      if(!orderDetails || (orderDetails && 
+      if(!orderDetails || (orderDetails && userRef && 
         orderDetails.restaurantRef.toString() !== userRef.restaurantRef.toString())) {
         return Promise.reject({
           'errCode': 'ORDER_NOT_FOUND'

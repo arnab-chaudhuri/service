@@ -12,6 +12,7 @@ module.exports = function (app) {
    * @type {Mongoose.Model}
    */
   const Table = app.models.Table;
+  const Restaurant = app.models.Restaurant;
 
   /**
    * Creates a Table
@@ -20,20 +21,23 @@ module.exports = function (app) {
    */
   const createTable = function (config, userRef) {
     if (config.tableIds && config.tableIds.length) {
-      const arr = config.tableIds.map(element => {
-        const monId = new mongoose.Types.ObjectId();
+      return Restaurant.findById(userRef.restaurantRef)
+        .then(restDetails => {
+          const arr = config.tableIds.map(element => {
+            const monId = new mongoose.Types.ObjectId();
+            return {
+              tableId: element.tableId,
+              restaurantRef: userRef.restaurantRef,
+              _id: monId,
+              qrCodeUrl: `http://localhost:3000/diner/${restDetails.name.split(" ").join("-")}_${userRef.restaurantRef}_${monId}`,
+              noOfSeats: element.noOfSeats
+            }
+          });
+          return Table.insertMany(arr);
+        })
 
-        return {
-          tableId: element.tableId,
-          restaurantRef: userRef.restaurantRef,
-          _id: monId,
-          qrCodeUrl: `http://localhost:3000?table=${monId}`,
-          noOfSeats: element.noOfSeats
-        }
-      });
-      return Table.insertMany(arr);
     }
-    
+
   };
 
   /**

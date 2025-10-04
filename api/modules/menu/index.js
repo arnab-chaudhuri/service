@@ -124,7 +124,8 @@ module.exports = function (app) {
               veg: '$isVeg',
               spicy: '$isSpicy',
               available: '$isAvailable',
-              images: '$images'
+              images: '$images',
+              restaurantRef: '$restaurantRef'
             }
           }
         }

@@ -30,19 +30,24 @@ module.exports = {
   },
   order: {
     active: 1,
+    cooking: 2,
+    served: 3,
     completed: 4,
-    deleted: 5 // need to be changed -> cancelled
+    deleted: 5, // need to be changed -> cancelled
+    pending: 6
   },
   orderType: {
     inStore: 1,
     swiggy: 2,
     zomato: 3,
-    other: 4
+    takeaway: 4,
+    others: 5
   },
   bill: {
     active: 1,
     completed: 4,
-    deleted: 5 // need to be changed -> cancelled
+    deleted: 5, // need to be changed -> cancelled
+    pending: 6
   },
   paymentStatus: {
     pending: 1,

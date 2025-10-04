@@ -38,7 +38,7 @@ module.exports = function (app, mongoose) {
     }],
     tableRef: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Restaurant',
+      ref: 'Table',
     },
     tableId: {
       type: String

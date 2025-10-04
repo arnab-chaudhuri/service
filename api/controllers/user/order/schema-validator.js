@@ -2,15 +2,49 @@
 
 module.exports = function(app) {
   const addOrder = {
-    'name': {
-      type: 'string',
+    'cart': {
+      type: 'array',
+      required: true,
       allowEmpty: false,
-      required: true
+      items: {
+        type: 'object',
+        properties: {
+          'name': {
+            type: 'string',
+            required: true,
+            allowEmpty: false,
+          },
+          'quantity': {
+            type: 'number',
+            required: true,
+            allowEmpty: false,
+          },
+          'price': {
+            type: 'number',
+            required: true,
+            allowEmpty: false,
+          },
+          'menuRef': {
+            type: 'string',
+            conform: function (value) {
+              return app.utility.checkMongooseObjectId(value);
+            },
+          }
+        }
+      },
     },
-    'order': {
+    'subTotal': {
       type: 'number',
       allowEmpty: false,
       required: true
+    },
+    'total': {
+      type: 'number',
+      allowEmpty: false,
+      required: true
+    },
+    'tableId': {
+      type: 'string'
     }
   };
 
