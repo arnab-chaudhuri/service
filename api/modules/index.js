@@ -19,6 +19,7 @@ module.exports = function(app) {
   const bill = require('./bill')(app);
   const inventory = require('./inventory')(app);
   const table = require('./table')(app);
+  const tableSession = require('./tableSession')(app);
   const imageByAI = require('./imageByAI')(app);
   const cron = require('./cron')(app)();
 
@@ -42,6 +43,7 @@ module.exports = function(app) {
     imageByAI,
     menu,
     order,
-    bill
+    bill,
+    tableSession
   };
 };

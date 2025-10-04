@@ -12,6 +12,7 @@ module.exports = function (app) {
   const bill = app.module.bill;
   const order = app.module.order;
   const menu = app.module.menu;
+  const tableSession = app.module.tableSession;
 
   /**
    * Fetches a bill
@@ -133,6 +134,7 @@ module.exports = function (app) {
       .then(output => {
         order.updateStatus(req.billId.orderRef);
         menu.updateOrderCount(req.billId.orderRef);
+        tableSession.updateStatusByOrderId(req.billId.orderRef, req.billId.restaurantRef);
         req.workflow.outcome.data = output;
         req.workflow.emit('response');
       })

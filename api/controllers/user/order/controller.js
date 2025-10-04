@@ -1,4 +1,5 @@
 'use strict';
+
 /**
  * This Controller handles all functionality of admin order
  * @module Controllers/Admin/order
@@ -12,6 +13,7 @@ module.exports = function (app) {
   const order = app.module.order;
   const bill = app.module.bill;
   const inventory = app.module.inventory;
+  const tableSession = app.module.tableSession;
 
   /**
    * Adds a order
@@ -21,29 +23,61 @@ module.exports = function (app) {
    * @return {Promise}       The Promise
    */
   const addOrder = (req, res, next) => {
-    // inventory.updateInventoryCount(req.body.cart)
-    //   .then(output1 => {
-        req.body.status = app.config.contentManagement.order.pending;
-        order.create(req.body)
+    let subTotal = 0;
+    let total = 0; 
+
+    // get active table session
+    tableSession.getByTableId(req.body)
+      .then(output1 => {
+
+        // calculate total
+        output1.cart.forEach(element => {
+          subTotal += (element.price * element.quantity);
+          if (element.subItems && element.subItems.length) {
+            element.subItems.forEach(element1 => {
+              subTotal += (element1.price * element1.quantity);
+            });
+          }
+        });
+
+        total = subTotal;
+
+        // create order
+        order.create({
+          tableRef: req.body.tableRef,
+          restaurantRef: req.body.restaurantRef,
+          cart: output1.cart,
+          subTotal,
+          total,
+          status: app.config.contentManagement.order.pending
+        })
           .then(output => {
+
+            // create bill
             bill.create({
               billNo: output.orderId,
               orderRef: output._id,
-              subTotal: req.body.subTotal,
-              total: req.body.total,
+              subTotal,
+              total,
               restaurantRef: req.body.restaurantRef
             })
             .then(output2 => {
-              output.billDetails = output2;
 
+              // update bill details in order
+              output.billDetails = output2;
               order.updateBillDetails(output._id, output2);
+
+              // update orderRef in table session
+              output1.orderRef = output._id;
+              tableSession.edit(output1);
+
               req.workflow.outcome.data = output;
               req.workflow.emit('response');
             }).catch(next);
           })
           .catch(next);
-      // })
-      // .catch(next);
+      })
+      .catch(next);
   };
 
   /**

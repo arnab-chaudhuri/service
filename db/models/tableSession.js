@@ -2,6 +2,7 @@
 module.exports = function(app, mongoose) {
   const schema = new mongoose.Schema({
     tableRef: { type: mongoose.Schema.Types.ObjectId, ref: "Table" },
+    restaurantRef: { type: mongoose.Schema.Types.ObjectId, ref: "Restaurant" },
     startedAt: { type: Date, default: Date.now },
     endedAt: Date,
     status: {
@@ -9,6 +10,32 @@ module.exports = function(app, mongoose) {
       default: app.config.contentManagement.tableSession.active
     },
     orderRef: { type: mongoose.Schema.Types.ObjectId, ref: "Order" },
+    cart: [{
+      name: String,
+      quantity: {
+        type: Number,
+        default: 0
+      },
+      price: {
+        type: Number,
+        default: 0
+      },
+      menuRef: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Menu'
+      },
+      subItems: [{
+        name: String,
+        quantity: {
+          type: Number,
+          default: 0
+        },
+        price: {
+          type: Number,
+          default: 0
+        }
+      }]
+    }],
   }, {
     versionKey: false,
     timestamps: true,

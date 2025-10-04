@@ -33,11 +33,11 @@ module.exports = function (app) {
         config.tableId = tableDetails.tableId;
       }
     }
-    
+
     const totalOrders = await Order.countDocuments({
-        restaurantRef: userRef ? userRef.restaurantRef : config.restaurantRef
+      restaurantRef: userRef ? userRef.restaurantRef : config.restaurantRef
     });
-    config.orderId = totalOrders ? (totalOrders + 1).toString(): "1";
+    config.orderId = totalOrders ? (totalOrders + 1).toString() : "1";
     return Order.createOrder(config);
   };
 
@@ -48,19 +48,19 @@ module.exports = function (app) {
    */
   const findOrderById = function (orderId, userRef) {
     return Order.findById(orderId)
-    .populate({
-      path: 'billRef'
-    })
-    .then(orderDetails => {
-      if(!orderDetails || (orderDetails && userRef && 
-        orderDetails.restaurantRef.toString() !== userRef.restaurantRef.toString())) {
-        return Promise.reject({
-          'errCode': 'ORDER_NOT_FOUND'
-        });
-      } else {
-        return Promise.resolve(orderDetails);
-      }
-    });
+      .populate({
+        path: 'billRef'
+      })
+      .then(orderDetails => {
+        if (!orderDetails || (orderDetails && userRef &&
+          orderDetails.restaurantRef.toString() !== userRef.restaurantRef.toString())) {
+          return Promise.reject({
+            'errCode': 'ORDER_NOT_FOUND'
+          });
+        } else {
+          return Promise.resolve(orderDetails);
+        }
+      });
   };
 
   /**
@@ -106,42 +106,42 @@ module.exports = function (app) {
     return Order.findOne({
       _id: orderId
     })
-    .then(order =>{
-      if (order) {
-        order.totalMenu = value === 1 ? order.totalMenu + 1 : order.totalMenu - 1;
-        return order.save(); 
-      } else {
-        return Promise.resolve(null);
-      }
-    });
+      .then(order => {
+        if (order) {
+          order.totalMenu = value === 1 ? order.totalMenu + 1 : order.totalMenu - 1;
+          return order.save();
+        } else {
+          return Promise.resolve(null);
+        }
+      });
   };
 
   const updateBillDetails = (orderId, billDetails) => {
     return Order.findOne({
       _id: orderId
     })
-    .then(order =>{
-      if (order) {
-        order.billRef = billDetails._id;
-        return order.save(); 
-      } else {
-        return Promise.resolve(null);
-      }
-    });
+      .then(order => {
+        if (order) {
+          order.billRef = billDetails._id;
+          return order.save();
+        } else {
+          return Promise.resolve(null);
+        }
+      });
   };
 
   const updateStatus = (orderId) => {
     return Order.findOne({
       _id: orderId
     })
-    .then(order =>{
-      if (order) {
-        order.status = app.config.contentManagement.order.completed;
-        return order.save(); 
-      } else {
-        return Promise.resolve(null);
-      }
-    });
+      .then(order => {
+        if (order) {
+          order.status = app.config.contentManagement.order.completed;
+          return order.save();
+        } else {
+          return Promise.resolve(null);
+        }
+      });
   };
 
   const getList = async (options) => {

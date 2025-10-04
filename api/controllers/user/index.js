@@ -10,6 +10,7 @@ const controllers = {
   menu: require('./menu/route'),
   restaurant: require('./restaurant/route'),
   order: require('./order/route'),
+  tableSession: require('./tableSession/route'),
 };
 module.exports = function(app) {
   const options = {
@@ -36,6 +37,7 @@ module.exports = function(app) {
   publicRouter.use('/menu', controllers.menu(app, options));
   publicRouter.use('/restaurant', controllers.restaurant(app, options));
   publicRouter.use('/order', controllers.order(app, options));
+  publicRouter.use('/table-session', controllers.tableSession(app, options));
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //                                                                                                                               //
