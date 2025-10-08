@@ -64,9 +64,12 @@ module.exports = function(app) {
     };
 
     if (req.body.filters) {
-      let { tableId } = req.body.filters;
+      let { tableId, status } = req.body.filters;
       if (tableId) {
         query.filters.tableId = new RegExp(`^${tableId}`, 'ig');
+      }
+      if (status) {
+        query.filters.status = status;
       }
     }
 

@@ -10,6 +10,7 @@ module.exports = function (app) {
    * @type {Object}
    */
   const tableSession = app.module.tableSession;
+  const table = app.module.table;
   const bill = app.module.bill;
   const inventory = app.module.inventory;
 
@@ -23,6 +24,9 @@ module.exports = function (app) {
   const addTableSession = (req, res, next) => {
     tableSession.create(req.body)
       .then(output => {
+        if (req.body.tableRef && output.isNew) {
+          table.markAsUnavailable(req.body.tableRef);
+        }
         req.workflow.outcome.data = output;
         req.workflow.emit('response');
       })

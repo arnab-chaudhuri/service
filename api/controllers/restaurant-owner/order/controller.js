@@ -12,6 +12,8 @@ module.exports = function (app) {
   const order = app.module.order;
   const bill = app.module.bill;
   const inventory = app.module.inventory;
+  const tableSession = app.module.tableSession;
+  const table = app.module.table;
 
   /**
    * Adds a order
@@ -21,7 +23,9 @@ module.exports = function (app) {
    * @return {Promise}       The Promise
    */
   const addOrder = (req, res, next) => {
-    inventory.updateInventoryCount(req.body.cart)
+    tableSession.createTableSessionFromOwner(req.body, req.session.user)
+    .then(output0 => {
+      inventory.updateInventoryCount(req.body.cart)
       .then(output1 => {
         order.create(req.body, req.session.user)
           .then(output => {
@@ -37,6 +41,15 @@ module.exports = function (app) {
               output.billDetails = output2;
 
               order.updateBillDetails(output._id, output2);
+
+              // update orderRef in table session
+              output0.orderRef = output._id;
+              tableSession.edit(output0);
+
+              if (req.body.tableRef) {
+                table.markAsUnavailable(req.body.tableRef);
+              }
+
               req.workflow.outcome.data = output;
               req.workflow.emit('response');
             }).catch(next);
@@ -44,6 +57,8 @@ module.exports = function (app) {
           .catch(next);
       })
       .catch(next);
+    })
+    .catch(next);
   };
 
   const acceptOrder = (req, res, next) => {
@@ -192,6 +207,13 @@ module.exports = function (app) {
               subTotal: req.body.subTotal,
               total: req.body.total,
             });
+
+            if (req.body.tableRef && req.orderId.tableRef && req.body.tableRef.toString() !== req.orderId.tableRef.toString()) {
+              // close the earlier table session and create a new session for the new table
+              tableSession.updateStatusByOrderId(req.orderId._id, req.orderId.restaurantRef);
+              tableSession.createTableSessionFromOwner(req.body, req.session.user);
+            }
+
             req.workflow.outcome.data = output;
             req.workflow.emit('response');
           })

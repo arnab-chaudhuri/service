@@ -18,21 +18,24 @@ module.exports = function (app) {
    * @param  {Object} config  The config object
    * @return {Promise}        The promise
    */
-  const createTableSession = async ({ tableRef, restaurantRef, cartItem }, userRef) => {
+  const createTableSession = async (config, userRef) => {
+    if (!config.tableRef) {
+      return Promise.resolve({});
+    }
     if (userRef) {
       config.createdBy = userRef._id;
       config.addedByOwner = true;
       config.restaurantRef = userRef.restaurantRef;
     }
     const filter = {
-      tableRef: new mongoose.Types.ObjectId(tableRef),
-      restaurantRef: new mongoose.Types.ObjectId(restaurantRef),
+      tableRef: new mongoose.Types.ObjectId(config.tableRef),
+      restaurantRef: new mongoose.Types.ObjectId(config.restaurantRef),
       status: app.config.contentManagement.tableSession.active,
       endedAt: { $exists: false }
     };
 
     // Step 1: Ensure there is an active session (create if not)
-    let session = await TableSession.findOneAndUpdate(
+    let result = await TableSession.findOneAndUpdate(
       filter,
       { 
         $setOnInsert: {
@@ -41,24 +44,28 @@ module.exports = function (app) {
           status: filter.status,
         }
       },
-      { new: true, upsert: true }
+      { new: true, upsert: true, includeResultMetadata: true }
     );
+
+    let session = result.value;
+
+    const isNew = result.lastErrorObject.upserted;
 
     // Step 2: Try to increment main cart item if menuRef exists
     const incObj = {};
-    if (typeof cartItem.quantity === "number") incObj["cart.$[item].quantity"] = cartItem.quantity;
+    if (typeof config.cartItem.quantity === "number") incObj["cart.$[item].quantity"] = config.cartItem.quantity;
 
     if (Object.keys(incObj).length) {
       await TableSession.updateOne(
         { _id: session._id },
         { $inc: incObj },
-        { arrayFilters: [{ "item.menuRef": cartItem.menuRef }] }
+        { arrayFilters: [{ "item.menuRef": config.cartItem.menuRef }] }
       );
     }
 
     // Step 3: Handle subItems
-    if (cartItem.subItems?.length) {
-      for (const sub of cartItem.subItems) {
+    if (config.cartItem.subItems?.length) {
+      for (const sub of config.cartItem.subItems) {
         const subInc = {};
         if (typeof sub.quantity === "number") subInc["cart.$[item].subItems.$[sub].quantity"] = sub.quantity;
 
@@ -68,7 +75,7 @@ module.exports = function (app) {
             { $inc: subInc },
             {
               arrayFilters: [
-                { "item.menuRef": cartItem.menuRef },
+                { "item.menuRef": config.cartItem.menuRef },
                 { "sub.name": sub.name }
               ]
             }
@@ -77,7 +84,7 @@ module.exports = function (app) {
           // If subItem was not found, push it
           if (updated.matchedCount === 0) {
             await TableSession.updateOne(
-              { _id: session._id, "cart.menuRef": cartItem.menuRef },
+              { _id: session._id, "cart.menuRef": config.cartItem.menuRef },
               { $push: { "cart.$.subItems": sub } }
             );
           }
@@ -87,13 +94,13 @@ module.exports = function (app) {
 
     // Step 4: If main cart item does not exist, push it
     const cartExists = session.cart.some(
-      (c) => c.menuRef.toString() === cartItem.menuRef.toString()
+      (c) => c.menuRef.toString() === config.cartItem.menuRef.toString()
     );
 
     if (!cartExists) {
       await TableSession.updateOne(
         { _id: session._id },
-        { $push: { cart: cartItem } }
+        { $push: { cart: config.cartItem } }
       );
     }
 
@@ -119,7 +126,46 @@ module.exports = function (app) {
     }
 
     // Step 8: Return updated session
-    return Promise.resolve(updatedSession);
+    return Promise.resolve({
+      isNew
+    });
+  };
+
+  const createTableSessionFromOwner = async (config, userRef) => {
+    if (!config.tableRef) {
+      return Promise.resolve({});
+    }
+    if (userRef) {
+      config.createdBy = userRef._id;
+      config.addedByOwner = true;
+      config.restaurantRef = userRef.restaurantRef;
+    }
+    const filter = {
+      tableRef: new mongoose.Types.ObjectId(config.tableRef),
+      restaurantRef: new mongoose.Types.ObjectId(config.restaurantRef),
+      status: app.config.contentManagement.tableSession.active,
+      endedAt: { $exists: false }
+    };
+
+    // Step 1: Ensure there is an active session (create if not)
+    let session = await TableSession.findOneAndUpdate(
+      filter,
+      { 
+        $setOnInsert: {
+          tableRef: filter.tableRef,
+          restaurantRef: filter.restaurantRef,
+          status: filter.status,
+          createdBy: userRef._id,
+          addedByOwner: true,
+          restaurantRef: userRef.restaurantRef,
+          cart: config.cart
+        }
+      },
+      { new: true, upsert: true }
+    );
+
+    // Step 8: Return updated session
+    return Promise.resolve(session);
   };
 
   /**
@@ -153,7 +199,6 @@ module.exports = function (app) {
     };
     return TableSession.findOne(filter)
       .then(tableSessionDetails => {
-        console.log("tableSessionDetails", tableSessionDetails)
         if (!tableSessionDetails) {
           if (noError) {
             return Promise.resolve({
@@ -271,6 +316,7 @@ module.exports = function (app) {
 
   return {
     'create': createTableSession,
+    'createTableSessionFromOwner': createTableSessionFromOwner,
     'getByTableId': getByTableId,
     'updateStatusByOrderId': updateStatusByOrderId,
     'get': findTableSessionById,

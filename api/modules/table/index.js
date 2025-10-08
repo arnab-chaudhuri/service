@@ -29,7 +29,7 @@ module.exports = function (app) {
               tableId: element.tableId,
               restaurantRef: userRef.restaurantRef,
               _id: monId,
-              qrCodeUrl: `http://localhost:3000/diner/${restDetails.name.split(" ").join("-")}_${userRef.restaurantRef}_${monId}`,
+              qrCodeUrl: `https://immedine.com/diner/${restDetails.name.split(" ").join("-")}_${userRef.restaurantRef}_${monId}`,
               noOfSeats: element.noOfSeats
             }
           });
@@ -85,6 +85,20 @@ module.exports = function (app) {
       }) : editedTable.save());
   };
 
+  const markAsUnavailable = (tableId) => {
+    return Table.findOne({
+      _id: tableId
+    })
+      .then(table => {
+        if (table) {
+          table.status = app.config.contentManagement.table.inActive;
+          return table.save();
+        } else {
+          return Promise.resolve(null);
+        }
+      });
+  };
+
   /**
    * Fetches a list of inventories
    * @param  {Object} options  The options object
@@ -113,6 +127,7 @@ module.exports = function (app) {
     'get': findTableById,
     'edit': editTable,
     'list': getList,
-    'remove': removeTable
+    'remove': removeTable,
+    'markAsUnavailable': markAsUnavailable
   };
 };
