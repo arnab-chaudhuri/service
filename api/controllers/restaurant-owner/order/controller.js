@@ -42,12 +42,12 @@ module.exports = function (app) {
 
               order.updateBillDetails(output._id, output2);
 
-              // update orderRef in table session
-              output0.orderRef = output._id;
-              tableSession.edit(output0);
-
               if (req.body.tableRef) {
                 table.markAsUnavailable(req.body.tableRef);
+
+                // update orderRef in table session
+                output0.orderRef = output._id;
+                tableSession.edit(output0);
               }
 
               req.workflow.outcome.data = output;
