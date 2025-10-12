@@ -43,7 +43,7 @@ module.exports = function (app) {
               order.updateBillDetails(output._id, output2);
 
               if (req.body.tableRef) {
-                table.markAsUnavailable(req.body.tableRef);
+                table.markAsUnavailable(req.body.tableRef, output0._id);
 
                 // update orderRef in table session
                 output0.orderRef = output._id;
@@ -193,6 +193,8 @@ module.exports = function (app) {
    */
   const editOrder = (req, res, next) => {
 
+    const oldTableId = req.orderId.tableRef;
+
     if (req.body && Object.keys(req.body).length) {
       for (let item in req.body) {
         req.orderId[item] = req.body[item];
@@ -202,16 +204,21 @@ module.exports = function (app) {
     inventory.rollbackInventory(req.orderId._id, req.body.cart)
       .then(output1 => {
         order.edit(req.orderId, req.session.user)
-          .then(output => {
+          .then(async output => {
             bill.updateBillFromOrder(req.orderId.billRef, {
               subTotal: req.body.subTotal,
               total: req.body.total,
             });
 
-            if (req.body.tableRef && req.orderId.tableRef && req.body.tableRef.toString() !== req.orderId.tableRef.toString()) {
+            if (req.body.tableRef && (!oldTableId || (oldTableId && req.body.tableRef.toString() !== oldTableId.toString()))) {
+
+              req.body.orderRef = req.orderId._id;
               // close the earlier table session and create a new session for the new table
               tableSession.updateStatusByOrderId(req.orderId._id, req.orderId.restaurantRef);
-              tableSession.createTableSessionFromOwner(req.body, req.session.user);
+              const tableSessionRes = await tableSession.createTableSessionFromOwner(req.body, req.session.user);
+
+              table.markAsUnavailable(req.body.tableRef, tableSessionRes._id);
+
             }
 
             req.workflow.outcome.data = output;

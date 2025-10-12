@@ -37,7 +37,7 @@ module.exports = function (app) {
     // Step 1: Ensure there is an active session (create if not)
     let result = await TableSession.findOneAndUpdate(
       filter,
-      { 
+      {
         $setOnInsert: {
           tableRef: filter.tableRef,
           restaurantRef: filter.restaurantRef,
@@ -147,19 +147,25 @@ module.exports = function (app) {
       endedAt: { $exists: false }
     };
 
+    const obj = {
+      tableRef: filter.tableRef,
+      restaurantRef: filter.restaurantRef,
+      status: filter.status,
+      createdBy: userRef._id,
+      addedByOwner: true,
+      restaurantRef: userRef.restaurantRef,
+      cart: config.cart,
+    };
+
+    if (config.orderRef) {
+      obj.orderRef = config.orderRef;
+    }
+
     // Step 1: Ensure there is an active session (create if not)
     let session = await TableSession.findOneAndUpdate(
       filter,
-      { 
-        $setOnInsert: {
-          tableRef: filter.tableRef,
-          restaurantRef: filter.restaurantRef,
-          status: filter.status,
-          createdBy: userRef._id,
-          addedByOwner: true,
-          restaurantRef: userRef.restaurantRef,
-          cart: config.cart
-        }
+      {
+        $setOnInsert: obj
       },
       { new: true, upsert: true }
     );
@@ -237,6 +243,7 @@ module.exports = function (app) {
       status: app.config.contentManagement.tableSession.active,
       endedAt: { $exists: false }
     };
+
     return TableSession.findOne(filter)
       .then(tableSessionDetails => {
         if (tableSessionDetails) {

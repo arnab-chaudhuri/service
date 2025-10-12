@@ -10,6 +10,7 @@ module.exports = function(app) {
    * @type {Object}
    */
   const table = app.module.table;
+  const tableSession = app.module.tableSession;
 
   /**
    * Adds a table
@@ -60,7 +61,11 @@ module.exports = function(app) {
         },
         restaurantRef: req.session.user.restaurantRef
       },
-      sort: {}
+      sort: {},
+      populate: [{
+        path: 'currentSessionRef',
+        select: 'status orderRef'
+      }]
     };
 
     if (req.body.filters) {
@@ -89,6 +94,9 @@ module.exports = function(app) {
    * @return {Promise}       The Promise
    */
   const editTable = (req, res, next) => {
+
+    const oldStatus = req.tableId.status;
+
     if (req.body && Object.keys(req.body).length) {
       for (let prop in req.body) {
         req.tableId[prop] = req.body[prop];
@@ -96,6 +104,11 @@ module.exports = function(app) {
     }
     table.edit(req.tableId, req.session.user)
       .then(output => {
+        if (req.body.status === app.config.contentManagement.table.active &&
+          oldStatus !== req.body.status
+        ) {
+          tableSession.updateStatusByOrderId(req.body.orderRef, req.session.user.restaurantRef);
+        }
         req.workflow.outcome.data = output;
         req.workflow.emit('response');
       })

@@ -20,6 +20,10 @@ module.exports = function (app, mongoose) {
     noOfSeats: {
       type: Number,
       default: 0
+    },
+    currentSessionRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "TableSession"
     }
   }, {
     versionKey: false,

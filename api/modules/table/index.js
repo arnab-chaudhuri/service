@@ -85,13 +85,14 @@ module.exports = function (app) {
       }) : editedTable.save());
   };
 
-  const markAsUnavailable = (tableId) => {
+  const markAsUnavailable = (tableId, tableSessionId) => {
     return Table.findOne({
       _id: tableId
     })
       .then(table => {
         if (table) {
           table.status = app.config.contentManagement.table.inActive;
+          table.currentSessionRef = tableSessionId;
           return table.save();
         } else {
           return Promise.resolve(null);
