@@ -205,6 +205,7 @@ module.exports = function (app) {
             bill.updateBillFromOrder(req.orderId.billRef, {
               subTotal: req.body.subTotal,
               total: req.body.total,
+              gstDetails: req.body.gstDetails
             });
 
             if (req.body.tableRef && (!oldTableId || (oldTableId && req.body.tableRef.toString() !== oldTableId.toString()))) {
