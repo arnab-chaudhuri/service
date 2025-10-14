@@ -70,7 +70,7 @@ module.exports = function (app) {
    */
   const editOrder = function (editedOrder, userRef) {
 
-    if (editedOrder.restaurantRef.toString() !== userRef.restaurantRef.toString()) {
+    if (userRef && editedOrder.restaurantRef.toString() !== userRef.restaurantRef.toString()) {
       return Promise.reject({
         'errCode': 'ORDER_NOT_FOUND'
       });

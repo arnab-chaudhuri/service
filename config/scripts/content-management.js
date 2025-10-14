@@ -53,7 +53,8 @@ module.exports = {
     pending: 1,
     paid: 2,
     refund: 3,
-    failed: 4
+    failed: 4,
+    cancelled: 5
   },
   paymentMode: {
     offline: 1,

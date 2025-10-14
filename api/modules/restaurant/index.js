@@ -80,6 +80,19 @@ module.exports = function (app) {
       });
   };
 
+  const updateGstDetails = (restaurantId, data) => {
+    return Restaurant.findById(restaurantId)
+      .then(restaurant => {
+        if (!restaurant) {
+          return Promise.reject({
+            'errCode': 'RESTAURANT_NOT_FOUND'
+          });
+        }
+        restaurant.gstDetails = data;
+        return restaurant.save();
+      });
+  };
+
 
   return {
     'create': createRestaurant,
@@ -87,6 +100,7 @@ module.exports = function (app) {
     'edit': editRestaurant,
     'list': getList,
     'remove': removeRestaurant,
-    'set': editMyRestaurant
+    'set': editMyRestaurant,
+    'updateGstDetails': updateGstDetails
   };
 };

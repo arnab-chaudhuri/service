@@ -33,6 +33,11 @@ module.exports = function (app, options) {
    * @type {Object}
    */
   const commonMiddlewares = require('../../common/middleware')(app);
+
+  router.put('/update-gst-details', [
+    options.validateBody(schemaValidator.updateGstDetails),
+    controllers.updateGstDetails
+  ]);
   /**
    * Fetch/Edit restaurant
    */

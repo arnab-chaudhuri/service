@@ -46,6 +46,20 @@ module.exports = function(app, mongoose) {
         name: String,
         price: Number
       }]
+    },
+    gstDetails: {
+      gstEnabled: {
+        type: Boolean,
+        default: false
+      },
+      cgst: {
+        type: Number,
+        default: 2.5
+      },
+      sgst: {
+        type: Number,
+        default: 2.5
+      },
     }
   }, {
     versionKey: false,

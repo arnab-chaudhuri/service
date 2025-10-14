@@ -89,6 +89,7 @@ module.exports = function (/*app*/) {
     // ORDER
     ORDER_ALREADY_EXISTS: 1650,
     ORDER_NOT_FOUND: 1651,
+    ORDER_CANNOT_BE_CANCELLED: 1652,
 
     // INVENTORY
     INVENTORY_ALREADY_EXISTS: 1700,

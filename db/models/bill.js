@@ -67,7 +67,7 @@ module.exports = function (app, mongoose) {
       otherMode: {
         type: String
       },
-      // pending: 1, paid: 2, refund: 3, failed: 4
+      // pending: 1, paid: 2, refund: 3, failed: 4, cancelled: 5
       status: {
         type: Number,
         default: app.config.contentManagement.paymentStatus.pending

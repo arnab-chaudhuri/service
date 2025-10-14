@@ -24,41 +24,41 @@ module.exports = function (app) {
    */
   const addOrder = (req, res, next) => {
     tableSession.createTableSessionFromOwner(req.body, req.session.user)
-    .then(output0 => {
-      inventory.updateInventoryCount(req.body.cart)
-      .then(output1 => {
-        order.create(req.body, req.session.user)
-          .then(output => {
-            bill.create({
-              billNo: output.orderId,
-              orderRef: output._id,
-              subTotal: req.body.subTotal,
-              total: req.body.total,
-              gstDetails: req.body.gstDetails,
-              paymentDetails: req.body.paymentDetails
-            }, req.session.user)
-            .then(output2 => {
-              output.billDetails = output2;
+      .then(output0 => {
+        inventory.updateInventoryCount(req.body.cart)
+          .then(output1 => {
+            order.create(req.body, req.session.user)
+              .then(output => {
+                bill.create({
+                  billNo: output.orderId,
+                  orderRef: output._id,
+                  subTotal: req.body.subTotal,
+                  total: req.body.total,
+                  gstDetails: req.body.gstDetails,
+                  paymentDetails: req.body.paymentDetails
+                }, req.session.user)
+                  .then(output2 => {
+                    output.billDetails = output2;
 
-              order.updateBillDetails(output._id, output2);
+                    order.updateBillDetails(output._id, output2);
 
-              if (req.body.tableRef) {
-                table.markAsUnavailable(req.body.tableRef, output0._id);
+                    if (req.body.tableRef) {
+                      table.markAsUnavailable(req.body.tableRef, output0._id);
 
-                // update orderRef in table session
-                output0.orderRef = output._id;
-                tableSession.edit(output0);
-              }
+                      // update orderRef in table session
+                      output0.orderRef = output._id;
+                      tableSession.edit(output0);
+                    }
 
-              req.workflow.outcome.data = output;
-              req.workflow.emit('response');
-            }).catch(next);
+                    req.workflow.outcome.data = output;
+                    req.workflow.emit('response');
+                  }).catch(next);
+              })
+              .catch(next);
           })
           .catch(next);
       })
       .catch(next);
-    })
-    .catch(next);
   };
 
   const acceptOrder = (req, res, next) => {
@@ -112,9 +112,6 @@ module.exports = function (app) {
     if (req.body.filters) {
       let { paymentStatus, orderStatus, startDate, endDate, search } = req.body.filters;
       let andFilters = [{
-        status: {
-          $ne: app.config.contentManagement.order.deleted
-        },
         restaurantRef: req.session.user.restaurantRef
       }];
 
@@ -123,11 +120,11 @@ module.exports = function (app) {
       }
 
       if (paymentStatus) {
-        andFilters.push({ "billRef.paymentDetails.status": Number(paymentStatus)});
+        andFilters.push({ "billRef.paymentDetails.status": Number(paymentStatus) });
       }
 
       if (orderStatus) {
-        andFilters.push({ "status": Number(orderStatus)});
+        andFilters.push({ "status": Number(orderStatus) });
       }
 
       if (startDate && endDate) {
@@ -229,6 +226,44 @@ module.exports = function (app) {
       .catch(next);
   };
 
+  const cancelOrder = (req, res, next) => {
+
+    const possibleCancelStatus = [
+      app.config.contentManagement.order.active,
+      app.config.contentManagement.order.cooking,
+      app.config.contentManagement.order.pending
+    ];
+
+    if (!possibleCancelStatus.includes(req.orderId.status)) {
+      return next({ 'errCode': 'ORDER_CANNOT_BE_CANCELLED' });
+    }
+
+    if (!req.body.noRevertBack) {
+      inventory.rollbackInventory(req.orderId._id, req.body.cart, true);
+    }
+
+    req.orderId.status = app.config.contentManagement.order.deleted;
+    order.edit(req.orderId, req.session.user)
+      .then(async output => {
+        bill.updateBillFromOrder(req.orderId.billRef, {
+          paymentDetails: {
+            status: app.config.contentManagement.paymentStatus.cancelled
+          }
+        });
+
+        if (req.orderId.tableRef) {
+
+          // close the earlier table session
+          tableSession.updateStatusByOrderId(req.orderId._id, req.orderId.restaurantRef);
+
+        }
+
+        req.workflow.outcome.data = output;
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+
   const changeStatus = (req, res, next) => {
     req.orderId.status = req.body.status;
 
@@ -263,7 +298,8 @@ module.exports = function (app) {
     list: getOrderList,
     delete: deleteOrder,
     changeStatus: changeStatus,
-    acceptOrder: acceptOrder
+    acceptOrder: acceptOrder,
+    cancelOrder: cancelOrder
   };
 
 };

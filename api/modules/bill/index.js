@@ -88,7 +88,10 @@ module.exports = function (app) {
         if (bill) {
           if (billDetails && Object.keys(billDetails).length) {
             for (let item in billDetails) {
-              bill[item] = billDetails[item];
+              bill[item] = typeof billDetails[item] !== "object" || Array.isArray(billDetails[item]) ? billDetails[item] : {
+                ...bill[item],
+                ...billDetails[item]
+              };
             }
           }
           return bill.save();

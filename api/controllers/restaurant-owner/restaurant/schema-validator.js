@@ -26,7 +26,22 @@ module.exports = function (app) {
     }
   };
 
+  const updateGstDetails = {
+    gstEnabled: {
+      type: 'boolean',
+      allowEmpty: false,
+      required: true
+    },
+    cgst: {
+      type: 'number'
+    },
+    sgst: {
+      type: 'number'
+    }
+  }
+
   return {
     edit: edit,
+    updateGstDetails: updateGstDetails
   };
 };
