@@ -149,7 +149,6 @@ module.exports = function (app) {
 
     const obj = {
       tableRef: filter.tableRef,
-      restaurantRef: filter.restaurantRef,
       status: filter.status,
       createdBy: userRef._id,
       addedByOwner: true,
@@ -174,6 +173,47 @@ module.exports = function (app) {
     return Promise.resolve(session);
   };
 
+  const createTableSessionFromUser = async (config, userRef) => {
+    if (!config.tableRef) {
+      return Promise.resolve({});
+    }
+    if (userRef) {
+      config.createdBy = userRef._id;
+    }
+    const filter = {
+      tableRef: new mongoose.Types.ObjectId(config.tableRef),
+      restaurantRef: new mongoose.Types.ObjectId(config.restaurantRef),
+      status: app.config.contentManagement.tableSession.active,
+      endedAt: { $exists: false }
+    };
+
+    const obj = {
+      tableRef: filter.tableRef,
+      restaurantRef: filter.restaurantRef,
+      status: filter.status,
+      cart: config.cart,
+    };
+
+    if (userRef) {
+      obj.createdBy = userRef._id;
+    }
+
+    if (config.orderRef) {
+      obj.orderRef = config.orderRef;
+    }
+
+    // Step 1: Ensure there is an active session (create if not)
+    let session = await TableSession.findOneAndUpdate(
+      filter,
+      {
+        $setOnInsert: obj
+      },
+      { new: true, upsert: true }
+    );
+
+    // Step 8: Return updated session
+    return Promise.resolve(session);
+  };
   /**
    * Fetches a tableSession by Id
    * @param  {String} tableSessionId  The tableSession id
@@ -197,6 +237,11 @@ module.exports = function (app) {
   };
 
   const getByTableId = function ({ tableRef, restaurantRef, noError }) {
+
+    if (!tableRef) {
+      return Promise.resolve({});
+    }
+
     const filter = {
       tableRef: new mongoose.Types.ObjectId(tableRef),
       restaurantRef: new mongoose.Types.ObjectId(restaurantRef),
@@ -329,6 +374,7 @@ module.exports = function (app) {
     'get': findTableSessionById,
     'edit': editTableSession,
     'list': getList,
-    'updateStatus': updateStatus
+    'updateStatus': updateStatus,
+    'createTableSessionFromUser': createTableSessionFromUser
   };
 };

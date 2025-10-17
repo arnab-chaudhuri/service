@@ -229,13 +229,11 @@ module.exports = function (app) {
 
   const cancelOrder = (req, res, next) => {
 
-    const possibleCancelStatus = [
-      app.config.contentManagement.order.active,
-      app.config.contentManagement.order.cooking,
-      app.config.contentManagement.order.pending
+    const notPossibleCancelStatus = [
+      app.config.contentManagement.order.deleted
     ];
 
-    if (!possibleCancelStatus.includes(req.orderId.status)) {
+    if (notPossibleCancelStatus.includes(req.orderId.status)) {
       return next({ 'errCode': 'ORDER_CANNOT_BE_CANCELLED' });
     }
 

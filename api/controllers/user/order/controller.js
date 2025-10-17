@@ -13,6 +13,7 @@ module.exports = function (app) {
   const order = app.module.order;
   const bill = app.module.bill;
   const inventory = app.module.inventory;
+  const restaurant = app.module.restaurant;
   const tableSession = app.module.tableSession;
 
   /**
@@ -24,14 +25,14 @@ module.exports = function (app) {
    */
   const addOrder = (req, res, next) => {
     let subTotal = 0;
-    let total = 0; 
+    let total = 0;
 
     // get active table session
-    tableSession.getByTableId(req.body)
+    tableSession.createTableSessionFromUser(req.body)
       .then(output1 => {
 
         // calculate total
-        output1.cart.forEach(element => {
+        req.body.cart.forEach(element => {
           subTotal += (element.price * element.quantity);
           if (element.subItems && element.subItems.length) {
             element.subItems.forEach(element1 => {
@@ -44,36 +45,50 @@ module.exports = function (app) {
 
         // create order
         order.create({
-          tableRef: req.body.tableRef,
-          restaurantRef: req.body.restaurantRef,
-          cart: output1.cart,
+          ...req.body,
           subTotal,
           total,
           status: app.config.contentManagement.order.pending
         })
-          .then(output => {
-
-            // create bill
-            bill.create({
+          .then(async output => {
+            const restDetails = await restaurant.get(req.body.restaurantRef);
+            
+            const reqBody = {
               billNo: output.orderId,
               orderRef: output._id,
               subTotal,
               total,
-              restaurantRef: req.body.restaurantRef
-            })
-            .then(output2 => {
+              restaurantRef: req.body.restaurantRef,
+            };
+            if (restDetails.gstDetails.gstEnabled) {
+              const cgst = Number(((subTotal*(restDetails.gstDetails.cgst || 0))/100).toFixed());
+              const sgst = Number(((subTotal*(restDetails.gstDetails.sgst || 0))/100).toFixed());
+              reqBody.gstDetails = {
+                cgst,
+                sgst
+              };
+              reqBody.total += cgst + sgst;
+            }
+            // create bill
+            bill.create(reqBody)
+              .then(output2 => {
 
-              // update bill details in order
-              output.billDetails = output2;
-              order.updateBillDetails(output._id, output2);
+                // update bill details in order
+                output.billDetails = output2;
+                order.updateBillDetails(output._id, output2);
 
-              // update orderRef in table session
-              output1.orderRef = output._id;
-              tableSession.edit(output1);
+                if (req.body.tableRef) {
+                  table.markAsUnavailable(req.body.tableRef, output1._id);
 
-              req.workflow.outcome.data = output;
-              req.workflow.emit('response');
-            }).catch(next);
+                  // update orderRef in table session
+                  output1.orderRef = output._id;
+                  tableSession.edit(output1);
+                }
+
+
+                req.workflow.outcome.data = output;
+                req.workflow.emit('response');
+              }).catch(next);
           })
           .catch(next);
       })
