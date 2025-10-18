@@ -65,7 +65,9 @@ module.exports = function (app) {
               const sgst = Number(((subTotal*(restDetails.gstDetails.sgst || 0))/100).toFixed());
               reqBody.gstDetails = {
                 cgst,
-                sgst
+                sgst,
+                cgstInPercentage: restDetails.gstDetails.cgst,
+                sgstInPercentage: restDetails.gstDetails.sgst,
               };
               reqBody.total += cgst + sgst;
             }

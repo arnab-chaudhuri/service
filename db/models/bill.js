@@ -53,6 +53,14 @@ module.exports = function (app, mongoose) {
       sgst: {
         type: Number,
         default: 0
+      },
+      cgstInPercentage: {
+        type: Number,
+        default: 0
+      },
+      sgstInPercentage: {
+        type: Number,
+        default: 0
       }
     },
     paymentDetails: {
