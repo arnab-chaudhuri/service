@@ -52,6 +52,7 @@ const controllers = {
   bill: require("./bill/route"),
   inventory: require("./inventory/route"),
   table: require("./table/route"),
+  tableSession: require("./table-session/route"),
   /**
    * User Route
    */
@@ -149,6 +150,7 @@ module.exports = function(app) {
   privateRouter.use('/bill', controllers.bill(app, options));
   privateRouter.use('/inventory', controllers.inventory(app, options));
   privateRouter.use('/table', controllers.table(app, options));
+  privateRouter.use('/table-session', controllers.tableSession(app, options));
 
   // /**
   //  * Admin User Route

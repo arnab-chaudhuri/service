@@ -147,6 +147,14 @@ module.exports = function (app) {
       endedAt: { $exists: false }
     };
 
+    const tabSesRes = await TableSession.findOne(filter);
+
+    if (tabSesRes && tabSesRes.orderRef) {
+      return Promise.reject({
+        'errCode': 'TABLE_SESSION_NOT_FOUND'
+      });
+    }
+
     const obj = {
       tableRef: filter.tableRef,
       status: filter.status,
@@ -186,6 +194,14 @@ module.exports = function (app) {
       status: app.config.contentManagement.tableSession.active,
       endedAt: { $exists: false }
     };
+
+    const tabSesRes = await TableSession.findOne(filter);
+
+    if (tabSesRes && tabSesRes.orderRef) {
+      return Promise.reject({
+        'errCode': 'TABLE_SESSION_NOT_FOUND'
+      });
+    }
 
     const obj = {
       tableRef: filter.tableRef,

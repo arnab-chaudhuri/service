@@ -15,6 +15,7 @@ module.exports = function (app) {
   const inventory = app.module.inventory;
   const restaurant = app.module.restaurant;
   const tableSession = app.module.tableSession;
+  const table = app.module.table;
 
   /**
    * Adds a order
