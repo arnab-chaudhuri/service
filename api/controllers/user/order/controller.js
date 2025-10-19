@@ -53,7 +53,7 @@ module.exports = function (app) {
         })
           .then(async output => {
             const restDetails = await restaurant.get(req.body.restaurantRef);
-            
+
             const reqBody = {
               billNo: output.orderId,
               orderRef: output._id,
@@ -62,8 +62,8 @@ module.exports = function (app) {
               restaurantRef: req.body.restaurantRef,
             };
             if (restDetails.gstDetails.gstEnabled) {
-              const cgst = Number(((subTotal*(restDetails.gstDetails.cgst || 0))/100).toFixed());
-              const sgst = Number(((subTotal*(restDetails.gstDetails.sgst || 0))/100).toFixed());
+              const cgst = Number(((subTotal * (restDetails.gstDetails.cgst || 0)) / 100).toFixed());
+              const sgst = Number(((subTotal * (restDetails.gstDetails.sgst || 0)) / 100).toFixed());
               reqBody.gstDetails = {
                 cgst,
                 sgst,
@@ -145,10 +145,31 @@ module.exports = function (app) {
       .catch(next);
   };
 
+  const stream = (req, res, next) => {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    const sendEvent = (data) => {
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
+
+    sendEvent({ message: "Connected to SSE" });
+
+    const interval = setInterval(() => {
+      sendEvent({ time: new Date().toISOString() });
+    }, 2000);
+
+    req.on("close", () => {
+      clearInterval(interval);
+    });
+  };
+
   return {
     add: addOrder,
     get: getOrder,
-    edit: editOrder
+    edit: editOrder,
+    stream: stream
   };
 
 };

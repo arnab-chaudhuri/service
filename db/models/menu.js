@@ -78,6 +78,10 @@ module.exports = function (app, mongoose) {
       inventoryRef: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Inventory'
+      },
+      showInApp: {
+        type: Boolean,
+        default: true
       }
     }],
     isAvailable: {
