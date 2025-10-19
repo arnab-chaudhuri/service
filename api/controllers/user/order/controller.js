@@ -145,31 +145,10 @@ module.exports = function (app) {
       .catch(next);
   };
 
-  const stream = (req, res, next) => {
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Connection", "keep-alive");
-
-    const sendEvent = (data) => {
-      res.write(`data: ${JSON.stringify(data)}\n\n`);
-    };
-
-    sendEvent({ message: "Connected to SSE" });
-
-    const interval = setInterval(() => {
-      sendEvent({ time: new Date().toISOString() });
-    }, 2000);
-
-    req.on("close", () => {
-      clearInterval(interval);
-    });
-  };
-
   return {
     add: addOrder,
     get: getOrder,
-    edit: editOrder,
-    stream: stream
+    edit: editOrder
   };
 
 };

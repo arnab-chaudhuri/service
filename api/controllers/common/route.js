@@ -22,7 +22,7 @@ module.exports = function (app) {
 
 
   router.get('/global-config', controllers.getGlobalConfig);
-  router.get('/stream', controllers.stream);
+  router.get('/order-stream', controllers.orderStream);
 
   router.get('/error-codes', controllers.getErrorCodes);
 

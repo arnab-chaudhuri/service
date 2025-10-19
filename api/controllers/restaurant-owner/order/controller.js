@@ -14,6 +14,7 @@ module.exports = function (app) {
   const inventory = app.module.inventory;
   const tableSession = app.module.tableSession;
   const table = app.module.table;
+  const sse = app.module.sse;
 
   /**
    * Adds a order
@@ -67,6 +68,11 @@ module.exports = function (app) {
       .then(output1 => {
         order.edit(req.orderId, req.session.user)
           .then(output => {
+            sse.broadcastOrderUpdate({
+              orderId: req.orderId._id,
+              restaurantRef: req.session.user.restaurantRef,
+              status: req.orderId.status
+            });
             req.workflow.outcome.data = output;
             req.workflow.emit('response');
           })
@@ -268,6 +274,11 @@ module.exports = function (app) {
 
     order.edit(req.orderId, req.session.user)
       .then(output => {
+        sse.broadcastOrderUpdate({
+          orderId: req.orderId._id.toString(),
+          restaurantRef: req.session.user.restaurantRef.toString(),
+          status: req.orderId.status
+        });
         req.workflow.outcome.data = output;
         req.workflow.emit('response');
       })

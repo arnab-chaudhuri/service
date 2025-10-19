@@ -3,6 +3,7 @@
 module.exports = function (app) {
   const globalConfig = app.module.globalConfig;
   const contactUs = app.module.contactUs;
+  const sse = app.module.sse;
 
   const getGlobalConfig = function (req, res, next) {
     // jshint ignore:line
@@ -146,24 +147,18 @@ module.exports = function (app) {
     //   .catch(next);
   };
 
-  const stream = (req, res, next) => {
+  const orderStream = (req, res) => {
+    const restaurantRef = req.query.restaurantRef; // 👈 Owner passes this in query param
+
+    if (!restaurantRef) {
+      return res.status(400).json({ error: "restaurantRef is required" });
+    }
+
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
 
-    const sendEvent = (data) => {
-      res.write(`data: ${JSON.stringify(data)}\n\n`);
-    };
-
-    sendEvent({ message: "Connected to SSE" });
-
-    const interval = setInterval(() => {
-      sendEvent({ time: new Date().toISOString() });
-    }, 2000);
-
-    req.on("close", () => {
-      clearInterval(interval);
-    });
+    sse.addClient(restaurantRef, res);
   };
 
   return {
@@ -172,6 +167,6 @@ module.exports = function (app) {
     submitContactUs: submitContactUs,
     getMasterData: getMasterData,
     triggerEmail: triggerEmail,
-    stream: stream
+    orderStream: orderStream
   };
 };

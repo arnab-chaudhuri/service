@@ -43,10 +43,6 @@ module.exports = function (app, options) {
     controllers.add
   ]);
 
-  router.get('/stream', [
-    controllers.stream
-  ]);
-
   /**
    * Fetches a order, edits a order and removes a order
    */
