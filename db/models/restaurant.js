@@ -42,6 +42,14 @@ module.exports = function(app, mongoose) {
         type: Number,
         default: 0
       },
+      menuEnabled: {
+        type: Boolean,
+        default: true
+      },
+      orderEnabled: {
+        type: Boolean,
+        default: false
+      },
       parcels: [{
         name: String,
         price: Number

@@ -20,6 +20,7 @@ module.exports = function(app) {
   const inventory = require('./inventory')(app);
   const table = require('./table')(app);
   const sse = require('./sse')(app);
+  const feedback = require('./feedback')(app);
   const tableSession = require('./tableSession')(app);
   const imageByAI = require('./imageByAI')(app);
   const cron = require('./cron')(app)();
@@ -46,6 +47,7 @@ module.exports = function(app) {
     order,
     bill,
     tableSession,
-    sse
+    sse,
+    feedback
   };
 };

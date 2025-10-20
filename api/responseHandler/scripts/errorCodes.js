@@ -103,5 +103,8 @@ module.exports = function (/*app*/) {
 
     TABLE_SESSION_NOT_FOUND: 1850,
 
+    FEEDBACK_NOT_FOUND: 1900,
+
+
   };
 };
