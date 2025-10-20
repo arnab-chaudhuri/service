@@ -69,9 +69,10 @@ module.exports = function (app) {
         order.edit(req.orderId, req.session.user)
           .then(output => {
             sse.broadcastOrderUpdate({
-              orderId: req.orderId._id,
-              restaurantRef: req.session.user.restaurantRef,
-              status: req.orderId.status
+              orderId: req.orderId._id.toString(),
+              restaurantRef: req.session.user.restaurantRef.toString(),
+              status: req.orderId.status,
+              type: "ACCEPT_ORDER"
             });
             req.workflow.outcome.data = output;
             req.workflow.emit('response');
@@ -277,7 +278,8 @@ module.exports = function (app) {
         sse.broadcastOrderUpdate({
           orderId: req.orderId._id.toString(),
           restaurantRef: req.session.user.restaurantRef.toString(),
-          status: req.orderId.status
+          status: req.orderId.status,
+          type: "CHANGE_ORDER_STATUS"
         });
         req.workflow.outcome.data = output;
         req.workflow.emit('response');
