@@ -51,6 +51,7 @@ const controllers = {
   order: require("./order/route"),
   bill: require("./bill/route"),
   inventory: require("./inventory/route"),
+  feedback: require("./feedback/route"),
   table: require("./table/route"),
   tableSession: require("./table-session/route"),
   /**
@@ -149,6 +150,7 @@ module.exports = function(app) {
   privateRouter.use('/order', controllers.order(app, options));
   privateRouter.use('/bill', controllers.bill(app, options));
   privateRouter.use('/inventory', controllers.inventory(app, options));
+  privateRouter.use('/feedback', controllers.feedback(app, options));
   privateRouter.use('/table', controllers.table(app, options));
   privateRouter.use('/table-session', controllers.tableSession(app, options));
 

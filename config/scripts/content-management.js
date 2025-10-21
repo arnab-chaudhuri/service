@@ -24,6 +24,10 @@ module.exports = {
     active: 1,
     deleted: 2
   },
+  feedback: {
+    active: 1,
+    deleted: 2
+  },
   faq: {
     active: 1,
     deleted: 2
