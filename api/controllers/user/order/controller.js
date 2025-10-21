@@ -16,6 +16,7 @@ module.exports = function (app) {
   const restaurant = app.module.restaurant;
   const tableSession = app.module.tableSession;
   const table = app.module.table;
+  const sse = app.module.sse;
 
   /**
    * Adds a order
@@ -87,7 +88,10 @@ module.exports = function (app) {
                   output1.orderRef = output._id;
                   tableSession.edit(output1);
                 }
-
+                sse.broadcastOrderUpdate({
+                  restaurantRef: req.body.restaurantRef,
+                  type: "NEW_ORDER"
+                });
 
                 req.workflow.outcome.data = output;
                 req.workflow.emit('response');
