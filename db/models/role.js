@@ -6,6 +6,14 @@ module.exports = function (app, mongoose /*, plugins*/) {
       type: String,
       required: true
     },
+    restaurantRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Restaurant'
+    },
+    status: {
+      type: Number,
+      default: app.config.contentManagement.role.active
+    },
     'permissions': [{
       'moduleKey': {
         'type': String,
@@ -17,7 +25,7 @@ module.exports = function (app, mongoose /*, plugins*/) {
       },
       'role': {
         'type': Number,
-        'required': true
+        default: app.config.adminRole.role.all
       }
     }]
   }, {
@@ -32,13 +40,14 @@ module.exports = function (app, mongoose /*, plugins*/) {
    * @param  {Array} permissions  array of permissions
    * @return {Promise}            
    */
-  roleSchema.statics.createRole = function (name, permissions) {
-    return this.exist(name)
+  roleSchema.statics.createRole = function ({name, permissions, restaurantRef}) {
+    return this.exist(name, restaurantRef)
       .then((doc) => doc ? Promise.reject({
         'errCode': 'ROLE_ALREADY_EXISTS'
       }) : (new this({
         name: name,
         permissions: permissions,
+        restaurantRef: restaurantRef
       })).save());
 
   };
@@ -47,9 +56,10 @@ module.exports = function (app, mongoose /*, plugins*/) {
    * @param  {String} name name of the role
    * @return {Promise}
    */
-  roleSchema.statics.exist = function (name) {
+  roleSchema.statics.exist = function (name, restaurantRef) {
     return this.countDocuments({
-      name: name
+      name: name,
+      restaurantRef: restaurantRef
     }).exec();
   };
 

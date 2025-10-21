@@ -55,7 +55,7 @@ module.exports = function(app) {
     };
 
     if (req.body.filters) {
-      let { feedbackId, status } = req.body.filters;
+      let { status } = req.body.filters;
       
       if (status) {
         query.filters.status = status;

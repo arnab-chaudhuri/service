@@ -19,6 +19,7 @@ module.exports = function(app) {
    * @return {Promise}       The Promise
    */
   const addRole = (req, res, next) => {
+    req.body.restaurantRef = req.session.user.restaurantRef;
     role.create(req.body)
       .then(output => {
         req.workflow.outcome.data = output;
@@ -54,7 +55,10 @@ module.exports = function(app) {
     let query = {
       skip: Number(req.query.skip) || app.config.page.defaultSkip,
       limit: Number(req.query.limit) || app.config.page.defaultLimit,
-      filters: {},
+      filters: {
+        status: app.config.contentManagement.role.active,
+        restaurantRef: req.session.user.restaurantRef
+      },
       sort: {}
     };
 
@@ -92,6 +96,7 @@ module.exports = function(app) {
   const editRole = (req, res, next) => {
     req.roleId.name = req.body.name;
     req.roleId.permissions = req.body.permissions;
+
     role.edit(req.roleId)
       .then(output => {
         req.workflow.outcome.data = output;
@@ -108,8 +113,10 @@ module.exports = function(app) {
    * @return {Promise}       The Promise
    */
   const deleteRole = (req, res, next) => {
-    role.remove(req.roleId)
+    req.roleId.status = app.config.contentManagement.role.deleted;
+    role.edit(req.roleId)
       .then(output => {
+        req.workflow.outcome.data = output;
         req.workflow.emit('response');
       })
       .catch(next);

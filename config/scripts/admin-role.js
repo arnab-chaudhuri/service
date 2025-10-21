@@ -3,21 +3,22 @@
 module.exports = {
   modules: [
     "dashboard",
-    "city",
-    "story",
-    "route",
-    "advertisement",
-    "role",
-    "subAdmin",
-    "language",
-    "category",
-    "faq",
-    "globalConfig",
-    "notifications"
+    "orders",
+    "bills",
+    "inventory",
+    "menu",
+    "restaurant",
+    "table",
+    "feedbacks",
+    "roles",
+    "members",
+    "printQR"
   ],
   role: {
     read: 1,
     edit: 2,
     delete: 3,
+    all: 4
   },
 };
+

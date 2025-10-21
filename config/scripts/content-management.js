@@ -78,4 +78,9 @@ module.exports = {
     active: 1,
     closed: 2
   },
+  role: {
+    active: 1,
+    inActive: 2,
+    deleted: 3
+  },
 };

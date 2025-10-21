@@ -23,12 +23,12 @@ module.exports = function(app) {
             required: true,
             enum: app.config.adminRole.modules
           },
-          'role': {
-            type: 'number',
-            allowEmpty: false,
-            required: true,
-            enum: Object.keys(app.config.adminRole.role).map(each => app.config.adminRole.role[each])
-          }
+          // 'role': {
+          //   type: 'number',
+          //   allowEmpty: false,
+          //   required: true,
+          //   enum: Object.keys(app.config.adminRole.role).map(each => app.config.adminRole.role[each])
+          // }
         }
       }
     }

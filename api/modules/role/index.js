@@ -25,7 +25,7 @@ module.exports = function (app) {
    * @return {Promise}        The promise
    */
   const createRole = function (config) {
-    return Role.createRole(config.name, config.permissions);
+    return Role.createRole(config);
   };
 
   /**
@@ -45,6 +45,7 @@ module.exports = function (app) {
   const editRole = function (editedRole) {
     return Role.countDocuments({
       name: editedRole.name,
+      restaurantRef: editedRole.restaurantRef,
       _id: {
         $ne: editedRole._id
       }

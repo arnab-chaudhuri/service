@@ -40,10 +40,6 @@ module.exports = function (app, options) {
    */
   router.post('/add', [
     options.validateBody(schemaValidator.add),
-    commonMiddlewares.checkAdminRoleAccess([{
-      'moduleName': 'admin',
-      'role': 2
-    }]),
     controllers.add
   ]);
 
@@ -53,10 +49,6 @@ module.exports = function (app, options) {
   router.post('/list', [
     options.validateQuery(schemaValidator.listQuery),
     options.validateBody(schemaValidator.list),
-    commonMiddlewares.checkAdminRoleAccess([{
-      'moduleName': 'admin',
-      'role': 1
-    }]),
     controllers.list
   ]);
 
@@ -69,25 +61,13 @@ module.exports = function (app, options) {
       commonMiddlewares.validateId('Admin', 'adminUserId')
     ])
     .get([
-      commonMiddlewares.checkAdminRoleAccess([{
-        'moduleName': 'admin',
-        'role': 1
-      }]),
       controllers.get
     ])
     .put([
-      commonMiddlewares.checkAdminRoleAccess([{
-        'moduleName': 'admin',
-        'role': 2
-      }]),
       options.validateBody(schemaValidator.edit),
       controllers.edit
     ])
     .delete([
-      commonMiddlewares.checkAdminRoleAccess([{
-        'moduleName': 'admin',
-        'role': 3
-      }]),
       controllers.delete
     ]);
 
