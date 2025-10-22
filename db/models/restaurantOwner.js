@@ -255,6 +255,7 @@ module.exports = function (app, mongoose /*, plugins*/) {
       },
     })
       .populate('restaurantRef')
+      .populate('roleInfo.roleId')
       .exec()
       .then((restaurantOwnerDoc) =>
         restaurantOwnerDoc
@@ -426,6 +427,7 @@ module.exports = function (app, mongoose /*, plugins*/) {
   restaurantOwnerSchema.statics.socialLoginValidate = async function (socialId, socialType, fullName, email) {
     let userDoc = await this.findOne({ 'personalInfo.email': email })
     .populate('restaurantRef')
+    .populate('roleInfo.roleId')
     .exec();
 
     if (userDoc) {
