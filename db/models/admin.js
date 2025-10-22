@@ -118,10 +118,6 @@ module.exports = function (app, mongoose /*, plugins*/) {
           type: Number,
         },
       },
-      restaurantRef: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Restaurant'
-      },
       /**
        * Session Information
        */

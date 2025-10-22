@@ -59,7 +59,10 @@ module.exports = function (app, mongoose /*, plugins*/) {
   roleSchema.statics.exist = function (name, restaurantRef) {
     return this.countDocuments({
       name: name,
-      restaurantRef: restaurantRef
+      restaurantRef: restaurantRef,
+      status: {
+        '$ne': app.config.contentManagement.role.deleted
+      }
     }).exec();
   };
 

@@ -30,6 +30,7 @@ const controllers = {
    */
   globalConfig: require('./global-config/route'),
   restaurant: require('./restaurant/route'),
+  restaurantMember: require('./restaurant-member/route'),
 
   // /**
   //  * Admin User Route
@@ -147,6 +148,7 @@ module.exports = function(app) {
    */
   privateRouter.use('/global-config', controllers.globalConfig(app, options));
   privateRouter.use('/restaurant', controllers.restaurant(app, options));
+  privateRouter.use('/restaurant-member', controllers.restaurantMember(app, options));
   privateRouter.use('/order', controllers.order(app, options));
   privateRouter.use('/bill', controllers.bill(app, options));
   privateRouter.use('/inventory', controllers.inventory(app, options));

@@ -87,6 +87,10 @@ module.exports = function (app, mongoose /*, plugins*/) {
           timeout: Date,
         },
       },
+      restaurantRef: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Restaurant'
+      },
       /**
        * Role Info
        */

@@ -48,6 +48,9 @@ module.exports = function (app) {
       restaurantRef: editedRole.restaurantRef,
       _id: {
         $ne: editedRole._id
+      },
+      'status': {
+        $ne: app.config.contentManagement.role.deleted
       }
     })
       .then(count => count ? Promise.reject({

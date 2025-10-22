@@ -55,10 +55,10 @@ module.exports = function (app, options) {
   /**
    * Fetches an admin, edits an admin and removes an admin
    */
-  router.route('/:adminUserId')
+  router.route('/:restaurantOwnerId')
     .all([
       options.validateParams(schemaValidator.param),
-      commonMiddlewares.validateId('Admin', 'adminUserId')
+      commonMiddlewares.validateId('RestaurantOwner', 'restaurantOwnerId')
     ])
     .get([
       controllers.get

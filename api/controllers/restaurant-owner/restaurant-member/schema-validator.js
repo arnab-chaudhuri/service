@@ -8,15 +8,7 @@ module.exports = function(app) {
       required: true,
       allowEmpty: false,
       properties: {
-        firstName: {
-          type: 'string',
-          required: true,
-          allowEmpty: false,
-          conform: function(value) {
-            return app.utility.isValidate.isNameComponent(value);
-          }
-        },
-        lastName: {
+        fullName: {
           type: 'string',
           required: true,
           allowEmpty: false,
@@ -37,7 +29,7 @@ module.exports = function(app) {
       required: true,
       allowEmpty: false,
       properties: {
-        isSuperAdmin: {
+        isSuperRestaurantOwner: {
           type: 'boolean',
           required: true,
           allowEmpty: false
@@ -68,7 +60,7 @@ module.exports = function(app) {
   };
 
   const param = {
-    'adminUserId': {
+    'restaurantOwnerId': {
       type: 'string',
       required: true,
       'conform': function(value) {

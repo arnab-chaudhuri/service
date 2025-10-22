@@ -38,6 +38,7 @@ module.exports = function (app) {
    * @return {Promise}              The promise
    */
   const editRestaurantOwner = function (editedRestaurantOwnerDoc) {
+    console.log("editedRestaurantOwnerDoc ", editedRestaurantOwnerDoc)
     return RestaurantOwner.exists({
       'personalInfo.email': editedRestaurantOwnerDoc.personalInfo.email,
       restaurantRef: editedRestaurantOwnerDoc.restaurantRef,
