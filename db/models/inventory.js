@@ -35,6 +35,12 @@ module.exports = function (app, mongoose) {
     inAppDisplayable: {
       type: Boolean,
       default: false
+    },
+    locationId: {
+      type: String
+    },
+    categoryId: {
+      type: String
     }
   }, {
     versionKey: false,

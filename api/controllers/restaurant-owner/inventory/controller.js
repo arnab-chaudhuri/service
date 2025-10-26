@@ -96,6 +96,8 @@ module.exports = function(app) {
     req.inventoryId.unit = req.body.unit;
     req.inventoryId.saveAsUnit = req.body.saveAsUnit;
     req.inventoryId.image = req.body.image;
+    req.inventoryId.locationId = req.body.locationId;
+    req.inventoryId.categoryId = req.body.categoryId;
     inventory.edit(req.inventoryId, req.session.user)
       .then(output => {
         req.workflow.outcome.data = output;

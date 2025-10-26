@@ -55,6 +55,13 @@ module.exports = function(app, mongoose) {
         price: Number
       }]
     },
+    inventoryLocations: [{
+      name: String,
+      code: String
+    }],
+    inventoryCategories: [{
+      name: String
+    }],
     gstDetails: {
       gstEnabled: {
         type: Boolean,
