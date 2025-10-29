@@ -38,6 +38,16 @@ module.exports = function (app, options) {
     options.validateBody(schemaValidator.updateGstDetails),
     controllers.updateGstDetails
   ]);
+
+  router.put('/update-locations', [
+    // options.validateBody(schemaValidator.updateGstDetails),
+    controllers.updateLocations
+  ]);
+
+  router.put('/update-inventory-categories', [
+    // options.validateBody(schemaValidator.updateGstDetails),
+    controllers.updateInventoryCategories
+  ]);
   /**
    * Fetch/Edit restaurant
    */

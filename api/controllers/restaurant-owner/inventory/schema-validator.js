@@ -16,6 +16,16 @@ module.exports = function(app) {
       type: 'number',
       allowEmpty: false,
       required: true
+    },
+    'locationId': {
+      type: 'string',
+      required: true,
+      'conform': function(value) {
+        return app.utility.checkMongooseObjectId(value);
+      }
+    },
+     'categoryId': {
+      type: 'string'
     }
   };
 

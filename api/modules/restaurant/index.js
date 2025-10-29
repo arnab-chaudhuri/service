@@ -19,6 +19,10 @@ module.exports = function (app) {
    * @return {Promise}        The promise
    */
   const createRestaurant = function (config) {
+    config.inventoryLocations = [{
+      name: config.name,
+      code: config.code
+    }];
     return Restaurant.createRestaurant(config);
   };
 
@@ -93,6 +97,32 @@ module.exports = function (app) {
       });
   };
 
+  const updateLocations = (restaurantId, data) => {
+    return Restaurant.findById(restaurantId)
+      .then(restaurant => {
+        if (!restaurant) {
+          return Promise.reject({
+            'errCode': 'RESTAURANT_NOT_FOUND'
+          });
+        }
+        restaurant.inventoryLocations = data;
+        return restaurant.save();
+      });
+  };
+
+  const updateInventoryCategories = (restaurantId, data) => {
+    return Restaurant.findById(restaurantId)
+      .then(restaurant => {
+        if (!restaurant) {
+          return Promise.reject({
+            'errCode': 'RESTAURANT_NOT_FOUND'
+          });
+        }
+        restaurant.inventoryCategories = data;
+        return restaurant.save();
+      });
+  };
+
 
   return {
     'create': createRestaurant,
@@ -101,6 +131,8 @@ module.exports = function (app) {
     'list': getList,
     'remove': removeRestaurant,
     'set': editMyRestaurant,
-    'updateGstDetails': updateGstDetails
+    'updateGstDetails': updateGstDetails,
+    'updateLocations': updateLocations,
+    'updateInventoryCategories': updateInventoryCategories
   };
 };
