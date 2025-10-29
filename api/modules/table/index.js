@@ -24,13 +24,19 @@ module.exports = function (app) {
       return Restaurant.findById(userRef.restaurantRef)
         .then(restDetails => {
           const arr = config.tableIds.map(element => {
+            console.log("element===============================")
+            console.log(element)
             const monId = new mongoose.Types.ObjectId();
             return {
               tableId: element.tableId,
               restaurantRef: userRef.restaurantRef,
               _id: monId,
               qrCodeUrl: `https://immedine.com/diner/${restDetails.name.split(" ").join("-")}_${userRef.restaurantRef}_${monId}`,
-              noOfSeats: element.noOfSeats
+              noOfSeats: element.noOfSeats,
+              env: element.env,
+              style: element.style,
+              shape: element.shape,
+              height: element.height
             }
           });
           return Table.insertMany(arr);
@@ -106,6 +112,9 @@ module.exports = function (app) {
    * @return {Promise}        The promise
    */
   const getList = function (options) {
+    // console.log("options")
+    // console.log(options)
+    // console.log(Table.pagedFind(options))
     return Table.pagedFind(options);
   };
 

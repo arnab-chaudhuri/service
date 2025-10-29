@@ -21,6 +21,22 @@ module.exports = function (app, mongoose) {
       type: Number,
       default: 0
     },
+    env: {
+      type: Number,
+      default: 1
+    },
+    style: {
+      type: Number,
+      default: 1
+    },
+    shape: {
+      type: Number,
+      default: 1
+    },
+    height: {
+      type: Number,
+      default: 1
+    },
     currentSessionRef: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "TableSession"
