@@ -107,13 +107,14 @@ module.exports = function (app) {
       });
   };
 
-  const updateInventoryCount = async (orderItems) => {
+  const updateInventoryCount = async (orderItems, orderId) => {
     const session = await app.db.startSession();
     session.startTransaction();
 
     try {
       // Prepare a map for bulk updates
       const bulkUpdates = [];
+      const invIds = [];
 
       for (const orderItem of orderItems) {
         if (orderItem.menuRef) {
@@ -131,21 +132,50 @@ module.exports = function (app) {
             for (const ing of menu.ingredients) {
               const requiredQty = ing.quantity * orderItem.quantity;
 
-              if (ing.inventoryRef.quantity < requiredQty) {
-                await session.abortTransaction();
-                session.endSession();
-                return Promise.reject({
-                  'errCode': 'NOT_ENOUGH_STOCK'
-                });
+              // if (ing.inventoryRef.quantity < requiredQty) {
+              //   await session.abortTransaction();
+              //   session.endSession();
+              //   return Promise.reject({
+              //     'errCode': 'NOT_ENOUGH_STOCK'
+              //   });
+              // }
+
+              const locationList = ing.inventoryRef.locationList;
+              const locationData = locationList.find(each => each.location === ing.location);
+              if (locationData && Object.keys(locationData).length) {
+                if (locationData.quantity < requiredQty) {
+                  await session.abortTransaction();
+                  session.endSession();
+                  return Promise.reject({
+                    'errCode': 'NOT_ENOUGH_STOCK'
+                  });
+                }
               }
+
+              const historyEntry = {
+                quantity: requiredQty,
+                isDebited: true,
+                reason: 'NEW_ORDER'
+              };
+
+              if (orderId) {
+                historyEntry.orderRef = orderId;
+              }
+
+              invIds.push(ing.inventoryRef._id.toString());
 
               // Push to bulk update list
               bulkUpdates.push({
                 updateOne: {
                   filter: { _id: ing.inventoryRef._id },
-                  update: { $inc: { quantity: -requiredQty } }
+                  update: {
+                    $inc: { 'locationList.$[loc].quantity': -requiredQty, quantity: -requiredQty },
+                    $push: { 'locationList.$[loc].history': historyEntry }
+                  },
+                  arrayFilters: [{ 'loc.location': ing.location }]
                 }
               });
+
             }
           }
           // Perform all inventory updates in bulk
@@ -160,7 +190,7 @@ module.exports = function (app) {
       await session.commitTransaction();
       session.endSession();
 
-      return Promise.resolve({ success: true, message: "Order placed & inventory updated" });
+      return Promise.resolve({ success: true, message: "Order placed & inventory updated", invIds: invIds });
 
     } catch (err) {
       await session.abortTransaction();
@@ -168,6 +198,59 @@ module.exports = function (app) {
       return Promise.reject({ success: false, error: err.message });
     }
   };
+
+  const updateHistoryOrderRef = async (inventoryIds, orderId) => {
+    const session = await app.db.startSession();
+    session.startTransaction();
+
+    try {
+      const getEntryDate = (entry) => {
+        if (entry.date) return new Date(entry.date);
+      };
+
+      for (const invId of inventoryIds) {
+        const inv = await Inventory.findById(invId).session(session);
+        if (!inv) continue;
+
+        let changed = false;
+
+        if (Array.isArray(inv.locationList)) {
+          for (const loc of inv.locationList) {
+            if (!Array.isArray(loc.history) || !loc.history.length) continue;
+
+            // Update orderRef where missing
+            // for (const h of loc.history) {
+            //   if (!h.orderRef) {
+            //     h.orderRef = orderId;
+            //     changed = true;
+            //   }
+            // }
+
+            // Sort history by date (newest first). Fallbacks are attempted above.
+            loc.history.sort((a, b) => getEntryDate(b) - getEntryDate(a));
+
+            if (!loc.history[0].orderRef) {
+              loc.history[0].orderRef = orderId.toString();
+              changed = true;
+            }
+          }
+        }
+
+        if (changed) {
+          await inv.save({ session });
+        }
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+      return Promise.resolve({ success: true, message: 'History orderRef updated and sorted' });
+    } catch (err) {
+      await session.abortTransaction();
+      session.endSession();
+      return Promise.reject({ success: false, error: err.message || err });
+    }
+  };
+  
 
   async function rollbackInventory(orderId, updatedItems, onlyRemove) {
     const session = await app.db.startSession();
@@ -192,6 +275,7 @@ module.exports = function (app) {
 
       // Step 2: Restore inventory from old order
       const restoreUsage = {};
+      const restoreUsageLoc = {};
       existingOrder.cart.forEach(item => {
         if (item.menuRef) {
           item.menuRef.ingredients.forEach(ing => {
@@ -200,14 +284,36 @@ module.exports = function (app) {
               restoreUsage[ing.inventoryRef._id] = 0;
             }
             restoreUsage[ing.inventoryRef._id] += qty;
+            restoreUsageLoc[ing.inventoryRef._id] = ing.location;
           });
         }
       });
 
       if (restoreUsage && Object.keys(restoreUsage).length) {
-        const restoreOps = Object.entries(restoreUsage).map(([invId, qty]) => ({
-          updateOne: { filter: { _id: invId }, update: { $inc: { quantity: qty } } }
-        }));
+        // const restoreOps = Object.entries(restoreUsage).map(([invId, qty]) => ({
+        //   updateOne: { filter: { _id: invId }, update: { $inc: { quantity: qty } } }
+        // }));
+
+        const restoreOps = Object.entries(restoreUsage).map(([invId, qty]) => {
+          const historyEntry = {
+            orderRef: orderId,
+            quantity: qty,
+            isDebited: false,
+            reason: 'ORDER_UPDATE'
+          };
+          return {
+            updateOne: {
+              filter: { _id: invId },
+              update: {
+                $inc: {
+                  'locationList.$[loc].quantity': qty, quantity: qty,
+                },
+                $push: { 'locationList.$[loc].history': historyEntry }
+              },
+              arrayFilters: [{ 'loc.location': restoreUsageLoc[invId] }]
+            }
+          }
+        });
 
         if (restoreOps.length > 0) {
           await Inventory.bulkWrite(restoreOps, { session });
@@ -218,6 +324,7 @@ module.exports = function (app) {
       if (!onlyRemove) {
         // Step 3: Deduct inventory for new items
         const newIngredientUsage = {};
+        const newIngredientLoc = {};
         for (const item of updatedItems) {
           if (item.menuRef) {
             const menu = await Menu.findById(item.menuRef).populate("ingredients.inventoryRef").session(session);
@@ -235,6 +342,7 @@ module.exports = function (app) {
                 newIngredientUsage[ing.inventoryRef._id] = 0;
               }
               newIngredientUsage[ing.inventoryRef._id] += qty;
+              newIngredientLoc[ing.inventoryRef._id] = ing.location;
             });
           }
 
@@ -244,19 +352,55 @@ module.exports = function (app) {
         if (newIngredientUsage && Object.keys(newIngredientUsage).length) {
           for (const [invId, qty] of Object.entries(newIngredientUsage)) {
             const inv = await Inventory.findById(invId).session(session);
-            if (!inv || inv.quantity < qty) {
-              await session.abortTransaction();
-              session.endSession();
-              // throw new Error(`Insufficient stock for ingredient ${inv?.name || invId}`);
-              return Promise.reject({
-                'errCode': 'NOT_ENOUGH_STOCK'
-              });
+
+            const locationList = inv.locationList;
+            const locationData = locationList.find(each => each.location === newIngredientLoc[invId]);
+            if (locationData && Object.keys(locationData).length) {
+              if (locationData.quantity < qty) {
+                await session.abortTransaction();
+                session.endSession();
+                return Promise.reject({
+                  'errCode': 'NOT_ENOUGH_STOCK'
+                });
+              }
             }
+
+
+            //   if (!inv || inv.quantity < qty) {
+            //     await session.abortTransaction();
+            //     session.endSession();
+            //     // throw new Error(`Insufficient stock for ingredient ${inv?.name || invId}`);
+            //     return Promise.reject({
+            //       'errCode': 'NOT_ENOUGH_STOCK'
+            //     });
+            //   }
           }
 
-          const deductOps = Object.entries(newIngredientUsage).map(([invId, qty]) => ({
-            updateOne: { filter: { _id: invId }, update: { $inc: { quantity: -qty } } }
-          }));
+          // const deductOps = Object.entries(newIngredientUsage).map(([invId, qty]) => ({
+          //   updateOne: { filter: { _id: invId }, update: { $inc: { 
+          //     quantity: -qty
+          //   } } }
+          // }));
+
+          const deductOps = Object.entries(newIngredientUsage).map(([invId, qty]) => {
+            const historyEntry = {
+              orderRef: orderId,
+              quantity: qty,
+              isDebited: true,
+              reason: 'ORDER_UPDATE'
+            };
+
+            return {
+              updateOne: {
+                filter: { _id: invId },
+                update: {
+                  $inc: { 'locationList.$[loc].quantity': -qty, quantity: -qty },
+                  $push: { 'locationList.$[loc].history': historyEntry }
+                },
+                arrayFilters: [{ 'loc.location': newIngredientLoc[invId] }]
+              }
+            };
+          });
 
           if (deductOps.length > 0) {
             await Inventory.bulkWrite(deductOps, { session });
@@ -286,6 +430,7 @@ module.exports = function (app) {
     'remove': removeInventory,
     'updateMenuCount': updateMenuCount,
     'updateInventoryCount': updateInventoryCount,
-    'rollbackInventory': rollbackInventory
+    'rollbackInventory': rollbackInventory,
+    'updateHistoryOrderRef': updateHistoryOrderRef
   };
 };

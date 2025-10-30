@@ -83,4 +83,9 @@ module.exports = {
     inActive: 2,
     deleted: 3
   },
+  location: {
+    active: 1,
+    inActive: 2,
+    deleted: 3
+  },
 };

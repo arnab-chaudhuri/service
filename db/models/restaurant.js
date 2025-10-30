@@ -57,7 +57,11 @@ module.exports = function(app, mongoose) {
     },
     inventoryLocations: [{
       name: String,
-      code: String
+      code: String,
+      status: {
+        type: Number,
+        default: app.config.contentManagement.location.active
+      }
     }],
     inventoryCategories: [{
       name: String

@@ -36,9 +36,35 @@ module.exports = function (app, mongoose) {
       type: Boolean,
       default: false
     },
-    locationId: {
-      type: String
-    },
+    locationList: [{
+      location: {
+        type: String,
+      },
+      quantity: {
+        type: Number,
+        default: 0
+      },
+      history: [{
+        quantity: {
+          type: Number,
+          default: 0
+        },
+        isDebited: {
+          type: Boolean
+        },
+        date: {
+          type: Date,
+          default: Date.now
+        },
+        reason: {
+          type: String
+        },
+        orderRef: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Order',
+        }
+      }]
+    }],
     categoryId: {
       type: String
     }

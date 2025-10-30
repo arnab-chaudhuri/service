@@ -51,6 +51,8 @@ module.exports = function (app) {
                       tableSession.edit(output0);
                     }
 
+                    inventory.updateHistoryOrderRef(output1.invIds, output._id);
+
                     req.workflow.outcome.data = output;
                     req.workflow.emit('response');
                   }).catch(next);
@@ -64,7 +66,7 @@ module.exports = function (app) {
 
   const acceptOrder = (req, res, next) => {
     req.orderId.status = app.config.contentManagement.order.active;
-    inventory.updateInventoryCount(req.orderId.cart)
+    inventory.updateInventoryCount(req.orderId.cart, req.orderId._id)
       .then(output1 => {
         order.edit(req.orderId, req.session.user)
           .then(output => {

@@ -75,6 +75,9 @@ module.exports = function (app, mongoose) {
       name: String,
       quantity: Number,
       unit: Number,
+      location: {
+        type: String
+      },
       inventoryRef: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Inventory'

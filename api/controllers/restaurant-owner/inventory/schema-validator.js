@@ -17,12 +17,25 @@ module.exports = function(app) {
       allowEmpty: false,
       required: true
     },
-    'locationId': {
-      type: 'string',
+    'locationList': {
+      type: 'array',
       required: true,
-      'conform': function(value) {
-        return app.utility.checkMongooseObjectId(value);
-      }
+      allowEmpty: false,
+      items: {
+        type: 'object',
+        properties: {
+          'location': {
+            type: 'string',
+            required: true,
+            allowEmpty: false,
+          },
+          'quantity': {
+            type: 'number',
+            required: true,
+            allowEmpty: false,
+          }
+        }
+      },
     },
      'categoryId': {
       type: 'string'
