@@ -88,4 +88,8 @@ module.exports = {
     inActive: 2,
     deleted: 3
   },
+  defaultAppView: {
+    list: 1,
+    card: 2
+  },
 };

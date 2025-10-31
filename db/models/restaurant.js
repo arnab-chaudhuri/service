@@ -30,6 +30,14 @@ module.exports = function(app, mongoose) {
         type: Boolean,
         default: false
       },
+      defaultAppMenuView: {
+        type: Number,
+        default: app.config.contentManagement.defaultAppView.list
+      },
+      defaultAppModeLight: {
+        type: Boolean,
+        default: true
+      },
       hideMenuDetails: {
         type: Boolean,
         default: false
