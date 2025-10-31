@@ -44,6 +44,10 @@ module.exports = function (app, mongoose) {
         type: Number,
         default: 0
       },
+      threshold: {
+        type: Number,
+        default: 0
+      },
       history: [{
         quantity: {
           type: Number,
