@@ -5,6 +5,10 @@ module.exports = function (app, mongoose) {
       type: String,
       required: true
     },
+    idbId: {
+      type: String,
+      required: true
+    },
     status: {
       type: Number,
       default: app.config.contentManagement.order.active
@@ -42,6 +46,10 @@ module.exports = function (app, mongoose) {
     },
     tableId: {
       type: String
+    },
+    isRestoredWhileCancel: {
+      type: Boolean,
+      default: true
     },
     // in Store: 1, Swiggy: 2, Zomato: 3, other: 4
     orderType: {

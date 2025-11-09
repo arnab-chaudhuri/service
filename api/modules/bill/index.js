@@ -28,6 +28,81 @@ module.exports = function (app) {
     return Bill.createBill(config);
   };
 
+  const createMultiBill = async (bills, userRef) => {
+    if (!Array.isArray(bills)) {
+      return Promise.reject({ errCode: 'INVALID_BILLS' });
+    }
+
+    const prepared = bills.map(b => {
+      const bill = { ...b };
+      if (userRef) {
+        bill.restaurantRef = userRef.restaurantRef;
+        bill.createdBy = userRef._id;
+        bill.addedByOwner = true;
+      }
+      return bill;
+    });
+
+    return Bill.insertMany(prepared);
+  };
+
+  const bulkUpdateBills = async (bills, userRef) => {
+    if (!Array.isArray(bills)) {
+      return Promise.reject({ errCode: 'INVALID_BILLS' });
+    }
+
+    const ops = [];
+    const ids = [];
+
+    for (const item of bills) {
+      if (!item || !item._id) {
+        return Promise.reject({ errCode: 'BILL_ID_REQUIRED' });
+      }
+
+      const id = item._id;
+      const updatePayload = { ...item };
+      delete updatePayload._id;
+
+      // Prevent changing ownership fields from API
+      delete updatePayload.restaurantRef;
+      delete updatePayload.createdBy;
+      delete updatePayload.addedByOwner;
+
+      // Nothing to update for this item
+      if (Object.keys(updatePayload).length === 0) continue;
+
+      const filter = { _id: id };
+      if (userRef && userRef.restaurantRef) {
+        filter.restaurantRef = userRef.restaurantRef;
+      }
+
+      ops.push({
+        updateOne: {
+          filter,
+          update: { $set: updatePayload },
+          upsert: false
+        }
+      });
+
+      ids.push(id);
+    }
+
+    if (ops.length === 0) {
+      return Promise.resolve({ matchedCount: 0, modifiedCount: 0, updated: [] });
+    }
+
+    await Bill.bulkWrite(ops);
+
+    // Fetch and return the updated documents (respecting restaurantRef if provided)
+    const findFilter = { _id: { $in: ids } };
+    if (userRef && userRef.restaurantRef) {
+      findFilter.restaurantRef = userRef.restaurantRef;
+    }
+    const updated = await Bill.find(findFilter);
+
+    return updated;
+  };
+
   /**
    * Fetches a bill by Id
    * @param  {String} billId  The bill id
@@ -35,6 +110,25 @@ module.exports = function (app) {
    */
   const findBillById = function (billId, userRef) {
     return Bill.findById(billId)
+      .populate({
+        path: 'orderRef'
+      })
+      .then(billDetails => {
+        if (!billDetails || (billDetails &&
+          billDetails.restaurantRef.toString() !== userRef.restaurantRef.toString())) {
+          return Promise.reject({
+            'errCode': 'BILL_NOT_FOUND'
+          });
+        } else {
+          return Promise.resolve(billDetails);
+        }
+      });
+  };
+
+  const getByOfflineId = function (billId, userRef) {
+    return Bill.findOne({
+      offlineId: billId
+    })
       .populate({
         path: 'orderRef'
       })
@@ -156,10 +250,13 @@ module.exports = function (app) {
 
   return {
     'create': createBill,
+    'createMulti': createMultiBill,
     'get': findBillById,
+    'getByOfflineId': getByOfflineId,
     'edit': editBill,
     'list': getList,
     'remove': removeBill,
-    'updateBillFromOrder': updateBillFromOrder
+    'updateBillFromOrder': updateBillFromOrder,
+    'bulkUpdateBills': bulkUpdateBills
   };
 };

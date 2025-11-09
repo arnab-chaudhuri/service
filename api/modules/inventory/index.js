@@ -199,6 +199,79 @@ module.exports = function (app) {
     }
   };
 
+  const updateInventoryCountSync = async (orderItems) => {
+    // console.log("updateInventoryCountSync",orderItems)
+
+    const session = await app.db.startSession();
+    session.startTransaction();
+
+    try {
+      // Prepare a map for bulk updates
+      for (const orderItem of orderItems) {
+        const bulkUpdates = [];
+        const invIds = [];
+        if (orderItem.menuRef && orderItem.status !== app.config.contentManagement.order.deleted) {
+          const menu = await Menu.findById(orderItem.menuRef).populate("ingredients.inventoryRef");
+
+          if (!menu) {
+            if (session.inTransaction()) {
+              await session.abortTransaction();
+              session.endSession();
+            }
+          }
+
+          if (menu.ingredients && menu.ingredients.length) {
+            for (const ing of menu.ingredients) {
+              const requiredQty = ing.quantity * orderItem.quantity;
+
+              const historyEntry = {
+                quantity: requiredQty,
+                isDebited: true,
+                reason: 'NEW_ORDER'
+              };
+
+              if (orderItem.orderId) {
+                historyEntry.orderRef = orderItem.orderId?.toString();
+              }
+
+              invIds.push(ing.inventoryRef._id.toString());
+
+              // Push to bulk update list
+              bulkUpdates.push({
+                updateOne: {
+                  filter: { _id: ing.inventoryRef._id },
+                  update: {
+                    $inc: { 'locationList.$[loc].quantity': -requiredQty, quantity: -requiredQty },
+                    $push: { 'locationList.$[loc].history': historyEntry }
+                  },
+                  arrayFilters: [{ 'loc.location': ing.location }]
+                }
+              });
+
+            }
+          }
+          // Perform all inventory updates in bulk
+          if (bulkUpdates.length > 0) {
+            await Inventory.bulkWrite(bulkUpdates, { session });
+          }
+        }
+
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+
+      return Promise.resolve({ success: true, message: "Order placed & inventory updated", invIds: invIds });
+
+    } catch (err) {
+      if (session.inTransaction()) {
+        await session.abortTransaction();
+        session.endSession();
+      }
+      return Promise.resolve({ success: false, error: err.message });
+    }
+  };
+
   const updateHistoryOrderRef = async (inventoryIds, orderId) => {
     const session = await app.db.startSession();
     session.startTransaction();
@@ -250,7 +323,7 @@ module.exports = function (app) {
       return Promise.reject({ success: false, error: err.message || err });
     }
   };
-  
+
 
   async function rollbackInventory(orderId, updatedItems, onlyRemove) {
     const session = await app.db.startSession();
@@ -421,6 +494,151 @@ module.exports = function (app) {
     }
   }
 
+  async function rollbackInventorySync(updatedItems, onlyRemove) {
+    // console.log("rollbackInventorySync",updatedItems)
+    const session = await app.db.startSession();
+    session.startTransaction();
+
+    try {
+      // Step 1: Fetch existing order
+      for (const order of updatedItems) {
+        // if (order.status !== app.config.contentManagement.order.deleted ||
+        //   (order.status === app.config.contentManagement.order.deleted && order.isRestoredWhileCancel)) {
+          const existingOrder = await Order.findById(order.orderId?.toString())
+            .populate({
+              path: "cart.menuRef",
+              populate: { path: "ingredients.inventoryRef" }
+            })
+            .session(session);
+
+          if (!existingOrder) {
+            if (session.inTransaction()) {
+              await session.abortTransaction();
+              session.endSession();
+            }
+          }
+
+          // Step 2: Restore inventory from old order
+          const restoreUsage = {};
+          const restoreUsageLoc = {};
+          existingOrder.cart.forEach(item => {
+            if (item.menuRef) {
+              item.menuRef.ingredients.forEach(ing => {
+                const qty = ing.quantity * item.quantity;
+                if (!restoreUsage[ing.inventoryRef._id]) {
+                  restoreUsage[ing.inventoryRef._id] = 0;
+                }
+                restoreUsage[ing.inventoryRef._id] += qty;
+                restoreUsageLoc[ing.inventoryRef._id] = ing.location;
+              });
+            }
+          });
+
+          if (restoreUsage && Object.keys(restoreUsage).length) {
+
+            const restoreOps = Object.entries(restoreUsage).map(([invId, qty]) => {
+              const historyEntry = {
+                orderRef: order.orderId?.toString(),
+                quantity: qty,
+                isDebited: false,
+                reason: 'ORDER_UPDATE'
+              };
+              return {
+                updateOne: {
+                  filter: { _id: invId },
+                  update: {
+                    $inc: {
+                      'locationList.$[loc].quantity': qty, quantity: qty,
+                    },
+                    $push: { 'locationList.$[loc].history': historyEntry }
+                  },
+                  arrayFilters: [{ 'loc.location': restoreUsageLoc[invId] }]
+                }
+              }
+            });
+
+            if (restoreOps.length > 0) {
+              await Inventory.bulkWrite(restoreOps, { session });
+            }
+          }
+        // }
+
+      }
+
+      // Step 3: Deduct inventory for new items
+      for (const item of updatedItems) {
+        if (item.status !== app.config.contentManagement.order.deleted ||
+          (item.status === app.config.contentManagement.order.deleted && !item.isRestoredWhileCancel)
+        ) {
+          const newIngredientUsage = {};
+          const newIngredientLoc = {};
+          if (item.menuRef) {
+            const menu = await Menu.findById(item.menuRef).populate("ingredients.inventoryRef").session(session);
+            if (!menu) {
+              if (session.inTransaction()) {
+                await session.abortTransaction();
+                session.endSession();
+              }
+            }
+
+            menu.ingredients.forEach(ing => {
+              const qty = ing.quantity * item.quantity;
+              if (!newIngredientUsage[ing.inventoryRef._id]) {
+                newIngredientUsage[ing.inventoryRef._id] = 0;
+              }
+              newIngredientUsage[ing.inventoryRef._id] += qty;
+              newIngredientLoc[ing.inventoryRef._id] = ing.location;
+            });
+          }
+
+          // Step 3a: Validate stock before deduction
+          if (newIngredientUsage && Object.keys(newIngredientUsage).length) {
+
+            const deductOps = Object.entries(newIngredientUsage).map(([invId, qty]) => {
+              const historyEntry = {
+                orderRef: item.orderId?.toString(),
+                quantity: qty,
+                isDebited: true,
+                reason: 'ORDER_UPDATE'
+              };
+
+              return {
+                updateOne: {
+                  filter: { _id: invId },
+                  update: {
+                    $inc: { 'locationList.$[loc].quantity': -qty, quantity: -qty },
+                    $push: { 'locationList.$[loc].history': historyEntry }
+                  },
+                  arrayFilters: [{ 'loc.location': newIngredientLoc[invId] }]
+                }
+              };
+            });
+
+            if (deductOps.length > 0) {
+              await Inventory.bulkWrite(deductOps, { session });
+            }
+          }
+        }
+
+
+      }
+
+
+      await session.commitTransaction();
+      session.endSession();
+
+      return Promise.resolve({ success: true, message: "Order updated and inventory adjusted" });
+
+    } catch (err) {
+      if (session.inTransaction()) {
+        await session.abortTransaction();
+        session.endSession();
+      }
+      console.log(err)
+      return Promise.resolve({ success: false });
+    }
+  }
+
 
   return {
     'create': createInventory,
@@ -431,6 +649,8 @@ module.exports = function (app) {
     'updateMenuCount': updateMenuCount,
     'updateInventoryCount': updateInventoryCount,
     'rollbackInventory': rollbackInventory,
-    'updateHistoryOrderRef': updateHistoryOrderRef
+    'rollbackInventorySync': rollbackInventorySync,
+    'updateHistoryOrderRef': updateHistoryOrderRef,
+    updateInventoryCountSync: updateInventoryCountSync
   };
 };

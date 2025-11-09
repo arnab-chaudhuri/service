@@ -5,6 +5,9 @@ module.exports = function (app, mongoose) {
       type: String,
       required: true
     },
+    offlineId: {
+      type: String
+    },
     restaurantRef: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Restaurant',

@@ -43,6 +43,11 @@ module.exports = function (app, options) {
     controllers.add
   ]);
 
+  router.post('/sync-master', [
+    // options.validateBody(schemaValidator.syncMaster),
+    controllers.syncMaster
+  ]);
+
   /**
    * Fetches a list of orders
    */
@@ -51,32 +56,27 @@ module.exports = function (app, options) {
     options.validateBody(schemaValidator.list),
     controllers.list
   ]);
-  
+
+  router.get('/get-by-idbid/:orderId', [
+    controllers.getByIdbId
+  ]);
+
+  router.put('/update-by-idbid/:orderId', [
+    controllers.updateByIdbId
+  ]);
 
   router.route('/change-status/:orderId')
-    .all([
-      options.validateParams(schemaValidator.param),
-      commonMiddlewares.validateId('Order', 'orderId')
-    ])
     .put([
       options.validateBody(schemaValidator.changeStatus),
       controllers.changeStatus
     ]);
 
   router.route('/accept/:orderId')
-    .all([
-      options.validateParams(schemaValidator.param),
-      commonMiddlewares.validateId('Order', 'orderId')
-    ])
     .put([
       controllers.acceptOrder
     ]);
 
   router.route('/cancel/:orderId')
-    .all([
-      options.validateParams(schemaValidator.param),
-      commonMiddlewares.validateId('Order', 'orderId')
-    ])
     .put([
       controllers.cancelOrder
     ]);

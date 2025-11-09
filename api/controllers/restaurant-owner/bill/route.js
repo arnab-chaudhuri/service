@@ -45,14 +45,14 @@ module.exports = function (app, options) {
   ]);
   
 
-  router.route('/make-payment/:billId')
-    .all([
-      options.validateParams(schemaValidator.param),
-      commonMiddlewares.validateId('Bill', 'billId')
-    ])
-    .put([
+  router.put('/make-payment/:billId', [
       controllers.handlePayment
     ]);
+
+  router.get('/by-offline/:billId', [
+    controllers.getByOfflineId
+  ]);
+
 
   /**
    * Fetches a bill, edits a bill and removes a bill

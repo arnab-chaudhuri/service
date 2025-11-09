@@ -30,6 +30,15 @@ module.exports = function (app) {
       .catch(next);
   };
 
+  const getByOfflineId = (req, res, next) => {
+    bill.getByOfflineId(req.params.billId, req.session.user)
+      .then(output => {
+        req.workflow.outcome.data = output;
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+
   /**
    * Fetches a list of categories
    * @param  {Object}   req  Request 
@@ -60,7 +69,7 @@ module.exports = function (app) {
       }
 
       if (paymentStatus) {
-        andFilters.push({ "paymentDetails.status": Number(paymentStatus)});
+        andFilters.push({ "paymentDetails.status": Number(paymentStatus) });
       }
 
       if (startDate && endDate) {
@@ -124,26 +133,32 @@ module.exports = function (app) {
 
   const handlePayment = (req, res, next) => {
 
-    if (req.body && Object.keys(req.body).length) {
-      for (let item in req.body) {
-        req.billId[item] = req.body[item];
-      }
-    }
+    bill.getByOfflineId(req.params.billId, req.session.user)
+      .then(orderData => {
+        if (req.body && Object.keys(req.body).length) {
+          for (let item in req.body) {
+            orderData[item] = req.body[item];
+          }
+        }
 
-    bill.edit(req.billId, req.session.user)
-      .then(output => {
-        order.updateStatus(req.billId.orderRef);
-        menu.updateOrderCount(req.billId.orderRef);
-        tableSession.updateStatusByOrderId(req.billId.orderRef, req.billId.restaurantRef);
-        req.workflow.outcome.data = output;
-        req.workflow.emit('response');
-      })
-      .catch(next);
+        bill.edit(orderData, req.session.user)
+          .then(output => {
+            order.updateStatus(orderData.orderRef);
+            menu.updateOrderCount(orderData.orderRef);
+            tableSession.updateStatusByOrderId(orderData.orderRef, orderData.restaurantRef);
+            req.workflow.outcome.data = output;
+            req.workflow.emit('response');
+          })
+          .catch(next);
+      }).catch(next);
+
+
   };
 
 
   return {
     get: getBill,
+    getByOfflineId: getByOfflineId,
     list: getBillList,
     handlePayment: handlePayment
   };
