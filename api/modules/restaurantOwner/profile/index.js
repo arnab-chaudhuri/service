@@ -41,14 +41,14 @@ module.exports = function (app) {
     }).then((output) =>
       output
         ? Promise.reject({
-            errCode: 'RESTAURANT_OWNER_EMAIL_ALREADY_EXISTS',
-          })
+          errCode: 'RESTAURANT_OWNER_EMAIL_ALREADY_EXISTS',
+        })
         : restaurantOwnerDoc.save().then((restaurantOwner) => {
-            // if (oldProfilePicture) {
-            //   app.utility.removeFile(oldProfilePicture);
-            // }
-            return restaurantOwner;
-          })
+          // if (oldProfilePicture) {
+          //   app.utility.removeFile(oldProfilePicture);
+          // }
+          return restaurantOwner;
+        })
     );
   };
 
@@ -66,13 +66,49 @@ module.exports = function (app) {
         isValid
           ? app.utility.encryptPassword(newPassword)
           : Promise.reject({
-              errCode: 'PASSWORD_MISMATCH',
-            })
+            errCode: 'PASSWORD_MISMATCH',
+          })
       )
       .then((password) => {
         restaurantOwnerDoc.authenticationInfo.password = password;
         return restaurantOwnerDoc.save();
       });
+  };
+
+  const generatePin = function (restaurantOwnerDoc) {
+    restaurantOwnerDoc.securityPinDetails.pin = app.utility.getRandomCodeNumber(4);
+    restaurantOwnerDoc.securityPinDetails.updateDate = new Date();
+    return restaurantOwnerDoc.save()
+      .then(restaurantOwnerData => {
+        let emailNotification = app.config.notification.email(app, app.config.lang.defaultLanguage),
+          multilangConfig = app.config.lang[app.config.lang.defaultLanguage];
+        // create email template
+        app.render(
+          emailNotification.pinRequest.pageName,
+          {
+            greeting: multilangConfig.email.pinRequest.greeting,
+            firstName: restaurantOwnerDoc.personalInfo.fullName,
+            pin: restaurantOwnerDoc.securityPinDetails.pin,
+            message: multilangConfig.email.pinRequest.message,
+            otpText: multilangConfig.email.pinRequest.otpText,
+            note: multilangConfig.email.pinRequest.note
+          },
+          function (err, renderedText) {
+            if (err) {
+              console.log(err);
+            } else {
+              // send email
+              app.service.notification.email.immediate({
+                userId: restaurantOwnerDoc._id,
+                userType: app.config.user.role.restaurantOwner,
+                emailId: restaurantOwnerDoc.personalInfo.email,
+                subject: emailNotification.pinRequest.subject,
+                body: renderedText,
+              });
+            }
+          }
+        );
+      }).catch();
   };
 
   /**
@@ -96,5 +132,6 @@ module.exports = function (app) {
     set: setProfile,
     changePassword: changePassword,
     logout: logout,
+    generatePin: generatePin
   };
 };

@@ -384,6 +384,25 @@ module.exports = function(app) {
     return output;
   };
 
+  utility.getRandomCodeNumber = function(length) {
+    const codeString = '1234567890';
+    let output = '',
+      index;
+
+    if (!length) {
+      length = 6;
+    }
+    for (var i = 0; i < length; i++) {
+      index = Math.floor(Math.random() * codeString.length);
+
+      if (index === 1) {
+        index = index - 1;
+      }
+      output += codeString[index];
+    }
+    return output;
+  };
+
   /**
    * Calculate year difference between 2 dates
    * @param  {Date} firstDate first date object

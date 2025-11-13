@@ -12,6 +12,7 @@ module.exports = function(app) {
   const menu = app.module.menu;
   const category = app.module.category;
   const imageByAI = app.module.imageByAI;
+  const order = app.module.order;
 
   /**
    * Adds a menu
@@ -130,7 +131,11 @@ module.exports = function(app) {
    * @param  {Function} next Next is used to pass control to the next middleware function
    * @return {Promise}       The Promise
    */
-  const deleteMenu = (req, res, next) => {
+  const deleteMenu = async (req, res, next) => {
+    const isPresent = await order.isMenuInOrderCart(req.menuId._id, req.menuId.restaurantRef);
+    if (isPresent) {
+      return next({ 'errCode': 'MENU_ITEM_CANNOT_BE_DELETED' });
+    }
     req.menuId.status = app.config.contentManagement.menu.deleted;
     menu.edit(req.menuId, req.session.user)
       .then(output => {

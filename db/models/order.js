@@ -40,6 +40,10 @@ module.exports = function (app, mongoose) {
         price: Number
       }]
     }],
+    isOnline: {
+      type: Boolean,
+      default: true
+    },
     tableRef: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Table',

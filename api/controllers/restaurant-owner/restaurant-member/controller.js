@@ -18,6 +18,7 @@ module.exports = function(app) {
    * @type {Object}
    */
   const session = app.module.session;
+  const order = app.module.order;
 
   /**
    * Adds an admin
@@ -136,7 +137,11 @@ module.exports = function(app) {
    * @param  {Function} next Next is used to pass control to the next middleware function
    * @return {Promise}       The Promise
    */
-  const deleteRestaurantMember = (req, res, next) => {
+  const deleteRestaurantMember = async (req, res, next) => {
+    const orderExists = await order.hasOrderForOwner(req.restaurantOwnerId._id);
+    if (orderExists) {
+      return next({ 'errCode': 'MEMBER_CANNOT_BE_DELETED' });
+    }
     req.restaurantOwnerId.accountStatus = app.config.user.accountStatus.restaurantOwner.deleted;
 
     restaurantOwner.crud.edit(req.restaurantOwnerId)
@@ -166,7 +171,7 @@ module.exports = function(app) {
     }
     restaurantOwner.crud.changeStatus(req.restaurantOwnerId, req.body)
       .then(output => {
-        if (req.body.accountStatus === app.config.user.accountStatus.admin.blocked) {
+        if (req.body.accountStatus === app.config.user.accountStatus.restaurantOwner.blocked) {
           return session.remove(req.restaurantOwnerId._id, app.config.user.role.admin).then(() => output);
         } else {
           return output;

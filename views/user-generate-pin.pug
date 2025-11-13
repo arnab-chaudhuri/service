@@ -1,0 +1,26 @@
+extends index.pug
+block content
+  main
+    table(style='box-sizing: border-box; border-spacing: 0; padding: 0 32px;' width='100%')
+      tbody
+        tr
+          td(colspan="2" style='font-weight: 600;padding-bottom:36px;font-size:17px;') 
+            | #{greeting} #{firstName},
+        tr
+          td(colspan="2" style="font-size:15px;padding-bottom:36px;color:#294661;font-weight:300") 
+            | #{message}
+        tr 
+          td(width= '10px;' style="font-size:15px;padding-bottom:6px;color:#294661;font-weight:300")  
+            | #{otpText}
+          td(style="font-size:15px;padding-bottom:6px;color:#294661;font-weight:300")  
+            | : #{pin}
+        tr
+          td(colspan="2" style='padding-bottom:36px;font-size:17px;')
+            div
+              p(style="margin:0;margin-bottom:0px;color:#294661;font-family:'Open Sans','Helvetica Neue','Helvetica',Helvetica,Arial,sans-serif;font-size:16px;font-weight:300")
+              | #{note}
+              p(style="margin:0;margin-bottom:30px;color:#294661;font-family:'Open Sans','Helvetica Neue','Helvetica',Helvetica,Arial,sans-serif;font-size:16px;font-weight:300")
+              | Thank you,
+              p(style="margin:0;color:#294661;font-family:'Open Sans','Helvetica Neue','Helvetica',Helvetica,Arial,sans-serif;font-size:16px;font-weight:300")
+              | The ImmeDine Team  
+    

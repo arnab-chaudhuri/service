@@ -49,6 +49,10 @@ module.exports = {
         subject: app.config.lang[selectedLang].email.userSignupRequest.subject,
         pageName: 'user-signup-otp',
       },
+      pinRequest:{
+        subject: app.config.lang[selectedLang].email.pinRequest.subject,
+        pageName: 'user-generate-pin',
+      },
       restaurantOwnerAddedByAdmin:{
         subject: app.config.lang[selectedLang].email.restaurantOwnerAddedByAdmin.subject,
         pageName: 'owner-added-by-admin',

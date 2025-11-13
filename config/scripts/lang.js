@@ -57,6 +57,13 @@ module.exports = {
         otpText: 'OTP',
         note: 'If you did not create this account, you can safely ignore this email.'
       },
+      pinRequest: {
+        subject: `ImmeDine - Generate PIN`,
+        greeting: 'Hi',
+        message: 'Please find the new PIN below:',
+        otpText: 'PIN',
+        note: 'If you did not generate this pin, you can safely ignore this email.'
+      },
       restaurantOwnerAddedByAdmin: {
         subject: `ImmeDine - Owner Created`,
         greeting: 'Hi',

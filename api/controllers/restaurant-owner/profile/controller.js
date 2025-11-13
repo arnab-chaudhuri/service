@@ -72,10 +72,27 @@ module.exports = function (app) {
       .catch(next);
   };
 
+  const generatePin = (req, res, next) => {
+    restaurantOwner.profile
+      .generatePin(req.session.user)
+      .then(() => req.workflow.emit('response'))
+      .catch(next);
+  };
+
+  const verifyPin = (req, res, next) => {
+    if (req.session.user.securityPinDetails.pin === req.body.pin) {
+      req.workflow.emit('response');
+    } else {
+      return next({ 'errCode': 'INVALID_PIN' });
+    }
+  };
+
   return {
     getProfile: getProfile,
     setProfile: setProfile,
     changePassword: changePassword,
     logout: logout,
+    generatePin: generatePin,
+    verifyPin: verifyPin
   };
 };

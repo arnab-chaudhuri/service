@@ -135,7 +135,15 @@ module.exports = function (app, mongoose /*, plugins*/) {
       createdByAdmin: {
         type: Boolean,
         default: false
-      } ,
+      },
+      securityPinDetails: {
+        pin: {
+          type: String
+        },
+        updateDate: {
+          type: Date
+        }
+      },
       /**
        * Session Information
        */
@@ -188,15 +196,15 @@ module.exports = function (app, mongoose /*, plugins*/) {
         userDoc
           ? Promise.resolve(userDoc)
           : Promise.reject({
-              errCode: 'RESTAURANT_OWNER_NOT_FOUND',
-            })
+            errCode: 'RESTAURANT_OWNER_NOT_FOUND',
+          })
       )
       .then((userDoc) =>
         userDoc.accountStatus !== app.config.user.accountStatus.user.blocked
           ? Promise.resolve(userDoc)
           : Promise.reject({
-              errCode: 'RESTAURANT_OWNER_HAS_BEEN_SUSPENDED',
-            })
+            errCode: 'RESTAURANT_OWNER_HAS_BEEN_SUSPENDED',
+          })
       )
       .then((restaurantOwnerDoc) => {
         restaurantOwnerDoc.authenticationInfo.link = {
@@ -426,9 +434,9 @@ module.exports = function (app, mongoose /*, plugins*/) {
 
   restaurantOwnerSchema.statics.socialLoginValidate = async function (socialId, socialType, fullName, email) {
     let userDoc = await this.findOne({ 'personalInfo.email': email })
-    .populate('restaurantRef')
-    .populate('roleInfo.roleId')
-    .exec();
+      .populate('restaurantRef')
+      .populate('roleInfo.roleId')
+      .exec();
 
     if (userDoc) {
       if (userDoc.accountStatus === app.config.user.accountStatus.restaurantOwner.deleted) {
@@ -930,22 +938,22 @@ module.exports = function (app, mongoose /*, plugins*/) {
       }
     }
     return this.updateOne({
-        'sessionInfo': {
-          $elemMatch: {
-            'deviceId': deviceId,
-            'accessToken': decryptedToken.token,
-            'deviceType': deviceType,
-          }
+      'sessionInfo': {
+        $elemMatch: {
+          'deviceId': deviceId,
+          'accessToken': decryptedToken.token,
+          'deviceType': deviceType,
         }
-      }, {
-        $pull: {
-          sessionInfo: {
-            'deviceId': deviceId,
-            'accessToken': decryptedToken.token,
-            'deviceType': deviceType
-          }
+      }
+    }, {
+      $pull: {
+        sessionInfo: {
+          'deviceId': deviceId,
+          'accessToken': decryptedToken.token,
+          'deviceType': deviceType
         }
-      })
+      }
+    })
       .exec();
   };
 

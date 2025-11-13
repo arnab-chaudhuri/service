@@ -57,6 +57,12 @@ module.exports = function (app, options) {
     controllers.list
   ]);
 
+  router.post('/ongoing-list', [
+    options.validateQuery(schemaValidator.listQuery),
+    options.validateBody(schemaValidator.list),
+    controllers.getOngoingOrderList
+  ]);
+
   router.get('/get-by-idbid/:orderId', [
     controllers.getByIdbId
   ]);

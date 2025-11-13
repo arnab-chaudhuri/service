@@ -330,6 +330,29 @@ module.exports = function (app) {
     });
   }
 
+  const isMenuInOrderCart = async (menuRef, restaurantRef) => {
+    if (!menuRef || !restaurantRef) return false;
+
+    const query = {
+      restaurantRef: restaurantRef,
+      $or: [
+        { 'cart.menuRef': menuRef },
+      ]
+    };
+
+    const exists = await Order.exists(query);
+    return Promise.resolve(!!exists);
+  };
+
+  const hasOrderForOwner = async (restaurantOwnerId) => {
+    if (!restaurantOwnerId) return Promise.resolve(false);
+
+    const filter = { createdBy: restaurantOwnerId };
+
+    const exists = await Order.exists(filter);
+    return Promise.resolve(!!exists);
+  };
+
   return {
     'create': createOrder,
     'createMulti': createMultiOrder,
@@ -342,6 +365,8 @@ module.exports = function (app) {
     'updateBillDetails': updateBillDetails,
     'updateStatus': updateStatus,
     'updateBillDetailsBulk': updateBillDetailsBulk,
-    'bulkUpdateOrders': bulkUpdateOrders
+    'bulkUpdateOrders': bulkUpdateOrders,
+    'isMenuInOrderCart': isMenuInOrderCart,
+    'hasOrderForOwner': hasOrderForOwner
   };
 };

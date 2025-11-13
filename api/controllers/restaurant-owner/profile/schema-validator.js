@@ -47,9 +47,18 @@ module.exports = function (app) {
     },
   };
 
+  const verifyPin = {
+    pin: {
+      type: 'string',
+      required: true,
+      allowEmpty: false
+    }
+  };
+
   return {
     profilePhoto: profilePhoto,
     set: setProfile,
     changePassword: changePassword,
+    verifyPin: verifyPin
   };
 };

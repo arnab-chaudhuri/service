@@ -122,7 +122,13 @@ module.exports = function(app) {
    * @param  {Function} next Next is used to pass control to the next middleware function
    * @return {Promise}       The Promise
    */
-  const deleteTable = (req, res, next) => {
+  const deleteTable = async (req, res, next) => {
+    const tbSessionData = await tableSession.getByTableId(req.tableId._id, req.tableId.restaurantRef, true);
+
+    if (tbSessionData && !tbSessionData.noData) {
+      return next({ 'errCode': 'TABLE_CANNOT_BE_DELETED' });
+    }
+    
     req.tableId.status = app.config.contentManagement.table.deleted;
     table.edit(req.tableId, req.session.user)
       .then(output => {
