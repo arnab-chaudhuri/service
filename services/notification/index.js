@@ -50,10 +50,11 @@ module.exports = function (app, smsGateway) {
    * @param  {Object} options.content  The content for notification
    * @return {Promise}                 The promise
    */
-  const sendInAppNotification = function ({ userId, userType, content, isActionable = true }) {
+  const sendInAppNotification = function ({ userId, userType, content, isActionable = true, restaurantRef }) {
     let notificationObj = {
       user: userId,
       userType: userType,
+      restaurantRef: restaurantRef,
       medium: app.config.notification.medium.inApp,
       inAppContent: content,
       sent: true,

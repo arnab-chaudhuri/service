@@ -82,34 +82,22 @@ module.exports = {
   },
   inApp: function (app, selectedLang) {
     return {
-      toEmployer: {
-        interestedUser: {
-          body: () => `${app.config.lang[selectedLang].inApp.toEmployer.interestedUser.body()}`,
-          type: "interestedUser",
+      toRestaurantOwner: {
+        newOrder: {
+          body: () => `${app.config.lang[selectedLang].inApp.toRestaurantOwner.newOrder.body()}`,
+          type: "newOrder",
         },
-        interestedAgency: {
-          body: () => `${app.config.lang[selectedLang].inApp.toEmployer.interestedAgency.body()}`,
-          type: "interestedAgency",
+        updateOrder: {
+          body: (id) => `${app.config.lang[selectedLang].inApp.toRestaurantOwner.updateOrder.body(id)}`,
+          type: "updateOrder",
         },
-      },
-      toAgency: {
-        interestedUser: {
-          body: () => `${app.config.lang[selectedLang].inApp.toAgency.interestedUser.body()}`,
-          type: "interestedUser",
+        cancelOrder: {
+          body: (id) => `${app.config.lang[selectedLang].inApp.toRestaurantOwner.cancelOrder.body(id)}`,
+          type: "cancelOrder",
         },
-        interestedEmployer: {
-          body: () => `${app.config.lang[selectedLang].inApp.toAgency.interestedEmployer.body()}`,
-          type: "interestedEmployer",
-        },
-      },
-      toUser: {
-        interestedAgency: {
-          body: () => `${app.config.lang[selectedLang].inApp.toUser.interestedAgency.body()}`,
-          type: "interestedAgency",
-        },
-        interestedEmployer: {
-          body: () => `${app.config.lang[selectedLang].inApp.toUser.interestedEmployer.body()}`,
-          type: "interestedEmployer",
+        changeOrderStatus: {
+          body: (id) => `${app.config.lang[selectedLang].inApp.toRestaurantOwner.changeOrderStatus.body(id)}`,
+          type: "changeOrderStatus",
         },
       },
     };

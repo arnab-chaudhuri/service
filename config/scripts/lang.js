@@ -6,29 +6,19 @@ module.exports = {
   'en-us': {
     push: {},
     inApp: {
-      toEmployer: {
-        interestedUser: {
-          body: () => `A new candidate has interested to your jobpost, Check it out!`,
+      toRestaurantOwner: {
+        newOrder: {
+          body: () => `New order arrived!`,
         },
-        interestedAgency: {
-          body: () => `A new agency has interested to your jobpost, Check it out!`,
+        updateOrder: {
+          body: (id) => `Order #${id} updated!`,
         },
-      },
-      toAgency: {
-        interestedUser: {
-          body: () => `A new candidate has interested to you for getting hire, Check it out!`,
+        cancelOrder: {
+          body: (id) => `Order #${id} cancelled!`,
         },
-        interestedEmployer: {
-          body: () => `A new employer has interested to you for hiring candidate of on demand jobpost, Check it out!`,
-        },
-      },
-      toUser: {
-        interestedAgency: {
-          body: () => `A new agency has interested to you for hiring on demand jobpost, Check it out!`,
-        },
-        interestedEmployer: {
-          body: () => `A new employer has interested to you for hiring on fulltime jobpost, Check it out!`,
-        },
+        changeOrderStatus: {
+          body: (id) => `Order #${id} status updated!`,
+        }
       },
     },
 

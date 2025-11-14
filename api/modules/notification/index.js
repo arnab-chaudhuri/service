@@ -11,6 +11,7 @@ module.exports = function (app) {
    */
   const Notification = app.models.Notification;
   const Admin = app.models.Admin;
+  const RestaurantOwner = app.models.RestaurantOwner;
   const User = app.models.User;
   const Role = app.models.Role;
   // let inAppNotification = app.config.notification.inApp(app, app.config.lang.defaultLanguage);
@@ -48,30 +49,39 @@ module.exports = function (app) {
    * @return {Promise}                  The promise
    */
   const unreadNotificationCount = (query) => Notification.countDocuments(query).exec();
-  
-  const sendInAppNotificationToAdmin = (metadata) => {
-    return Role.find({ 'permissions.moduleKey': metadata.moduleName }, { _id: 1 }).then((roles) => {
+
+  const sendInAppNotificationToRestaurantStaffs = (restaurantRef, metadata) => {
+    return Role.find({
+      status: app.config.contentManagement.role.active,
+      'permissions.moduleKey': metadata.moduleName, restaurantRef: restaurantRef
+    }, { _id: 1 }).then((roles) => {
       const roleIds = roles.map((each) => each._id);
       // console.log('roleIds', roleIds);
-      return Admin.find({ $or: [{ 'roleInfo.isSuperAdmin': true }, { 'roleInfo.roleId': { $in: roleIds } }] })
+      return RestaurantOwner.find({
+        restaurantRef: restaurantRef,
+        accountStatus: app.config.user.accountStatus.restaurantOwner.active,
+        $or: [{ 'roleInfo.isSuperRestaurantOwner': true },
+        { 'roleInfo.roleId': { $in: roleIds } }]
+      })
         .select({ _id: 1 })
-        .then((adminList) => {
-          // console.log('adminList', adminList);
-          adminList.forEach((each) => {
-            //////////////////////////
-            //Send Inapp to Admin//
-            //////////////////////////
-            app.service.notification.inApp.send({
-              userId: each._id,
-              userType: app.config.user.role.admin,
-              content: {
-                notificationType: metadata.notificationType,
-                info: {
-                  message: metadata.message,
-                  redirectionId: metadata.redirectionId,
+        .then((resStaffList) => {
+          // console.log('resStaffList', resStaffList);
+          resStaffList.forEach((each) => {
+            if (!metadata.userRef || (metadata.userRef && metadata.userRef.toString() !== each._id.toString())) {
+              app.service.notification.inApp.send({
+                userId: each._id,
+                userType: app.config.user.role.restaurantOwner,
+                restaurantRef: restaurantRef,
+                content: {
+                  notificationType: metadata.notificationType,
+                  info: {
+                    message: metadata.message,
+                    redirectionId: metadata.redirectionId,
+                  },
                 },
-              },
-            });
+              });
+            }
+
           });
         });
     });
@@ -127,7 +137,7 @@ module.exports = function (app) {
     markAsRead: markAsRead,
     markAllAsRead: markAllAsRead,
     unreadNotificationCount: unreadNotificationCount,
-    sendInAppNotificationToAdmin: sendInAppNotificationToAdmin,
+    sendInAppNotificationToRestaurantStaffs: sendInAppNotificationToRestaurantStaffs,
     createNotification: createNotification
   };
 };

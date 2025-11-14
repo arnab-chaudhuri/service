@@ -30,7 +30,10 @@ module.exports = function (app) {
 
   const getAll = (req, res, next) => {
     notification
-      .list({})
+      .list({
+        restaurantRef: req.session.user.restaurantRef,
+        user: req.session.user._id
+      })
       .then((output) => {
         req.workflow.outcome.data = output;
 

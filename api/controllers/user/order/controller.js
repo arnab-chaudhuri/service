@@ -17,6 +17,7 @@ module.exports = function (app) {
   const tableSession = app.module.tableSession;
   const table = app.module.table;
   const sse = app.module.sse;
+  const notification = app.module.notification;
 
   /**
    * Adds a order
@@ -88,9 +89,20 @@ module.exports = function (app) {
                   output1.orderRef = output._id;
                   tableSession.edit(output1);
                 }
+
+                let inAppNotification = app.config.notification.inApp(app, app.config.lang.defaultLanguage);
+                
                 sse.broadcastOrderUpdate({
                   restaurantRef: req.body.restaurantRef,
-                  type: "NEW_ORDER"
+                  type: "NEW_ORDER",
+                  message: inAppNotification.toRestaurantOwner.newOrder.body(),
+                });
+
+                notification.sendInAppNotificationToRestaurantStaffs(req.body.restaurantRef, {
+                  moduleName: 'orders',
+                  notificationType: "NEW_ORDER",
+                  message: inAppNotification.toRestaurantOwner.newOrder.body(),
+                  redirectionId: output._id
                 });
 
                 req.workflow.outcome.data = output;

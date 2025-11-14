@@ -9,6 +9,10 @@ module.exports = function (app, mongoose /*, plugins*/) {
       user: {
         type: mongoose.Schema.Types.ObjectId,
       },
+      restaurantRef: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Restaurant'
+      },
       /**
        *
        * This field will be used with userId to populate the proper data
