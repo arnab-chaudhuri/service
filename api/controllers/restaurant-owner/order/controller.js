@@ -60,7 +60,7 @@ module.exports = function (app) {
                     sse.broadcastOrderUpdate({
                       orderId: output.idbId.toString(),
                       restaurantRef: req.session.user.restaurantRef.toString(),
-                      message: inAppNotification.toRestaurantOwner.newOrder.body(),
+                      message: inAppNotification.toRestaurantOwner.newOrder.body(req.session.user.personalInfo.fullName),
                       type: "NEW_ORDER_BY_STAFF",
                       userRef: req.session.user._id.toString()
                     });
@@ -68,9 +68,10 @@ module.exports = function (app) {
                     notification.sendInAppNotificationToRestaurantStaffs(req.session.user.restaurantRef, {
                       moduleName: 'orders',
                       notificationType: "NEW_ORDER_BY_STAFF",
-                      message: inAppNotification.toRestaurantOwner.newOrder.body(),
+                      message: inAppNotification.toRestaurantOwner.newOrder.body(req.session.user.personalInfo.fullName),
                       redirectionId: output.idbId,
-                      userRef: req.session.user._id
+                      userRef: req.session.user._id,
+                      staffName: req.session.user.personalInfo.fullName
                     });
 
                     req.workflow.outcome.data = output;
@@ -211,11 +212,32 @@ module.exports = function (app) {
           .then(output1 => {
             order.edit(orderData, req.session.user)
               .then(output => {
+
+
+                let inAppNotification = app.config.notification.inApp(app, app.config.lang.defaultLanguage);
+
                 sse.broadcastOrderUpdate({
                   orderId: orderData._id.toString(),
                   restaurantRef: req.session.user.restaurantRef.toString(),
                   status: orderData.status,
                   type: "ACCEPT_ORDER"
+                });
+
+                sse.broadcastOrderUpdate({
+                  orderId: orderData.idbId.toString(),
+                  restaurantRef: req.session.user.restaurantRef.toString(),
+                  type: "ACCEPT_ORDER_BY_STAFF",
+                  message: inAppNotification.toRestaurantOwner.acceptOrder.body(orderData.orderId, req.session.user.personalInfo.fullName),
+                  userRef: req.session.user._id.toString()
+                });
+
+                notification.sendInAppNotificationToRestaurantStaffs(req.session.user.restaurantRef, {
+                  moduleName: 'orders',
+                  notificationType: "ACCEPT_ORDER_BY_STAFF",
+                  message: inAppNotification.toRestaurantOwner.acceptOrder.body(orderData.orderId, req.session.user.personalInfo.fullName),
+                  redirectionId: orderData.idbId,
+                  userRef: req.session.user._id,
+                  staffName: req.session.user.personalInfo.fullName
                 });
                 req.workflow.outcome.data = output;
                 req.workflow.emit('response');
@@ -322,6 +344,12 @@ module.exports = function (app) {
         "billRef.paymentDetails": 1,
         "billRef.total": 1,
         "billRef._id": 1,
+        "billRef.offlineId": 1,
+        "billRef.billNo": 1,
+        "billRef.restaurantRef": 1,
+        "billRef.subTotal": 1,
+        "billRef.discountDetails": 1,
+        "billRef.gstDetails": 1,
         createdAt: 1,
         updatedAt: 1,
         _id: 1
@@ -415,6 +443,12 @@ module.exports = function (app) {
         "billRef.paymentDetails": 1,
         "billRef.total": 1,
         "billRef._id": 1,
+        "billRef.offlineId": 1,
+        "billRef.billNo": 1,
+        "billRef.restaurantRef": 1,
+        "billRef.subTotal": 1,
+        "billRef.discountDetails": 1,
+        "billRef.gstDetails": 1,
         createdAt: 1,
         updatedAt: 1,
         _id: 1
@@ -470,16 +504,17 @@ module.exports = function (app) {
               orderId: req.orderId.idbId.toString(),
               restaurantRef: req.session.user.restaurantRef.toString(),
               type: "UPDATE_ORDER_BY_STAFF",
-              message: inAppNotification.toRestaurantOwner.updateOrder.body(orderData.orderId),
+              message: inAppNotification.toRestaurantOwner.updateOrder.body(orderData.orderId, req.session.user.personalInfo.fullName),
               userRef: req.session.user._id.toString()
             });
 
             notification.sendInAppNotificationToRestaurantStaffs(req.session.user.restaurantRef, {
               moduleName: 'orders',
               notificationType: "UPDATE_ORDER_BY_STAFF",
-              message: inAppNotification.toRestaurantOwner.updateOrder.body(orderData.orderId),
+              message: inAppNotification.toRestaurantOwner.updateOrder.body(orderData.orderId, req.session.user.personalInfo.fullName),
               redirectionId: req.orderId.idbId,
-              userRef: req.session.user._id
+              userRef: req.session.user._id,
+              staffName: req.session.user.personalInfo.fullName
             });
 
             if (req.body.tableRef && (!oldTableId || (oldTableId && req.body.tableRef.toString() !== oldTableId.toString()))) {
@@ -529,16 +564,17 @@ module.exports = function (app) {
                   orderId: orderData.idbId.toString(),
                   restaurantRef: req.session.user.restaurantRef.toString(),
                   type: "UPDATE_ORDER_BY_STAFF",
-                  message: inAppNotification.toRestaurantOwner.updateOrder.body(orderData.orderId),
+                  message: inAppNotification.toRestaurantOwner.updateOrder.body(orderData.orderId, req.session.user.personalInfo.fullName),
                   userRef: req.session.user._id.toString()
                 });
 
                 notification.sendInAppNotificationToRestaurantStaffs(req.session.user.restaurantRef, {
                   moduleName: 'orders',
                   notificationType: "UPDATE_ORDER_BY_STAFF",
-                  message: inAppNotification.toRestaurantOwner.updateOrder.body(orderData.orderId),
+                  message: inAppNotification.toRestaurantOwner.updateOrder.body(orderData.orderId, req.session.user.personalInfo.fullName),
                   redirectionId: orderData.idbId,
-                  userRef: req.session.user._id
+                  userRef: req.session.user._id,
+                  staffName: req.session.user.personalInfo.fullName
                 });
 
                 if (req.body.tableRef && (!oldTableId || (oldTableId && req.body.tableRef.toString() !== oldTableId.toString()))) {
@@ -604,16 +640,17 @@ module.exports = function (app) {
               orderId: orderData.idbId.toString(),
               restaurantRef: req.session.user.restaurantRef.toString(),
               type: "CANCEL_ORDER_BY_STAFF",
-              message: inAppNotification.toRestaurantOwner.cancelOrder.body(orderData.orderId),
+              message: inAppNotification.toRestaurantOwner.cancelOrder.body(orderData.orderId, req.session.user.personalInfo.fullName),
               userRef: req.session.user._id.toString()
             });
 
             notification.sendInAppNotificationToRestaurantStaffs(req.session.user.restaurantRef, {
               moduleName: 'orders',
               notificationType: "CANCEL_ORDER_BY_STAFF",
-              message: inAppNotification.toRestaurantOwner.cancelOrder.body(orderData.orderId),
+              message: inAppNotification.toRestaurantOwner.cancelOrder.body(orderData.orderId, req.session.user.personalInfo.fullName),
               redirectionId: orderData.idbId,
-              userRef: req.session.user._id
+              userRef: req.session.user._id,
+              staffName: req.session.user.personalInfo.fullName
             });
 
             req.workflow.outcome.data = output;
@@ -640,15 +677,16 @@ module.exports = function (app) {
               status: orderData.status,
               type: "CHANGE_ORDER_STATUS",
               userRef: req.session.user._id.toString(),
-              message: inAppNotification.toRestaurantOwner.changeOrderStatus.body(orderData.orderId),
+              message: inAppNotification.toRestaurantOwner.changeOrderStatus.body(orderData.orderId, req.session.user.personalInfo.fullName),
             });
 
             notification.sendInAppNotificationToRestaurantStaffs(req.session.user.restaurantRef, {
               moduleName: 'orders',
               notificationType: "CHANGE_ORDER_STATUS",
-              message: inAppNotification.toRestaurantOwner.changeOrderStatus.body(orderData.orderId),
+              message: inAppNotification.toRestaurantOwner.changeOrderStatus.body(orderData.orderId, req.session.user.personalInfo.fullName),
               redirectionId: orderData.idbId,
-              userRef: req.session.user._id
+              userRef: req.session.user._id,
+              staffName: req.session.user.personalInfo.fullName
             });
 
             req.workflow.outcome.data = output;

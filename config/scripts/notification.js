@@ -84,20 +84,28 @@ module.exports = {
     return {
       toRestaurantOwner: {
         newOrder: {
-          body: () => `${app.config.lang[selectedLang].inApp.toRestaurantOwner.newOrder.body()}`,
+          body: (staffName) => `${app.config.lang[selectedLang].inApp.toRestaurantOwner.newOrder.body(staffName)}`,
           type: "newOrder",
         },
         updateOrder: {
-          body: (id) => `${app.config.lang[selectedLang].inApp.toRestaurantOwner.updateOrder.body(id)}`,
+          body: (id, staffName) => `${app.config.lang[selectedLang].inApp.toRestaurantOwner.updateOrder.body(id, staffName)}`,
           type: "updateOrder",
         },
         cancelOrder: {
-          body: (id) => `${app.config.lang[selectedLang].inApp.toRestaurantOwner.cancelOrder.body(id)}`,
+          body: (id, staffName) => `${app.config.lang[selectedLang].inApp.toRestaurantOwner.cancelOrder.body(id, staffName)}`,
           type: "cancelOrder",
         },
+        acceptOrder: {
+          body: (id, staffName) => `${app.config.lang[selectedLang].inApp.toRestaurantOwner.acceptOrder.body(id, staffName)}`,
+          type: "acceptOrder",
+        },
         changeOrderStatus: {
-          body: (id) => `${app.config.lang[selectedLang].inApp.toRestaurantOwner.changeOrderStatus.body(id)}`,
+          body: (id, staffName) => `${app.config.lang[selectedLang].inApp.toRestaurantOwner.changeOrderStatus.body(id, staffName)}`,
           type: "changeOrderStatus",
+        },
+        billPaid: {
+          body: (id, staffName) => `${app.config.lang[selectedLang].inApp.toRestaurantOwner.billPaid.body(id, staffName)}`,
+          type: "billPaid",
         },
       },
     };

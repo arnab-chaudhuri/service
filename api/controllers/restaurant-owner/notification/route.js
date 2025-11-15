@@ -36,6 +36,15 @@ module.exports = function (app, options) {
   /**
    * Fetch/Edit global config
    */
+
+  router.get('/get-unread-count', [
+    controllers.getUnreadCount
+  ]);
+
+  router.put('/mark-all-as-read', [
+    controllers.markAllAsRead
+  ]);
+
   router
     .route("/")
     .get([controllers.get])

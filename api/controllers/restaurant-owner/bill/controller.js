@@ -13,6 +13,8 @@ module.exports = function (app) {
   const order = app.module.order;
   const menu = app.module.menu;
   const tableSession = app.module.tableSession;
+  const sse = app.module.sse;
+  const notification = app.module.notification;
 
   /**
    * Fetches a bill
@@ -146,6 +148,26 @@ module.exports = function (app) {
             order.updateStatus(orderData.orderRef);
             menu.updateOrderCount(orderData.orderRef);
             tableSession.updateStatusByOrderId(orderData.orderRef, orderData.restaurantRef);
+
+            let inAppNotification = app.config.notification.inApp(app, app.config.lang.defaultLanguage);
+
+            sse.broadcastOrderUpdate({
+              orderId: output.offlineId.toString(),
+              restaurantRef: req.session.user.restaurantRef.toString(),
+              type: "PAYMENT_BY_STAFF",
+              message: inAppNotification.toRestaurantOwner.billPaid.body(output.billNo, req.session.user.personalInfo.fullName),
+              userRef: req.session.user._id.toString()
+            });
+
+            notification.sendInAppNotificationToRestaurantStaffs(req.session.user.restaurantRef, {
+              moduleName: 'bills',
+              notificationType: "PAYMENT_BY_STAFF",
+              message: inAppNotification.toRestaurantOwner.billPaid.body(output.billNo, req.session.user.personalInfo.fullName),
+              redirectionId: output.offlineId,
+              userRef: req.session.user._id,
+              staffName: req.session.user.personalInfo.fullName
+            });
+
             req.workflow.outcome.data = output;
             req.workflow.emit('response');
           })

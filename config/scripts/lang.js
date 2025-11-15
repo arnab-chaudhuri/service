@@ -8,16 +8,22 @@ module.exports = {
     inApp: {
       toRestaurantOwner: {
         newOrder: {
-          body: () => `New order arrived!`,
+          body: (staffName) => `New order arrived ${staffName ? `by ${staffName}` : ''}!`,
         },
         updateOrder: {
-          body: (id) => `Order #${id} updated!`,
+          body: (id, staffName) => `Order #${id} updated by ${staffName}!`,
         },
         cancelOrder: {
-          body: (id) => `Order #${id} cancelled!`,
+          body: (id, staffName) => `Order #${id} cancelled by ${staffName}!`,
         },
         changeOrderStatus: {
-          body: (id) => `Order #${id} status updated!`,
+          body: (id, staffName) => `Order #${id} status updated by ${staffName}!`,
+        },
+        billPaid: {
+          body: (id, staffName) => `Bill #${id} marked as paid by ${staffName}!`,
+        },
+        acceptOrder: {
+          body: (id, staffName) => `Order #${id} status updated by ${staffName}!`,
         }
       },
     },

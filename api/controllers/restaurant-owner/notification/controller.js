@@ -28,12 +28,47 @@ module.exports = function (app) {
       .catch(next);
   };
 
-  const getAll = (req, res, next) => {
+  const getUnreadCount = (req, res, next) => {
     notification
-      .list({
-        restaurantRef: req.session.user.restaurantRef,
-        user: req.session.user._id
+      .unreadNotificationCount({
+        restaurantRef: req.session.user.restaurantRef.toString(),
+        user: req.session.user._id.toString(),
+        seen: false
       })
+      .then((output) => {
+        req.workflow.outcome.data = output;
+
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+
+  const markAllAsRead = (req, res, next) => {
+    notification
+      .markAllAsRead({
+        restaurantRef: req.session.user.restaurantRef.toString(),
+        _id: req.session.user._id.toString(),
+      })
+      .then((output) => {
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+
+  const getAll = (req, res, next) => {
+    let query = {
+      skip: Number(req.query.skip) || app.config.page.defaultSkip,
+      limit: Number(req.query.limit) || app.config.page.defaultLimit,
+      filters: {
+        restaurantRef: req.session.user.restaurantRef.toString(),
+        user: req.session.user._id.toString()
+      },
+      sort: {
+        createdAt: -1
+      }
+    };
+    notification
+      .list(query)
       .then((output) => {
         req.workflow.outcome.data = output;
 
@@ -44,6 +79,8 @@ module.exports = function (app) {
 
   return {
     createNotification: createNotification,
-    get: getAll
+    get: getAll,
+    getUnreadCount: getUnreadCount,
+    markAllAsRead: markAllAsRead
   };
 };

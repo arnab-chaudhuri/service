@@ -27,7 +27,7 @@ module.exports = function (app) {
    * @param  {Object} notificationDoc     Updated notification doc
    * @return {Promise}                    The promise
    */
-  const markAllAsRead = (user) => Notification.updateMany({ user: user._id }, { $set: { seen: true } });
+  const markAllAsRead = (user) => Notification.updateMany({ user: user._id, restaurantRef: user.restaurantRef }, { $set: { seen: true } });
 
   /**
    * Fetches the notification list
@@ -77,6 +77,8 @@ module.exports = function (app) {
                   info: {
                     message: metadata.message,
                     redirectionId: metadata.redirectionId,
+                    staffRef: metadata.userRef || "",
+                    staffName: metadata.staffName || ""
                   },
                 },
               });
