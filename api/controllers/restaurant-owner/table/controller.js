@@ -64,7 +64,11 @@ module.exports = function(app) {
       sort: {},
       populate: [{
         path: 'currentSessionRef',
-        select: 'status orderRef'
+        select: 'status orderRef',
+        populate: [{
+          path: 'orderRef',
+          select: 'createdAt orderId status'
+        }]
       }]
     };
 

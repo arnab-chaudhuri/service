@@ -16,6 +16,7 @@ module.exports = function (app) {
   const table = app.module.table;
   const sse = app.module.sse;
   const notification = app.module.notification;
+  const menu = app.module.menu;
 
   /**
    * Adds a order
@@ -129,7 +130,22 @@ module.exports = function (app) {
         // update inventory - await in case returns a promise
         await inventory.updateInventoryCountSync(aggregateItems(outputOrders, req.session.user));
 
+        const carts = [];
+        // collect all cart items from outputOrders
+        outputOrders.forEach(o => {
+          if (Array.isArray(o.cart) && o.cart.length &&
+        (o.status === app.config.contentManagement.order.completed ||
+          o.status === app.config.contentManagement.order.deleted
+        )) {
+            carts.push(...o.cart);
+          }
+        });
+        if (carts.length) {
+          await menu.updateBulkOrderCount(carts);
+        }
+
         const bills = newOrders.map(n => {
+            
           const match = outputOrders.find(o => String(o.idbId) === String(n.idbId));
           const obj = {
             offlineId: match.idbId,
@@ -169,6 +185,22 @@ module.exports = function (app) {
         await inventory.rollbackInventorySync(aggregateItems(updateOrders, req.session.user));
 
         const outputOrders = await order.bulkUpdateOrders(updateOrders, req.session.user);
+
+        const carts = [];
+        // collect all cart items from outputOrders
+        outputOrders.forEach(o => {
+          if (Array.isArray(o.cart) && o.cart.length &&
+        (o.status === app.config.contentManagement.order.completed ||
+          o.status === app.config.contentManagement.order.deleted
+        )) {
+            carts.push(...o.cart);
+          }
+        });
+
+        console.log("carts ", carts)
+        if (carts.length) {
+          await menu.updateBulkOrderCount(carts);
+        }
 
         const bills = updateOrders.map(n => {
           const match = outputOrders.find(o => String(o.idbId) === String(n.idbId));

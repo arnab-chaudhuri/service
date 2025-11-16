@@ -172,6 +172,23 @@ module.exports = function (app) {
     }
   };
 
+  const updateBulkOrderCount = async (carts) => {
+    console.log("carts ", carts)
+    // Prepare bulk operations
+    const bulkOps = carts
+      .filter(item => item.menuRef) // only if menuRef is present
+      .map(item => ({
+        updateOne: {
+          filter: { _id: item.menuRef },
+          update: { $inc: { noOfOrders: item.quantity } } // increase by quantity
+        }
+      }));
+
+    if (bulkOps.length > 0) {
+      await Menu.bulkWrite(bulkOps);
+    }
+  };
+
   return {
     'create': createMenu,
     'get': findMenuById,
@@ -180,6 +197,7 @@ module.exports = function (app) {
     'remove': removeMenu,
     'listFromApp': listFromApp,
     'removeInventoryItem': removeInventoryItem,
-    'updateOrderCount': updateOrderCount
+    'updateOrderCount': updateOrderCount,
+    'updateBulkOrderCount': updateBulkOrderCount
   };
 };

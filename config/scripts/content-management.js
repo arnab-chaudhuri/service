@@ -72,7 +72,9 @@ module.exports = {
   table: {
     active: 1,
     inActive: 2,
-    deleted: 3
+    deleted: 3,
+    occupied: 4,
+    reserved: 5
   },
   tableSession: {
     active: 1,

@@ -24,6 +24,7 @@ module.exports = function (app) {
         },
       }, {
         _id: 1,
+        idbId: 1,
         status: 1,
         orderId: 1,
         tableId: 1,

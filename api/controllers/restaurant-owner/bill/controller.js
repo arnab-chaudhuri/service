@@ -101,6 +101,7 @@ module.exports = function (app) {
 
       query.select = {
         billNo: 1,
+        offlineId: 1,
         total: 1,
         subTotal: 1,
         "orderRef.tableId": 1,
@@ -109,6 +110,7 @@ module.exports = function (app) {
         "orderRef.orderType": 1,
         "orderRef._id": 1,
         "orderRef.parcelDetails": 1,
+        "orderRef.idbId": 1,
         createdAt: 1,
         _id: 1,
         paymentDetails: 1,
