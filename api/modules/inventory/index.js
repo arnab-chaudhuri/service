@@ -130,51 +130,54 @@ module.exports = function (app) {
 
           if (menu.ingredients && menu.ingredients.length) {
             for (const ing of menu.ingredients) {
-              const requiredQty = ing.quantity * orderItem.quantity;
+              if (ing.inventoryRef) {
+                const requiredQty = ing.quantity * orderItem.quantity;
 
-              // if (ing.inventoryRef.quantity < requiredQty) {
-              //   await session.abortTransaction();
-              //   session.endSession();
-              //   return Promise.reject({
-              //     'errCode': 'NOT_ENOUGH_STOCK'
-              //   });
-              // }
+                // if (ing.inventoryRef.quantity < requiredQty) {
+                //   await session.abortTransaction();
+                //   session.endSession();
+                //   return Promise.reject({
+                //     'errCode': 'NOT_ENOUGH_STOCK'
+                //   });
+                // }
 
-              const locationList = ing.inventoryRef.locationList;
-              const locationData = locationList.find(each => each.location === ing.location);
-              if (locationData && Object.keys(locationData).length) {
-                if (locationData.quantity < requiredQty) {
-                  await session.abortTransaction();
-                  session.endSession();
-                  return Promise.reject({
-                    'errCode': 'NOT_ENOUGH_STOCK'
-                  });
+                const locationList = ing.inventoryRef.locationList;
+                const locationData = locationList.find(each => each.location === ing.location);
+                if (locationData && Object.keys(locationData).length) {
+                  if (locationData.quantity < requiredQty) {
+                    await session.abortTransaction();
+                    session.endSession();
+                    return Promise.reject({
+                      'errCode': 'NOT_ENOUGH_STOCK'
+                    });
+                  }
                 }
+
+                const historyEntry = {
+                  quantity: requiredQty,
+                  isDebited: true,
+                  reason: 'NEW_ORDER'
+                };
+
+                if (orderId) {
+                  historyEntry.orderRef = orderId;
+                }
+
+                invIds.push(ing.inventoryRef._id.toString());
+
+                // Push to bulk update list
+                bulkUpdates.push({
+                  updateOne: {
+                    filter: { _id: ing.inventoryRef._id },
+                    update: {
+                      $inc: { 'locationList.$[loc].quantity': -requiredQty, quantity: -requiredQty },
+                      $push: { 'locationList.$[loc].history': historyEntry }
+                    },
+                    arrayFilters: [{ 'loc.location': ing.location }]
+                  }
+                });
               }
 
-              const historyEntry = {
-                quantity: requiredQty,
-                isDebited: true,
-                reason: 'NEW_ORDER'
-              };
-
-              if (orderId) {
-                historyEntry.orderRef = orderId;
-              }
-
-              invIds.push(ing.inventoryRef._id.toString());
-
-              // Push to bulk update list
-              bulkUpdates.push({
-                updateOne: {
-                  filter: { _id: ing.inventoryRef._id },
-                  update: {
-                    $inc: { 'locationList.$[loc].quantity': -requiredQty, quantity: -requiredQty },
-                    $push: { 'locationList.$[loc].history': historyEntry }
-                  },
-                  arrayFilters: [{ 'loc.location': ing.location }]
-                }
-              });
 
             }
           }
@@ -222,31 +225,34 @@ module.exports = function (app) {
 
           if (menu.ingredients && menu.ingredients.length) {
             for (const ing of menu.ingredients) {
-              const requiredQty = ing.quantity * orderItem.quantity;
+              if (ing.inventoryRef) {
+                const requiredQty = ing.quantity * orderItem.quantity;
 
-              const historyEntry = {
-                quantity: requiredQty,
-                isDebited: true,
-                reason: 'NEW_ORDER'
-              };
+                const historyEntry = {
+                  quantity: requiredQty,
+                  isDebited: true,
+                  reason: 'NEW_ORDER'
+                };
 
-              if (orderItem.orderId) {
-                historyEntry.orderRef = orderItem.orderId?.toString();
+                if (orderItem.orderId) {
+                  historyEntry.orderRef = orderItem.orderId?.toString();
+                }
+
+                invIds.push(ing.inventoryRef._id.toString());
+
+                // Push to bulk update list
+                bulkUpdates.push({
+                  updateOne: {
+                    filter: { _id: ing.inventoryRef._id },
+                    update: {
+                      $inc: { 'locationList.$[loc].quantity': -requiredQty, quantity: -requiredQty },
+                      $push: { 'locationList.$[loc].history': historyEntry }
+                    },
+                    arrayFilters: [{ 'loc.location': ing.location }]
+                  }
+                });
               }
 
-              invIds.push(ing.inventoryRef._id.toString());
-
-              // Push to bulk update list
-              bulkUpdates.push({
-                updateOne: {
-                  filter: { _id: ing.inventoryRef._id },
-                  update: {
-                    $inc: { 'locationList.$[loc].quantity': -requiredQty, quantity: -requiredQty },
-                    $push: { 'locationList.$[loc].history': historyEntry }
-                  },
-                  arrayFilters: [{ 'loc.location': ing.location }]
-                }
-              });
 
             }
           }
@@ -352,12 +358,15 @@ module.exports = function (app) {
       existingOrder.cart.forEach(item => {
         if (item.menuRef) {
           item.menuRef.ingredients.forEach(ing => {
-            const qty = ing.quantity * item.quantity;
-            if (!restoreUsage[ing.inventoryRef._id]) {
-              restoreUsage[ing.inventoryRef._id] = 0;
+            if (ing.inventoryRef) {
+              const qty = ing.quantity * item.quantity;
+              if (!restoreUsage[ing.inventoryRef._id]) {
+                restoreUsage[ing.inventoryRef._id] = 0;
+              }
+              restoreUsage[ing.inventoryRef._id] += qty;
+              restoreUsageLoc[ing.inventoryRef._id] = ing.location;
             }
-            restoreUsage[ing.inventoryRef._id] += qty;
-            restoreUsageLoc[ing.inventoryRef._id] = ing.location;
+            
           });
         }
       });
@@ -410,12 +419,15 @@ module.exports = function (app) {
             }
 
             menu.ingredients.forEach(ing => {
-              const qty = ing.quantity * item.quantity;
-              if (!newIngredientUsage[ing.inventoryRef._id]) {
-                newIngredientUsage[ing.inventoryRef._id] = 0;
+              if (ing.inventoryRef) {
+                const qty = ing.quantity * item.quantity;
+                if (!newIngredientUsage[ing.inventoryRef._id]) {
+                  newIngredientUsage[ing.inventoryRef._id] = 0;
+                }
+                newIngredientUsage[ing.inventoryRef._id] += qty;
+                newIngredientLoc[ing.inventoryRef._id] = ing.location;
               }
-              newIngredientUsage[ing.inventoryRef._id] += qty;
-              newIngredientLoc[ing.inventoryRef._id] = ing.location;
+              
             });
           }
 
@@ -504,63 +516,66 @@ module.exports = function (app) {
       for (const order of updatedItems) {
         // if (order.status !== app.config.contentManagement.order.deleted ||
         //   (order.status === app.config.contentManagement.order.deleted && order.isRestoredWhileCancel)) {
-          const existingOrder = await Order.findById(order.orderId?.toString())
-            .populate({
-              path: "cart.menuRef",
-              populate: { path: "ingredients.inventoryRef" }
-            })
-            .session(session);
+        const existingOrder = await Order.findById(order.orderId?.toString())
+          .populate({
+            path: "cart.menuRef",
+            populate: { path: "ingredients.inventoryRef" }
+          })
+          .session(session);
 
-          if (!existingOrder) {
-            if (session.inTransaction()) {
-              await session.abortTransaction();
-              session.endSession();
-            }
+        if (!existingOrder) {
+          if (session.inTransaction()) {
+            await session.abortTransaction();
+            session.endSession();
           }
+        }
 
-          // Step 2: Restore inventory from old order
-          const restoreUsage = {};
-          const restoreUsageLoc = {};
-          existingOrder.cart.forEach(item => {
-            if (item.menuRef) {
-              item.menuRef.ingredients.forEach(ing => {
+        // Step 2: Restore inventory from old order
+        const restoreUsage = {};
+        const restoreUsageLoc = {};
+        existingOrder.cart.forEach(item => {
+          if (item.menuRef) {
+            item.menuRef.ingredients.forEach(ing => {
+              if (ing.inventoryRef) {
                 const qty = ing.quantity * item.quantity;
                 if (!restoreUsage[ing.inventoryRef._id]) {
                   restoreUsage[ing.inventoryRef._id] = 0;
                 }
                 restoreUsage[ing.inventoryRef._id] += qty;
                 restoreUsageLoc[ing.inventoryRef._id] = ing.location;
-              });
+              }
+              
+            });
+          }
+        });
+
+        if (restoreUsage && Object.keys(restoreUsage).length) {
+
+          const restoreOps = Object.entries(restoreUsage).map(([invId, qty]) => {
+            const historyEntry = {
+              orderRef: order.orderId?.toString(),
+              quantity: qty,
+              isDebited: false,
+              reason: 'ORDER_UPDATE'
+            };
+            return {
+              updateOne: {
+                filter: { _id: invId },
+                update: {
+                  $inc: {
+                    'locationList.$[loc].quantity': qty, quantity: qty,
+                  },
+                  $push: { 'locationList.$[loc].history': historyEntry }
+                },
+                arrayFilters: [{ 'loc.location': restoreUsageLoc[invId] }]
+              }
             }
           });
 
-          if (restoreUsage && Object.keys(restoreUsage).length) {
-
-            const restoreOps = Object.entries(restoreUsage).map(([invId, qty]) => {
-              const historyEntry = {
-                orderRef: order.orderId?.toString(),
-                quantity: qty,
-                isDebited: false,
-                reason: 'ORDER_UPDATE'
-              };
-              return {
-                updateOne: {
-                  filter: { _id: invId },
-                  update: {
-                    $inc: {
-                      'locationList.$[loc].quantity': qty, quantity: qty,
-                    },
-                    $push: { 'locationList.$[loc].history': historyEntry }
-                  },
-                  arrayFilters: [{ 'loc.location': restoreUsageLoc[invId] }]
-                }
-              }
-            });
-
-            if (restoreOps.length > 0) {
-              await Inventory.bulkWrite(restoreOps, { session });
-            }
+          if (restoreOps.length > 0) {
+            await Inventory.bulkWrite(restoreOps, { session });
           }
+        }
         // }
 
       }
@@ -582,12 +597,15 @@ module.exports = function (app) {
             }
 
             menu.ingredients.forEach(ing => {
-              const qty = ing.quantity * item.quantity;
-              if (!newIngredientUsage[ing.inventoryRef._id]) {
-                newIngredientUsage[ing.inventoryRef._id] = 0;
+              if (ing.inventoryRef) {
+                const qty = ing.quantity * item.quantity;
+                if (!newIngredientUsage[ing.inventoryRef._id]) {
+                  newIngredientUsage[ing.inventoryRef._id] = 0;
+                }
+                newIngredientUsage[ing.inventoryRef._id] += qty;
+                newIngredientLoc[ing.inventoryRef._id] = ing.location;
               }
-              newIngredientUsage[ing.inventoryRef._id] += qty;
-              newIngredientLoc[ing.inventoryRef._id] = ing.location;
+              
             });
           }
 
