@@ -74,9 +74,9 @@ module.exports = function (app, options) {
   /**
      *  Changes(Suspend) the status of an Admin User
      */
-  router.put('/change-status/:adminUserId', [
+  router.put('/change-status/:restaurantOwnerId', [
     options.validateParams(schemaValidator.param),
-    commonMiddlewares.validateId('Admin', 'adminUserId'),
+    commonMiddlewares.validateId('RestaurantOwner', 'restaurantOwnerId'),
     controllers.changeStatus
   ]);
 

@@ -66,7 +66,9 @@ module.exports = function(app) {
       skip: Number(req.query.skip) || app.config.page.defaultSkip,
       limit: Number(req.query.limit) || app.config.page.defaultLimit,
       filters: {
-        accountStatus: app.config.user.accountStatus.restaurantOwner.active,
+        accountStatus: {
+          '$ne': app.config.user.accountStatus.restaurantOwner.deleted
+        },
         restaurantRef: req.session.user.restaurantRef,
         _id: {
           '$ne': req.session.user._id
@@ -163,11 +165,11 @@ module.exports = function(app) {
    */
   const changeStatus = (req, res, next) => {
 
-    if (!req.session.user.roleInfo.isSuperAdmin) {
+    if (!req.session.user.roleInfo.isSuperRestaurantOwner) {
       return next({ 'errCode': 'N0_ACCESS' });
     }
-    if (req.restaurantOwnerId.roleInfo.isSuperAdmin) {
-      return next({ 'errCode': 'SUPER_ADMIN_CANNOT_BE_SUSPENDED' });
+    if (req.restaurantOwnerId.roleInfo.isSuperRestaurantOwner) {
+      return next({ 'errCode': 'RESTAURANT_OWNER_CANNOT_BE_SUSPENDED' });
     }
     restaurantOwner.crud.changeStatus(req.restaurantOwnerId, req.body)
       .then(output => {

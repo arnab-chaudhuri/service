@@ -138,7 +138,8 @@ module.exports = function (app, mongoose /*, plugins*/) {
       },
       securityPinDetails: {
         pin: {
-          type: String
+          type: String,
+          default: "0000"
         },
         updateDate: {
           type: Date
