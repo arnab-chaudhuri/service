@@ -24,8 +24,6 @@ module.exports = function (app) {
       return Restaurant.findById(userRef.restaurantRef)
         .then(restDetails => {
           const arr = config.tableIds.map(element => {
-            console.log("element===============================")
-            console.log(element)
             const monId = new mongoose.Types.ObjectId();
             return {
               tableId: element.tableId,
