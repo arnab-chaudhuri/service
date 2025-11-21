@@ -481,6 +481,7 @@ module.exports = function (app) {
         "billRef.subTotal": 1,
         "billRef.discountDetails": 1,
         "billRef.gstDetails": 1,
+        createdBy: 1,
         createdAt: 1,
         updatedAt: 1,
         _id: 1

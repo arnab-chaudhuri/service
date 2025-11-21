@@ -84,6 +84,19 @@ module.exports = function (app) {
       });
   };
 
+  const updateParcel = (restaurantId, data) => {
+    return Restaurant.findById(restaurantId)
+      .then(restaurant => {
+        if (!restaurant) {
+          return Promise.reject({
+            'errCode': 'RESTAURANT_NOT_FOUND'
+          });
+        }
+        restaurant.config.parcels = data;
+        return restaurant.save();
+      });
+  };
+
   const updateGstDetails = (restaurantId, data) => {
     return Restaurant.findById(restaurantId)
       .then(restaurant => {
@@ -133,6 +146,7 @@ module.exports = function (app) {
     'set': editMyRestaurant,
     'updateGstDetails': updateGstDetails,
     'updateLocations': updateLocations,
-    'updateInventoryCategories': updateInventoryCategories
+    'updateInventoryCategories': updateInventoryCategories,
+    'updateParcel': updateParcel
   };
 };

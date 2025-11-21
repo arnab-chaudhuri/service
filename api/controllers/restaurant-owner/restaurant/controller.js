@@ -28,6 +28,17 @@ module.exports = function (app) {
       .catch(next);
   };
 
+  const updateParcel = (req, res, next) => {
+    restaurant
+      .updateParcel(req.session.user.restaurantRef, req.body)
+      .then((output) => {
+        req.workflow.outcome.data = output;
+
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+
   const updateGstDetails = (req, res, next) => {
     restaurant
       .updateGstDetails(req.session.user.restaurantRef, req.body)
@@ -84,6 +95,7 @@ module.exports = function (app) {
     get: getRestaurantDetails,
     updateGstDetails: updateGstDetails,
     updateLocations: updateLocations,
-    updateInventoryCategories: updateInventoryCategories
+    updateInventoryCategories: updateInventoryCategories,
+    updateParcel: updateParcel
   };
 };

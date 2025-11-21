@@ -48,6 +48,11 @@ module.exports = function (app, options) {
     // options.validateBody(schemaValidator.updateGstDetails),
     controllers.updateInventoryCategories
   ]);
+
+  router.put('/update-parcel', [
+    // options.validateBody(schemaValidator.updateGstDetails),
+    controllers.updateParcel
+  ]);
   /**
    * Fetch/Edit restaurant
    */

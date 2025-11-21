@@ -60,7 +60,8 @@ module.exports = function(app, mongoose) {
       },
       parcels: [{
         name: String,
-        price: Number
+        price: Number,
+        status: Number // 1: Active, 2: Deleted
       }]
     },
     inventoryLocations: [{

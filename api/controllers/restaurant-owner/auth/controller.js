@@ -123,7 +123,7 @@ module.exports = function (app) {
     restaurantOwner.auth
       .verifyToken(token, 'reset')
       .then((output) => {
-        req.workflow.outcome.data = app.utility.format.user(output);
+        // req.workflow.outcome.data = app.utility.format.user(output);
         req.workflow.emit('response');
       })
       .catch(next);
