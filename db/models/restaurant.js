@@ -73,7 +73,12 @@ module.exports = function(app, mongoose) {
       }
     }],
     inventoryCategories: [{
-      name: String
+      name: String,
+      code: String,
+      status: {
+        type: Number,
+        default: app.config.contentManagement.invCategories.active
+      }
     }],
     gstDetails: {
       gstEnabled: {

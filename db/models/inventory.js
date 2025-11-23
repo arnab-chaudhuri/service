@@ -5,6 +5,12 @@ module.exports = function (app, mongoose) {
       type: String,
       required: true
     },
+    preCode: {
+      type: String
+    },
+    code: {
+      type: String
+    },
     status: {
       type: Number,
       default: app.config.contentManagement.inventory.active

@@ -90,6 +90,11 @@ module.exports = {
     inActive: 2,
     deleted: 3
   },
+  invCategories: {
+    active: 1,
+    inActive: 2,
+    deleted: 3
+  },
   defaultAppView: {
     list: 1,
     card: 2
