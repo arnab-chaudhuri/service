@@ -325,7 +325,7 @@ module.exports = function (app) {
     };
 
     if (req.body.filters) {
-      let { paymentStatus, orderStatus, startDate, endDate, search } = req.body.filters;
+      let { paymentStatus, orderStatus, startDate, endDate, search, offline } = req.body.filters;
       let andFilters = [{
         restaurantRef: req.session.user.restaurantRef
       }];
@@ -340,6 +340,10 @@ module.exports = function (app) {
 
       if (orderStatus) {
         andFilters.push({ "status": Number(orderStatus) });
+      }
+
+      if (offline) {
+        andFilters.push({ "isOnline": false });
       }
 
       if (startDate && endDate) {
