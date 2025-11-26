@@ -1,7 +1,7 @@
 'use strict';
 
 ///////////////////////////////////////////////////
-// THIS IS THE ROUTE FILE FOR ADMIN USER MODULE //
+// THIS IS THE ROUTE FILE FOR CATEGORY MODULE //
 ///////////////////////////////////////////////////
 
 /**
@@ -16,6 +16,7 @@ const router = require('express').Router();
  * @return {Object}          The revealed module
  */
 module.exports = function (app, options) {
+
   /**
    * The JSON-Schema for these APIs
    * @type {Object}
@@ -34,40 +35,42 @@ module.exports = function (app, options) {
    */
   const commonMiddlewares = require('../../common/middleware')(app);
 
+  /**
+   * Adds a inventory
+   */
   router.post('/add', [
     options.validateBody(schemaValidator.add),
-    controllers.create
+    controllers.add
   ]);
 
-  router.put('/update-gst-details', [
-    options.validateBody(schemaValidator.updateGstDetails),
-    controllers.updateGstDetails
-  ]);
-
-  router.put('/update-locations', [
-    // options.validateBody(schemaValidator.updateGstDetails),
-    controllers.updateLocations
-  ]);
-
-  router.put('/update-inventory-categories', [
-    // options.validateBody(schemaValidator.updateGstDetails),
-    controllers.updateInventoryCategories
-  ]);
-
-  router.put('/update-parcel', [
-    // options.validateBody(schemaValidator.updateGstDetails),
-    controllers.updateParcel
-  ]);
   /**
-   * Fetch/Edit restaurant
+   * Fetches a list of inventories
    */
-  router
-    .route("/")
-    .get([controllers.get])
+  router.post('/list', [
+    options.validateQuery(schemaValidator.listQuery),
+    options.validateBody(schemaValidator.list),
+    controllers.list
+  ]);
+
+  /**
+   * Fetches a inventory, edits a inventory and removes a inventory
+   */
+  router.route('/:expenseId')
+    .all([
+      options.validateParams(schemaValidator.param),
+      commonMiddlewares.validateId('Expense', 'expenseId')
+    ])
+    .get([
+      controllers.get
+    ])
     .put([
       options.validateBody(schemaValidator.edit),
-      controllers.edit,
+      controllers.edit
+    ])
+    .delete([
+      controllers.delete
     ]);
+
 
   return router;
 };

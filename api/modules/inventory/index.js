@@ -366,7 +366,7 @@ module.exports = function (app) {
               restoreUsage[ing.inventoryRef._id] += qty;
               restoreUsageLoc[ing.inventoryRef._id] = ing.location;
             }
-            
+
           });
         }
       });
@@ -427,7 +427,7 @@ module.exports = function (app) {
                 newIngredientUsage[ing.inventoryRef._id] += qty;
                 newIngredientLoc[ing.inventoryRef._id] = ing.location;
               }
-              
+
             });
           }
 
@@ -544,7 +544,7 @@ module.exports = function (app) {
                 restoreUsage[ing.inventoryRef._id] += qty;
                 restoreUsageLoc[ing.inventoryRef._id] = ing.location;
               }
-              
+
             });
           }
         });
@@ -605,7 +605,7 @@ module.exports = function (app) {
                 newIngredientUsage[ing.inventoryRef._id] += qty;
                 newIngredientLoc[ing.inventoryRef._id] = ing.location;
               }
-              
+
             });
           }
 
@@ -657,6 +657,84 @@ module.exports = function (app) {
     }
   }
 
+  const updateInventoryWithPurchase = async (payload, purchaseId) => {
+    const bulkOps = [];
+
+    // 1️⃣ Update main inventory fields + increment total quantity
+    payload.forEach(item => {
+      bulkOps.push({
+        updateOne: {
+          filter: { _id: item.itemRef },
+          update: {
+            $set: {
+              unit: item.unit,
+              saveAsUnit: item.saveAsUnit
+            },
+            $inc: {
+              quantity: item.quantity // increment total quantity
+            }
+          }
+        }
+      });
+
+      // 2️⃣ Increment location quantities + push history
+      item.locationList.forEach(loc => {
+        bulkOps.push({
+          updateOne: {
+            filter: {
+              _id: item.itemRef,
+              "locationList.location": loc.location.toString()
+            },
+            update: {
+              $inc: {
+                "locationList.$.quantity": loc.quantity // increment location quantity
+              },
+              $push: {
+                "locationList.$.history": {
+                  $each: loc.history.map(h => {
+                    return {
+                      ...h,
+                      expenseRef: purchaseId
+                    }
+                  })
+                }
+              }
+            }
+          }
+        });
+
+        bulkOps.push({
+          updateOne: {
+            filter: {
+              _id: item.itemRef,
+              "locationList.location": { $ne: loc.location }
+            },
+            update: {
+              $addToSet: {
+                locationList: {
+                  location: loc.location,
+                  quantity: loc.quantity,
+                  history: loc.history.map(h => {
+                    return {
+                      ...h,
+                      expenseRef: purchaseId
+                    }
+                  })
+                }
+              }
+            }
+          }
+        });
+      });
+
+
+    });
+
+    await Inventory.bulkWrite(bulkOps);
+    return Promise.resolve({ success: true, message: "inventory updated" });
+
+  }
+
 
   return {
     'create': createInventory,
@@ -669,6 +747,7 @@ module.exports = function (app) {
     'rollbackInventory': rollbackInventory,
     'rollbackInventorySync': rollbackInventorySync,
     'updateHistoryOrderRef': updateHistoryOrderRef,
-    updateInventoryCountSync: updateInventoryCountSync
+    updateInventoryCountSync: updateInventoryCountSync,
+    updateInventoryWithPurchase: updateInventoryWithPurchase
   };
 };

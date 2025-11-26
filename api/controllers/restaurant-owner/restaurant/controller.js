@@ -10,6 +10,14 @@ module.exports = function (app) {
    * @type {Object}
    */
   const restaurant = app.module.restaurant;
+
+  const addRestaurant = (req, res, next) => {
+    restaurant.create(req.body)
+      .then(output => {
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
   /**
    * Edit Restaurant
    * @param  {Object}   req  Request
@@ -91,6 +99,7 @@ module.exports = function (app) {
   };
 
   return {
+    create: addRestaurant,
     edit: editRestaurant,
     get: getRestaurantDetails,
     updateGstDetails: updateGstDetails,

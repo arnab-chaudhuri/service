@@ -110,6 +110,9 @@ module.exports = function (/*app*/) {
 
     FEEDBACK_NOT_FOUND: 1900,
 
+    QUERY_NOT_FOUND: 1950,
+
+    EXPENSE_NOT_FOUND: 2000,
 
   };
 };

@@ -22,11 +22,13 @@ module.exports = function (app) {
 
 
   router.get('/global-config', controllers.getGlobalConfig);
+  router.get('/get-queries', controllers.getQueries);
+  router.post('/submit-query', controllers.submitQuery);
   router.get('/order-stream', controllers.orderStream);
 
   router.get('/error-codes', controllers.getErrorCodes);
 
-  router.post('/contact-us', [app.utility.apiValidate.body(schemaValidator.contactUs), controllers.submitContactUs]);
+  // router.post('/contact-us', [app.utility.apiValidate.body(schemaValidator.contactUs), controllers.submitContactUs]);
   router.post('/mail', [controllers.triggerEmail]);
 
   return {

@@ -13,6 +13,7 @@ module.exports = {
     "restaurant",
     "table",
     "feedbacks",
+    "purchase",
     "roles",
     "members",
     "printQR"

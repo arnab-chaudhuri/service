@@ -21,12 +21,15 @@ module.exports = function(app) {
   const table = require('./table')(app);
   const sse = require('./sse')(app);
   const feedback = require('./feedback')(app);
+  const query = require('./query')(app);
+  const expense = require('./expense')(app);
   const tableSession = require('./tableSession')(app);
   const imageByAI = require('./imageByAI')(app);
   const cron = require('./cron')(app)();
 
   return {
     init,
+    query,
     globalConfig,
     session,
     admin,
@@ -36,6 +39,7 @@ module.exports = function(app) {
     notification,
     adminUser,
     role,
+    expense,
     language,
     category,
     faq,

@@ -11,6 +11,10 @@ module.exports = {
     active: 1,
     deleted: 2
   },
+  expense: {
+    active: 1,
+    deleted: 2
+  },
   menu: {
     active: 1,
     deleted: 2

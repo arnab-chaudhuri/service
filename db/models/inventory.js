@@ -44,7 +44,7 @@ module.exports = function (app, mongoose) {
     },
     locationList: [{
       location: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
       },
       quantity: {
         type: Number,
@@ -72,11 +72,15 @@ module.exports = function (app, mongoose) {
         orderRef: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Order',
+        },
+        expenseRef: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Expense',
         }
       }]
     }],
     categoryId: {
-      type: String
+      type: mongoose.Schema.Types.ObjectId
     }
   }, {
     versionKey: false,

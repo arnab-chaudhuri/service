@@ -2,7 +2,7 @@
 
 module.exports = function (app) {
   const globalConfig = app.module.globalConfig;
-  const contactUs = app.module.contactUs;
+  const query = app.module.query;
   const sse = app.module.sse;
 
   const getGlobalConfig = function (req, res, next) {
@@ -25,11 +25,29 @@ module.exports = function (app) {
     req.workflow.emit('response');
   };
 
-  const submitContactUs = function (req, res, next) {
+  const getQueries = function (req, res, next) {
+    // jshint ignore:line
+    const data = {
+      skip: Number(req.query.skip) || app.config.page.defaultSkip,
+      limit: Number(req.query.limit) || app.config.page.defaultLimit,
+      filters: {
+      },
+      sort: {
+      }
+    };
+    query
+      .list(data)
+      .then(output => {
+        req.workflow.outcome.data = output;
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+  const submitQuery = function (req, res, next) {
     // jshint ignore:line
 
-    contactUs
-      .saveContactUsRequest(req.body)
+    query
+      .create(req.body)
       .then(() => req.workflow.emit('response'))
       .catch(next);
   };
@@ -164,9 +182,10 @@ module.exports = function (app) {
   return {
     getGlobalConfig: getGlobalConfig,
     getErrorCodes: getErrorCodes,
-    submitContactUs: submitContactUs,
+    submitQuery: submitQuery,
     getMasterData: getMasterData,
     triggerEmail: triggerEmail,
-    orderStream: orderStream
+    orderStream: orderStream,
+    getQueries: getQueries
   };
 };

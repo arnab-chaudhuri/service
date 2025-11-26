@@ -62,6 +62,8 @@ module.exports = function(app) {
     Table: db.model('Table', require('./models/table')(app, mongoose, plugins)),
     TableSession: db.model('TableSession', require('./models/tableSession')(app, mongoose, plugins)),
     Feedback: db.model('Feedback', require('./models/feedback')(app, mongoose, plugins)),
+    Query: db.model('Query', require('./models/query')(app, mongoose, plugins)),
+    Expense: db.model('Expense', require('./models/expense')(app, mongoose, plugins)),
   };
 
   return db;

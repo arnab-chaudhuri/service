@@ -13,6 +13,10 @@ module.exports = function (app, mongoose /*, plugins*/) {
         ref: 'Restaurant',
         required: true
       },
+      otherRestaurants: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Restaurant'
+      }],
       /**
        * Personal Info
        */
