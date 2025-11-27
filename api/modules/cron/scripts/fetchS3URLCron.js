@@ -32,7 +32,7 @@ async function listAllObjects(bucket, prefix = "", s3) {
 function generateUrls(keys, bucket, region) {
   return keys.map(
     (key) =>
-      `https://${bucket}.s3.${region}.amazonaws.com/${key}`
+      `${key}`
   );
 }
 
@@ -82,13 +82,16 @@ module.exports = function (app) {
     const urls = generateUrls(keys, app.config.aws.s3.bucket, app.config.aws.s3.region);
     // console.log("urls ", urls);
     const tagsWithUrl = createTags(urls);
-    ImageByAI.insertMany(tagsWithUrl, { ordered: false})
-    .then(() => {
-      console.log('Tags inserted');
-    })
-    .catch(err => {
-      console.log("Error in tags ", err);
-    })
+    await ImageByAI.bulkWrite(
+      tagsWithUrl.map(tag => ({
+        updateOne: {
+          filter: { url: tag.url },      // check if URL exists
+          update: { $setOnInsert: tag }, // insert only new ones
+          upsert: true
+        }
+      }))
+    );
+    console.log("Tags inserted or skipped duplicates");
 
     
   });

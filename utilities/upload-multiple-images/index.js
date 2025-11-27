@@ -90,7 +90,7 @@ module.exports = function (app, opts) {
    * @param  {Function} callback The callback
    */
   function uploadFile(config) {
-    console.log('Config', config);
+    // console.log('Config', config);
     return s3Util
       .uploadInS3({
         bucket: config.bucket,
