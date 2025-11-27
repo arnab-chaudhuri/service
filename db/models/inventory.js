@@ -22,8 +22,11 @@ module.exports = function (app, mongoose) {
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'RestaurantOwner',
-      required: true
+      ref: 'RestaurantOwner'
+    },
+    isDefault: {
+      type: Boolean,
+      default: false
     },
     image: {
       type: String

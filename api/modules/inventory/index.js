@@ -5,12 +5,15 @@
  * @module Modules/Inventory
  */
 module.exports = function (app) {
+  const mongoose = require('mongoose');
+
 
   /**
    * inventory Model
    * @type {Mongoose.Model}
    */
   const Inventory = app.models.Inventory;
+  const Restaurant = app.models.Restaurant;
   const Menu = app.models.Menu;
   const Order = app.models.Order;
 
@@ -735,6 +738,113 @@ module.exports = function (app) {
 
   }
 
+  async function seedInventoryForRestaurant(restaurantId, invCategories, inventoryItems) {
+    console.log("start")
+    const session = await app.db.startSession();
+    session.startTransaction();
+
+    
+    try {
+      // ============================
+      // 1️⃣  FETCH RESTAURANT
+      // ============================
+      const restaurant = await Restaurant.findById(restaurantId).session(session);
+      if (!restaurant) throw new Error("Restaurant not found");
+    console.log("restaurant ", restaurant)
+
+      if (!restaurant.inventoryCategories) {
+        restaurant.inventoryCategories = [];
+      }
+
+      // Existing category names (lowercase for safety)
+      const existingNames = restaurant.inventoryCategories.map(c => c.name.toLowerCase());
+
+      // ============================
+      // 2️⃣  ADD NEW CATEGORIES
+      // ============================
+      const newCategories = [];
+
+      for (const cat of invCategories) {
+        if (!existingNames.includes(cat.name.toLowerCase())) {
+          const newCat = {
+            _id: new mongoose.Types.ObjectId(),
+            name: cat.name,
+            code: cat.name
+          };
+          newCategories.push(newCat);
+          restaurant.inventoryCategories.push(newCat);
+        }
+      }
+
+      console.log("newCategories ", newCategories)
+      // Save restaurant with new categories
+      await restaurant.save({ session });
+
+      // Build quick lookup map:  categoryName → categoryId
+      const categoryMap = {};
+      for (const cat of restaurant.inventoryCategories) {
+        categoryMap[cat.name.toLowerCase()] = cat._id;
+      }
+
+      // ============================
+      // 3️⃣  PREPARE INVENTORY ITEMS FOR BULK INSERT
+      // ============================
+      const bulkOps = [];
+
+      for (const item of inventoryItems) {
+        const categoryId = categoryMap[item.categoryName.toLowerCase()];
+        if (!categoryId) continue; // skip if category missing
+
+        bulkOps.push({
+          updateOne: {
+            filter: {
+              name: item.name,
+              restaurantRef: restaurantId
+            },
+            update: {
+              $setOnInsert: {
+                name: item.name,
+                restaurantRef: restaurantId,
+                isDefault: true,
+                preCode: `${item.categoryName.slice(0,3).replaceAll(' ', '')}`,
+                code: `${item.name.slice(0,6).replaceAll(' ', '')}`,
+                unit: item.unit,
+                saveAsUnit: item.saveAsUnit,
+                categoryId: categoryId,
+                locationList: [{
+                  location: restaurant.inventoryLocations[0]?._id
+                }]
+              }
+            },
+            upsert: true
+          }
+        });
+      }
+
+      // ============================
+      // 4️⃣  EXECUTE BULK INSERT
+      // ============================
+      if (bulkOps.length > 0) {
+        await Inventory.bulkWrite(bulkOps, { session });
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+
+      return Promise.resolve({
+        status: "success",
+        addedCategories: newCategories.length,
+        itemsInsertedOrUpserted: bulkOps.length
+      });
+
+    } catch (err) {
+      await session.abortTransaction();
+      session.endSession();
+      return Promise.reject({err});
+    }
+  }
+
+
 
   return {
     'create': createInventory,
@@ -748,6 +858,7 @@ module.exports = function (app) {
     'rollbackInventorySync': rollbackInventorySync,
     'updateHistoryOrderRef': updateHistoryOrderRef,
     updateInventoryCountSync: updateInventoryCountSync,
-    updateInventoryWithPurchase: updateInventoryWithPurchase
+    updateInventoryWithPurchase: updateInventoryWithPurchase,
+    seedInventoryForRestaurant: seedInventoryForRestaurant
   };
 };

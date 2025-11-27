@@ -1,4 +1,7 @@
 'use strict';
+
+const { inventoryCategories, inventoryItems } = require("../../../modules/cron/scripts/inventory");
+
 /**
  * This Controller handles all functionality of admin inventory
  * @module Controllers/Admin/inventory
@@ -123,12 +126,22 @@ module.exports = function(app) {
       .catch(next);
   };
 
+  const seedInventory = (req, res, next) => {
+    console.log("req.params ", req.params)
+    inventory.seedInventoryForRestaurant(req.params.restaurantId, inventoryCategories, inventoryItems)
+      .then(output => {
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+
   return {
     add: addInventory,
     get: getInventory,
     edit: editInventory,
     list: getInventoryList,
-    delete: deleteInventory
+    delete: deleteInventory,
+    seedInventory: seedInventory
   };
 
 };

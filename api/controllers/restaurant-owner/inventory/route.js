@@ -43,6 +43,10 @@ module.exports = function (app, options) {
     controllers.add
   ]);
 
+  router.post('/seed/:restaurantId', [
+    controllers.seedInventory
+  ]);
+
   /**
    * Fetches a list of inventories
    */
