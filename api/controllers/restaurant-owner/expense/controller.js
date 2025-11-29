@@ -122,8 +122,8 @@ module.exports = function(app) {
   const deleteExpense = (req, res, next) => {
     req.expenseId.status = app.config.contentManagement.expense.deleted;
     expense.edit(req.expenseId, req.session.user)
-      .then(output => {
-        menu.removeExpenseItem(req.expenseId._id);
+      .then(async output => {
+        await inventory.updateInventoryWithPurchase(req.expenseId.items, req.expenseId._id, true);
         req.workflow.emit('response');
       })
       .catch(next);

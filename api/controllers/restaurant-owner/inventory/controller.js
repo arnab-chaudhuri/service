@@ -127,8 +127,7 @@ module.exports = function(app) {
   };
 
   const seedInventory = (req, res, next) => {
-    console.log("req.params ", req.params)
-    inventory.seedInventoryForRestaurant(req.params.restaurantId, inventoryCategories, inventoryItems)
+    inventory.seedInventoryForRestaurant(req.session.user.restaurantRef, inventoryCategories, inventoryItems)
       .then(output => {
         req.workflow.emit('response');
       })

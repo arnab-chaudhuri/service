@@ -43,7 +43,7 @@ module.exports = function (app, options) {
     controllers.add
   ]);
 
-  router.post('/seed/:restaurantId', [
+  router.post('/seed', [
     controllers.seedInventory
   ]);
 

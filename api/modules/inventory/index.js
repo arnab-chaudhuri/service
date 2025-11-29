@@ -660,7 +660,7 @@ module.exports = function (app) {
     }
   }
 
-  const updateInventoryWithPurchase = async (payload, purchaseId) => {
+  const updateInventoryWithPurchase = async (payload, purchaseId, isDeduct) => {
     const bulkOps = [];
 
     // 1️⃣ Update main inventory fields + increment total quantity
@@ -674,7 +674,7 @@ module.exports = function (app) {
               saveAsUnit: item.saveAsUnit
             },
             $inc: {
-              quantity: item.quantity // increment total quantity
+              quantity: !isDeduct ? item.quantity : -item.quantity
             }
           }
         }
@@ -690,22 +690,23 @@ module.exports = function (app) {
             },
             update: {
               $inc: {
-                "locationList.$.quantity": loc.quantity // increment location quantity
+                "locationList.$.quantity": !isDeduct ? loc.quantity : -loc.quantity
               },
               $push: {
                 "locationList.$.history": {
-                  $each: loc.history.map(h => {
-                    return {
-                      ...h,
-                      expenseRef: purchaseId
-                    }
-                  })
+                  $each: [{
+                    quantity: loc.quantity,
+                    expenseRef: purchaseId,
+                    isDebited: !isDeduct,
+                    reason: !isDeduct ? 'PURCHASE_ADDITION' : 'PURCHASE_DEDUCTION'
+                  }]
                 }
               }
             }
           }
         });
 
+        // 3️⃣ If location does not exist, add it
         bulkOps.push({
           updateOne: {
             filter: {
@@ -716,13 +717,13 @@ module.exports = function (app) {
               $addToSet: {
                 locationList: {
                   location: loc.location,
-                  quantity: loc.quantity,
-                  history: loc.history.map(h => {
-                    return {
-                      ...h,
-                      expenseRef: purchaseId
-                    }
-                  })
+                  quantity: !isDeduct ? loc.quantity : -loc.quantity,
+                  history: [{
+                    quantity: loc.quantity,
+                    expenseRef: purchaseId,
+                    isDebited: !isDeduct,
+                    reason: !isDeduct ? 'PURCHASE_ADDITION' : 'PURCHASE_DEDUCTION'
+                  }]
                 }
               }
             }
@@ -743,14 +744,14 @@ module.exports = function (app) {
     const session = await app.db.startSession();
     session.startTransaction();
 
-    
+
     try {
       // ============================
       // 1️⃣  FETCH RESTAURANT
       // ============================
       const restaurant = await Restaurant.findById(restaurantId).session(session);
       if (!restaurant) throw new Error("Restaurant not found");
-    console.log("restaurant ", restaurant)
+      console.log("restaurant ", restaurant)
 
       if (!restaurant.inventoryCategories) {
         restaurant.inventoryCategories = [];
@@ -806,8 +807,8 @@ module.exports = function (app) {
                 name: item.name,
                 restaurantRef: restaurantId,
                 isDefault: true,
-                preCode: `${item.categoryName.slice(0,3).replaceAll(' ', '')}`,
-                code: `${item.name.slice(0,6).replaceAll(' ', '')}`,
+                preCode: `${item.categoryName.slice(0, 3).replaceAll(' ', '')}`,
+                code: `${item.name.slice(0, 6).replaceAll(' ', '')}`,
                 unit: item.unit,
                 saveAsUnit: item.saveAsUnit,
                 categoryId: categoryId,
@@ -840,7 +841,7 @@ module.exports = function (app) {
     } catch (err) {
       await session.abortTransaction();
       session.endSession();
-      return Promise.reject({err});
+      return Promise.reject({ err });
     }
   }
 
