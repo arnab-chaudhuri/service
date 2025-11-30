@@ -30,6 +30,10 @@ module.exports = function (app) {
    */
   const findExpenseById = function (expenseId, userRef) {
     return Expense.findById(expenseId)
+    .populate({
+      path: 'items.itemRef',
+      select: 'name _id unit saveAsUnit'
+    })
       .then(expenseDetails => {
         if (!expenseDetails || (expenseDetails &&
           expenseDetails.restaurantRef.toString() !== userRef.restaurantRef.toString())) {

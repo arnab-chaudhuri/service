@@ -7,7 +7,8 @@ module.exports = function (app, mongoose) {
     },
     amount: {
       type: Number,
-      required: true
+      required: true,
+      default: 0
     },
     status: {
       type: Number,
@@ -27,6 +28,10 @@ module.exports = function (app, mongoose) {
       itemRef: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Inventory',
+      },
+      amount: {
+        type: Number,
+        default: 0
       },
       quantity: {
         type: Number,
