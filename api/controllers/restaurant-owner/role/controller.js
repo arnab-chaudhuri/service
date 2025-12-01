@@ -96,6 +96,7 @@ module.exports = function(app) {
   const editRole = (req, res, next) => {
     req.roleId.name = req.body.name;
     req.roleId.permissions = req.body.permissions;
+    req.roleId.isManager = req.body.isManager;
 
     role.edit(req.roleId)
       .then(output => {

@@ -10,6 +10,10 @@ module.exports = function (app, mongoose /*, plugins*/) {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Restaurant'
     },
+    isManager: {
+      type: Boolean,
+      default: false
+    },
     status: {
       type: Number,
       default: app.config.contentManagement.role.active
@@ -40,14 +44,15 @@ module.exports = function (app, mongoose /*, plugins*/) {
    * @param  {Array} permissions  array of permissions
    * @return {Promise}            
    */
-  roleSchema.statics.createRole = function ({name, permissions, restaurantRef}) {
+  roleSchema.statics.createRole = function ({name, permissions, restaurantRef, isManager}) {
     return this.exist(name, restaurantRef)
       .then((doc) => doc ? Promise.reject({
         'errCode': 'ROLE_ALREADY_EXISTS'
       }) : (new this({
         name: name,
         permissions: permissions,
-        restaurantRef: restaurantRef
+        restaurantRef: restaurantRef,
+        isManager: isManager || false
       })).save());
 
   };
