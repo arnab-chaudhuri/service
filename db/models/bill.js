@@ -8,6 +8,18 @@ module.exports = function (app, mongoose) {
     offlineId: {
       type: String
     },
+    isCGSTDisabled: {
+      type: Boolean,
+      default: false
+    },
+    isSGSTDisabled: {
+      type: Boolean,
+      default: false
+    },
+    isServiceTaxDisabled: {
+      type: Boolean,
+      default: false
+    },
     restaurantRef: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Restaurant',
@@ -65,6 +77,16 @@ module.exports = function (app, mongoose) {
         type: Number,
         default: 0
       }
+    },
+    serviceTaxDetails: {
+      serviceTax: {
+        type: Number,
+        default: 0
+      },
+      serviceTaxInPercentage: {
+        type: Number,
+        default: 0
+      },
     },
     paymentDetails: {
       // online: 1, offline: 2

@@ -93,6 +93,16 @@ module.exports = function(app, mongoose) {
         type: Number,
         default: 2.5
       },
+    },
+    serviceTaxDetails: {
+      serviceTaxEnabled: {
+        type: Boolean,
+        default: false
+      },
+      serviceTax: {
+        type: Number,
+        default: 0
+      }
     }
   }, {
     versionKey: false,

@@ -44,6 +44,11 @@ module.exports = function (app, options) {
     controllers.updateGstDetails
   ]);
 
+  router.put('/update-service-tax-details', [
+    options.validateBody(schemaValidator.updateServiceTaxDetails),
+    controllers.updateServiceTaxDetails
+  ]);
+
   router.put('/update-locations', [
     // options.validateBody(schemaValidator.updateGstDetails),
     controllers.updateLocations

@@ -39,6 +39,7 @@ module.exports = function (app) {
                   subTotal: req.body.subTotal,
                   total: req.body.total,
                   gstDetails: req.body.gstDetails,
+                  serviceTaxDetails: req.body.serviceTaxDetails,
                   paymentDetails: req.body.paymentDetails
                 }, req.session.user)
                   .then(output2 => {
@@ -153,7 +154,10 @@ module.exports = function (app) {
             orderRef: match ? match._id : undefined,
             subTotal: n.billDetails ? n.billDetails.subTotal : n.subTotal,
             total: n.billDetails ? n.billDetails.total : n.total,
+            isCGSTDisabled: n.billDetails ? n.billDetails.isCGSTDisabled : n.isCGSTDisabled || false,
+            isSGSTDisabled: n.billDetails ? n.billDetails.isSGSTDisabled : n.isSGSTDisabled || false,
             gstDetails: n.billDetails ? n.billDetails.gstDetails : n.gstDetails,
+            serviceTaxDetails: n.billDetails ? n.billDetails.serviceTaxDetails : n.serviceTaxDetails,
             paymentDetails: n.billDetails ? n.billDetails.paymentDetails : n.paymentDetails,
           };
           if ((n.billDetails && n.billDetails.discountDetails) || n.discountDetails) {
@@ -211,6 +215,7 @@ module.exports = function (app) {
             subTotal: n.billDetails ? n.billDetails.subTotal : n.subTotal,
             total: n.billDetails ? n.billDetails.total : n.total,
             gstDetails: n.billDetails ? n.billDetails.gstDetails : n.gstDetails,
+            serviceTaxDetails: n.billDetails ? n.billDetails.serviceTaxDetails : n.serviceTaxDetails,
             paymentDetails: n.billDetails ? n.billDetails.paymentDetails : n.paymentDetails,
           };
           if ((n.billDetails && n.billDetails.discountDetails) || n.discountDetails) {
@@ -387,6 +392,7 @@ module.exports = function (app) {
         "billRef.subTotal": 1,
         "billRef.discountDetails": 1,
         "billRef.gstDetails": 1,
+        "billRef.serviceTaxDetails": 1,
         createdAt: 1,
         updatedAt: 1,
         _id: 1
@@ -487,6 +493,7 @@ module.exports = function (app) {
         "billRef.subTotal": 1,
         "billRef.discountDetails": 1,
         "billRef.gstDetails": 1,
+        "billRef.serviceTaxDetails": 1,
         createdBy: 1,
         createdAt: 1,
         updatedAt: 1,
@@ -534,7 +541,8 @@ module.exports = function (app) {
             bill.updateBillFromOrder(req.orderId.billRef, {
               subTotal: req.body.subTotal,
               total: req.body.total,
-              gstDetails: req.body.gstDetails
+              gstDetails: req.body.gstDetails,
+              serviceTaxDetails: req.body.serviceTaxDetails,
             });
 
             let inAppNotification = app.config.notification.inApp(app, app.config.lang.defaultLanguage);
@@ -594,7 +602,8 @@ module.exports = function (app) {
                 bill.updateBillFromOrder(orderData.billRef, {
                   subTotal: req.body.subTotal,
                   total: req.body.total,
-                  gstDetails: req.body.gstDetails
+                  gstDetails: req.body.gstDetails,
+                  serviceTaxDetails: req.body.serviceTaxDetails
                 });
 
                 let inAppNotification = app.config.notification.inApp(app, app.config.lang.defaultLanguage);

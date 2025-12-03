@@ -110,6 +110,19 @@ module.exports = function (app) {
       });
   };
 
+  const updateServiceTaxDetails = (restaurantId, data) => {
+    return Restaurant.findById(restaurantId)
+      .then(restaurant => {
+        if (!restaurant) {
+          return Promise.reject({
+            'errCode': 'RESTAURANT_NOT_FOUND'
+          });
+        }
+        restaurant.serviceTaxDetails = data;
+        return restaurant.save();
+      });
+  };
+
   const updateLocations = (restaurantId, data) => {
     return Restaurant.findById(restaurantId)
       .then(restaurant => {
@@ -145,6 +158,7 @@ module.exports = function (app) {
     'remove': removeRestaurant,
     'set': editMyRestaurant,
     'updateGstDetails': updateGstDetails,
+    'updateServiceTaxDetails': updateServiceTaxDetails,
     'updateLocations': updateLocations,
     'updateInventoryCategories': updateInventoryCategories,
     'updateParcel': updateParcel

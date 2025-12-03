@@ -58,6 +58,17 @@ module.exports = function (app) {
       .catch(next);
   };
 
+  const updateServiceTaxDetails = (req, res, next) => {
+    restaurant
+      .updateServiceTaxDetails(req.session.user.restaurantRef, req.body)
+      .then((output) => {
+        req.workflow.outcome.data = output;
+
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+
   const updateLocations = (req, res, next) => {
     restaurant
       .updateLocations(req.session.user.restaurantRef, req.body)
@@ -105,6 +116,7 @@ module.exports = function (app) {
     updateGstDetails: updateGstDetails,
     updateLocations: updateLocations,
     updateInventoryCategories: updateInventoryCategories,
-    updateParcel: updateParcel
+    updateParcel: updateParcel,
+    updateServiceTaxDetails: updateServiceTaxDetails
   };
 };

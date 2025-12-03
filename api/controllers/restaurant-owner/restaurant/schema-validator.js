@@ -36,8 +36,7 @@ module.exports = function (app) {
       type: 'string'
     },
     logo: {
-      type: 'string',
-      format: 'url',
+      type: 'string'
     },
     primaryThmeColor: {
       type: 'string'
@@ -61,9 +60,21 @@ module.exports = function (app) {
     }
   }
 
+  const updateServiceTaxDetails = {
+    serviceTaxEnabled: {
+      type: 'boolean',
+      allowEmpty: false,
+      required: true
+    },
+    serviceTax: {
+      type: 'number'
+    }
+  }
+
   return {
     add: add,
     edit: edit,
-    updateGstDetails: updateGstDetails
+    updateGstDetails: updateGstDetails,
+    updateServiceTaxDetails: updateServiceTaxDetails
   };
 };
