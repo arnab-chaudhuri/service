@@ -11,10 +11,7 @@ module.exports = function(app) {
         fullName: {
           type: 'string',
           required: true,
-          allowEmpty: false,
-          conform: function(value) {
-            return app.utility.isValidate.isNameComponent(value);
-          }
+          allowEmpty: false
         },
         email: {
           type: 'string',

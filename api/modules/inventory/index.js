@@ -740,7 +740,7 @@ module.exports = function (app) {
   }
 
   async function seedInventoryForRestaurant(restaurantId, invCategories, inventoryItems) {
-    console.log("start")
+    // console.log("start")
     const session = await app.db.startSession();
     session.startTransaction();
 
@@ -751,7 +751,7 @@ module.exports = function (app) {
       // ============================
       const restaurant = await Restaurant.findById(restaurantId).session(session);
       if (!restaurant) throw new Error("Restaurant not found");
-      console.log("restaurant ", restaurant)
+      // console.log("restaurant ", restaurant)
 
       if (!restaurant.inventoryCategories) {
         restaurant.inventoryCategories = [];
@@ -777,7 +777,7 @@ module.exports = function (app) {
         }
       }
 
-      console.log("newCategories ", newCategories)
+      // console.log("newCategories ", newCategories)
       // Save restaurant with new categories
       await restaurant.save({ session });
 
