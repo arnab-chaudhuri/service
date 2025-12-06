@@ -65,7 +65,11 @@ module.exports = function(app) {
         status: app.config.contentManagement.expense.active,
         restaurantRef: req.session.user.restaurantRef
       },
-      sort: {}
+      sort: {},
+      populate: [{
+        path: 'items.itemRef',
+        select: 'name _id'
+      }]
     };
 
     if (req.body.filters) {
