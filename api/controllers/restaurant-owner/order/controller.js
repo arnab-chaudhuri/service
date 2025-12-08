@@ -611,7 +611,7 @@ module.exports = function (app) {
           .then(output1 => {
             order.edit(orderData, req.session.user)
               .then(async output => {
-                bill.updateBillFromOrder(orderData.billRef, {
+                const billRes = await bill.updateBillFromOrder(orderData.billRef, {
                   subTotal: req.body.subTotal,
                   total: req.body.total,
                   gstDetails: req.body.gstDetails,
@@ -653,7 +653,10 @@ module.exports = function (app) {
 
                 }
 
-                req.workflow.outcome.data = output;
+                const finalOutput = output;
+                finalOutput.billRef = billRes;
+
+                req.workflow.outcome.data = finalOutput;
                 req.workflow.emit('response');
               })
               .catch(next);
