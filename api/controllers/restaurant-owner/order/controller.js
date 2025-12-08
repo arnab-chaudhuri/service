@@ -45,17 +45,25 @@ module.exports = function (app) {
                   .then(output2 => {
                     output.billDetails = output2;
 
-                    order.updateBillDetails(output._id, output2);
+                    order.updateBillDetails(output._id, output2).catch(err => {
+                        console.log("err updateBillDetails ", err)
+                      });
 
                     if (req.body.tableRef) {
-                      table.markAsUnavailable(req.body.tableRef, output0._id);
+                      table.markAsUnavailable(req.body.tableRef, output0._id).catch(err => {
+                        console.log("err markAsUnavailable ", err)
+                      });
 
                       // update orderRef in table session
                       output0.orderRef = output._id;
-                      tableSession.edit(output0);
+                      tableSession.edit(output0).catch(err => {
+                        console.log("err tableSession ", err)
+                      });
                     }
 
-                    inventory.updateHistoryOrderRef(output1.invIds, output._id);
+                    inventory.updateHistoryOrderRef(output1.invIds, output._id).catch(err => {
+                      console.log("err updateHistoryOrderRef ", err)
+                    });
 
                     let inAppNotification = app.config.notification.inApp(app, app.config.lang.defaultLanguage);
 
@@ -65,7 +73,7 @@ module.exports = function (app) {
                       message: inAppNotification.toRestaurantOwner.newOrder.body(req.session.user.personalInfo.fullName),
                       type: "NEW_ORDER_BY_STAFF",
                       userRef: req.session.user._id.toString()
-                    });
+                    })
 
                     notification.sendInAppNotificationToRestaurantStaffs(req.session.user.restaurantRef, {
                       moduleName: 'orders',
@@ -378,6 +386,7 @@ module.exports = function (app) {
 
       query.select = {
         tableId: 1,
+        tableRef: 1,
         orderId: 1,
         idbId: 1,
         cart: 1,
@@ -480,6 +489,7 @@ module.exports = function (app) {
 
       query.select = {
         tableId: 1,
+        tableRef: 1,
         orderId: 1,
         idbId: 1,
         cart: 1,
@@ -626,6 +636,11 @@ module.exports = function (app) {
                   userRef: req.session.user._id,
                   staffName: req.session.user.personalInfo.fullName
                 });
+
+                if(req.body.tableRef && (oldTableId && req.body.tableRef.toString() === oldTableId.toString())) {
+
+                  tableSession.updateCartByOrderId(orderData._id, orderData.restaurantRef, req.body.cart);
+                }
 
                 if (req.body.tableRef && (!oldTableId || (oldTableId && req.body.tableRef.toString() !== oldTableId.toString()))) {
 

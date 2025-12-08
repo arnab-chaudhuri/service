@@ -315,6 +315,23 @@ module.exports = function (app) {
       });
   };
 
+  const updateCartByOrderId = function (orderRef, restaurantRef, cart) {
+    const filter = {
+      orderRef: new mongoose.Types.ObjectId(orderRef),
+      restaurantRef: new mongoose.Types.ObjectId(restaurantRef),
+      status: app.config.contentManagement.tableSession.active,
+      endedAt: { $exists: false }
+    };
+
+    return TableSession.findOne(filter)
+      .then(tableSessionDetails => {
+        if (tableSessionDetails) {
+          tableSessionDetails.cart = cart;
+          return tableSessionDetails.save();
+        }
+      });
+  };
+
   const updateStatus = (tableSessionId) => {
     return TableSession.findOne({
       _id: tableSessionId
@@ -387,6 +404,7 @@ module.exports = function (app) {
     'createTableSessionFromOwner': createTableSessionFromOwner,
     'getByTableId': getByTableId,
     'updateStatusByOrderId': updateStatusByOrderId,
+    'updateCartByOrderId': updateCartByOrderId,
     'get': findTableSessionById,
     'edit': editTableSession,
     'list': getList,

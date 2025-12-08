@@ -796,6 +796,23 @@ module.exports = function (app) {
         const categoryId = categoryMap[item.categoryName.toLowerCase()];
         if (!categoryId) continue; // skip if category missing
 
+        const obj = {
+          name: item.name,
+          restaurantRef: restaurantId,
+          isDefault: true,
+          preCode: `${item.categoryName.slice(0, 3).replaceAll(' ', '')}`,
+          code: `${item.name.slice(0, 6).replaceAll(' ', '')}`,
+          unit: item.unit,
+          saveAsUnit: item.saveAsUnit,
+          locationList: [{
+            location: restaurant.inventoryLocations[0]?._id
+          }]
+        };
+
+        if (categoryId) {
+          obj.categoryId = categoryId;
+        }
+
         bulkOps.push({
           updateOne: {
             filter: {
@@ -803,19 +820,7 @@ module.exports = function (app) {
               restaurantRef: restaurantId
             },
             update: {
-              $setOnInsert: {
-                name: item.name,
-                restaurantRef: restaurantId,
-                isDefault: true,
-                preCode: `${item.categoryName.slice(0, 3).replaceAll(' ', '')}`,
-                code: `${item.name.slice(0, 6).replaceAll(' ', '')}`,
-                unit: item.unit,
-                saveAsUnit: item.saveAsUnit,
-                categoryId: categoryId,
-                locationList: [{
-                  location: restaurant.inventoryLocations[0]?._id
-                }]
-              }
+              $setOnInsert: obj
             },
             upsert: true
           }
