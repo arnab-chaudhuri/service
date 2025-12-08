@@ -147,9 +147,11 @@ module.exports = function (app) {
 
         bill.edit(orderData, req.session.user)
           .then(output => {
-            order.updateStatus(orderData.orderRef);
-            menu.updateOrderCount(orderData.orderRef);
-            tableSession.updateStatusByOrderId(orderData.orderRef, orderData.restaurantRef);
+            if (!req.body.updateMethod) {
+              order.updateStatus(orderData.orderRef);
+              menu.updateOrderCount(orderData.orderRef);
+              tableSession.updateStatusByOrderId(orderData.orderRef, orderData.restaurantRef);
+            }
 
             let inAppNotification = app.config.notification.inApp(app, app.config.lang.defaultLanguage);
 
