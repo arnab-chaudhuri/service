@@ -114,7 +114,12 @@ module.exports = function (app) {
         createdAt: 1,
         _id: 1,
         paymentDetails: 1,
-        discountDetails: 1
+        discountDetails: 1,
+        serviceTaxDetails: 1,
+        gstDetails: 1,
+        isCGSTDisabled: 1,
+        isSGSTDisabled: 1,
+        isServiceTaxDisabled: 1
       };
     }
     // if (req.body.sortConfig) {
