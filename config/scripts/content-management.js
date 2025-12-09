@@ -71,7 +71,8 @@ module.exports = {
   paymentSubMode: {
     upi: 1,
     card: 2,
-    other: 3
+    other: 3,
+    zomatoPayment: 4
   },
   table: {
     active: 1,
