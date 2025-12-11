@@ -97,6 +97,19 @@ module.exports = function (app) {
       });
   };
 
+  const updateWater = (restaurantId, data) => {
+    return Restaurant.findById(restaurantId)
+      .then(restaurant => {
+        if (!restaurant) {
+          return Promise.reject({
+            'errCode': 'RESTAURANT_NOT_FOUND'
+          });
+        }
+        restaurant.config.waters = data;
+        return restaurant.save();
+      });
+  };
+
   const updateGstDetails = (restaurantId, data) => {
     return Restaurant.findById(restaurantId)
       .then(restaurant => {
@@ -161,6 +174,7 @@ module.exports = function (app) {
     'updateServiceTaxDetails': updateServiceTaxDetails,
     'updateLocations': updateLocations,
     'updateInventoryCategories': updateInventoryCategories,
-    'updateParcel': updateParcel
+    'updateParcel': updateParcel,
+    'updateWater': updateWater
   };
 };

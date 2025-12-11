@@ -63,6 +63,11 @@ module.exports = function (app, options) {
     // options.validateBody(schemaValidator.updateGstDetails),
     controllers.updateParcel
   ]);
+
+  router.put('/update-water', [
+    // options.validateBody(schemaValidator.updateGstDetails),
+    controllers.updateWater
+  ]);
   /**
    * Fetch/Edit restaurant
    */

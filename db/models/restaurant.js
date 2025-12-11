@@ -62,6 +62,11 @@ module.exports = function(app, mongoose) {
         name: String,
         price: Number,
         status: Number // 1: Active, 2: Deleted
+      }],
+      waters: [{
+        name: String,
+        price: Number,
+        status: Number // 1: Active, 2: Deleted
       }]
     },
     inventoryLocations: [{

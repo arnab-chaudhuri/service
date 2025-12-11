@@ -78,6 +78,21 @@ module.exports = function (app, mongoose) {
         type: Number,
         default: 0
       }
+    },
+    waterDetails: {
+      items: [{
+        name: String,
+        count: Number,
+        price: Number
+      }],
+      count: {
+        type: Number,
+        default: 0
+      },
+      totalCost: {
+        type: Number,
+        default: 0
+      }
     }
   }, {
     versionKey: false,
