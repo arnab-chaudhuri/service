@@ -46,8 +46,8 @@ module.exports = function (app) {
                     output.billDetails = output2;
 
                     order.updateBillDetails(output._id, output2).catch(err => {
-                        console.log("err updateBillDetails ", err)
-                      });
+                      console.log("err updateBillDetails ", err)
+                    });
 
                     if (req.body.tableRef) {
                       table.markAsUnavailable(req.body.tableRef, output0._id).catch(err => {
@@ -143,9 +143,9 @@ module.exports = function (app) {
         // collect all cart items from outputOrders
         outputOrders.forEach(o => {
           if (Array.isArray(o.cart) && o.cart.length &&
-        (o.status === app.config.contentManagement.order.completed ||
-          o.status === app.config.contentManagement.order.deleted
-        )) {
+            (o.status === app.config.contentManagement.order.completed ||
+              o.status === app.config.contentManagement.order.deleted
+            )) {
             carts.push(...o.cart);
           }
         });
@@ -154,7 +154,7 @@ module.exports = function (app) {
         }
 
         const bills = newOrders.map(n => {
-            
+
           const match = outputOrders.find(o => String(o.idbId) === String(n.idbId));
           const obj = {
             offlineId: match.idbId,
@@ -202,9 +202,9 @@ module.exports = function (app) {
         // collect all cart items from outputOrders
         outputOrders.forEach(o => {
           if (Array.isArray(o.cart) && o.cart.length &&
-        (o.status === app.config.contentManagement.order.completed ||
-          o.status === app.config.contentManagement.order.deleted
-        )) {
+            (o.status === app.config.contentManagement.order.completed ||
+              o.status === app.config.contentManagement.order.deleted
+            )) {
             carts.push(...o.cart);
           }
         });
@@ -393,6 +393,8 @@ module.exports = function (app) {
         status: 1,
         isOnline: 1,
         restaurantRef: 1,
+        parcelDetails: 1,
+        waterDetails: 1,
         "billRef.paymentDetails": 1,
         "billRef.total": 1,
         "billRef._id": 1,
@@ -433,6 +435,54 @@ module.exports = function (app) {
       filters: {},
       sort: {
         createdAt: -1
+      }
+    };
+
+    const idbOrderFilters = [{
+      restaurantRef: req.session.user.restaurantRef,
+      status: {
+        '$in': [
+          app.config.contentManagement.order.completed,
+          app.config.contentManagement.order.deleted,
+        ]
+      },
+      idbId: {
+        '$in': req.body.orderList
+      }
+    }];
+
+    const idbQuery = {
+      skip: Number(req.query.skip) || app.config.page.defaultSkip,
+      limit: Number(req.query.limit) || app.config.page.defaultLimit,
+      filters: { $and: idbOrderFilters },
+      sort: {
+        createdAt: -1
+      },
+      select: {
+        tableId: 1,
+        tableRef: 1,
+        orderId: 1,
+        idbId: 1,
+        cart: 1,
+        status: 1,
+        isOnline: 1,
+        restaurantRef: 1,
+        parcelDetails: 1,
+        waterDetails: 1,
+        "billRef.paymentDetails": 1,
+        "billRef.total": 1,
+        "billRef._id": 1,
+        "billRef.offlineId": 1,
+        "billRef.billNo": 1,
+        "billRef.restaurantRef": 1,
+        "billRef.subTotal": 1,
+        "billRef.discountDetails": 1,
+        "billRef.gstDetails": 1,
+        "billRef.serviceTaxDetails": 1,
+        createdBy: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        _id: 1
       }
     };
 
@@ -496,6 +546,8 @@ module.exports = function (app) {
         status: 1,
         isOnline: 1,
         restaurantRef: 1,
+        parcelDetails: 1,
+        waterDetails: 1,
         "billRef.paymentDetails": 1,
         "billRef.total": 1,
         "billRef._id": 1,
@@ -521,9 +573,16 @@ module.exports = function (app) {
     //   }
     // }
 
-    order.list(query)
-      .then(output => {
-        req.workflow.outcome.data = output;
+    // order.list(query)
+      return Promise.all([
+        order.list(query),
+        req.body.orderList && req.body.orderList.length ? order.list(idbQuery) : []
+      ])
+      .then(([queryResult, idbResult]) => {
+        const output = idbResult && idbResult.data ? [...queryResult.data, ...idbResult.data] : [...queryResult.data];
+        req.workflow.outcome.data = {
+          data: output
+        };
         req.workflow.emit('response');
       })
       .catch(next);
@@ -637,7 +696,7 @@ module.exports = function (app) {
                   staffName: req.session.user.personalInfo.fullName
                 });
 
-                if(req.body.tableRef && (oldTableId && req.body.tableRef.toString() === oldTableId.toString())) {
+                if (req.body.tableRef && (oldTableId && req.body.tableRef.toString() === oldTableId.toString())) {
 
                   tableSession.updateCartByOrderId(orderData._id, orderData.restaurantRef, req.body.cart);
                 }
