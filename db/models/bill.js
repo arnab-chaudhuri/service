@@ -12,6 +12,10 @@ module.exports = function (app, mongoose) {
       type: Boolean,
       default: false
     },
+    isRoundOff: {
+      type: Boolean,
+      default: true
+    },
     isSGSTDisabled: {
       type: Boolean,
       default: false

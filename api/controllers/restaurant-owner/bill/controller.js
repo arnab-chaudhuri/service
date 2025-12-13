@@ -110,6 +110,7 @@ module.exports = function (app) {
         "orderRef.orderType": 1,
         "orderRef._id": 1,
         "orderRef.parcelDetails": 1,
+        "orderRef.waterDetails": 1,
         "orderRef.idbId": 1,
         createdAt: 1,
         _id: 1,
