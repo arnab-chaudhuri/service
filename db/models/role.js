@@ -10,6 +10,16 @@ module.exports = function (app, mongoose /*, plugins*/) {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Restaurant'
     },
+    defaultModule: {
+      key: {
+        type: String,
+        default: 'dashboard'
+      },
+      name: {
+        type: String,
+        default: 'Dashboard'
+      }
+    },
     isManager: {
       type: Boolean,
       default: false

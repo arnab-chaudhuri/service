@@ -388,6 +388,7 @@ module.exports = function (app) {
         tableId: 1,
         tableRef: 1,
         orderId: 1,
+        orderType: 1,
         idbId: 1,
         cart: 1,
         status: 1,
@@ -462,6 +463,7 @@ module.exports = function (app) {
         tableId: 1,
         tableRef: 1,
         orderId: 1,
+        orderType: 1,
         idbId: 1,
         cart: 1,
         status: 1,
@@ -487,7 +489,7 @@ module.exports = function (app) {
     };
 
     if (req.body.filters) {
-      let { paymentStatus, orderStatus, startDate, endDate, search } = req.body.filters;
+      let { paymentStatus, orderStatus, startDate, endDate, search, orderType } = req.body.filters;
       let andFilters = [{
         restaurantRef: req.session.user.restaurantRef,
         status: {
@@ -533,6 +535,14 @@ module.exports = function (app) {
         });
       }
 
+      if (orderType) {
+        andFilters.push({
+          "orderType": {
+            "$in": orderType
+          }
+        })
+      }
+
       if (andFilters.length > 0) {
         query.filters = { $and: andFilters };
       }
@@ -541,6 +551,7 @@ module.exports = function (app) {
         tableId: 1,
         tableRef: 1,
         orderId: 1,
+        orderType: 1,
         idbId: 1,
         cart: 1,
         status: 1,
