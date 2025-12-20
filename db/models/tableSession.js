@@ -20,6 +20,10 @@ module.exports = function(app, mongoose) {
         type: Number,
         default: 0
       },
+      served: {
+        type: Boolean,
+        default: false
+      },
       menuRef: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Menu'
@@ -33,6 +37,10 @@ module.exports = function(app, mongoose) {
         price: {
           type: Number,
           default: 0
+        },
+        served: {
+          type: Boolean,
+          default: false
         }
       }]
     }],

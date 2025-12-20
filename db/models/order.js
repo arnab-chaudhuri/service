@@ -30,6 +30,10 @@ module.exports = function (app, mongoose) {
       name: String,
       quantity: Number,
       price: Number,
+      served: {
+        type: Boolean,
+        default: false
+      },
       menuRef: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Menu'
@@ -37,7 +41,11 @@ module.exports = function (app, mongoose) {
       subItems: [{
         name: String,
         quantity: Number,
-        price: Number
+        price: Number,
+        served: {
+          type: Boolean,
+          default: false
+        },
       }]
     }],
     isOnline: {
