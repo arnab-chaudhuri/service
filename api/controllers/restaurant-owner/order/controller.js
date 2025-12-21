@@ -585,10 +585,10 @@ module.exports = function (app) {
     // }
 
     // order.list(query)
-      return Promise.all([
-        order.list(query),
-        req.body.orderList && req.body.orderList.length ? order.list(idbQuery) : []
-      ])
+    return Promise.all([
+      order.list(query),
+      req.body.orderList && req.body.orderList.length ? order.list(idbQuery) : []
+    ])
       .then(([queryResult, idbResult]) => {
         const output = idbResult && idbResult.data ? [...queryResult.data, ...idbResult.data] : [...queryResult.data];
         req.workflow.outcome.data = {
@@ -738,6 +738,38 @@ module.exports = function (app) {
 
   };
 
+  const updateCartByIdbId = (req, res, next) => {
+
+    order.getOrderByIdbId(req.params.orderId, req.session.user)
+      .then(orderData => {
+        const oldTableId = orderData.tableRef;
+
+        if (req.body && Object.keys(req.body).length) {
+          for (let item in req.body) {
+            orderData[item] = req.body[item];
+          }
+        }
+        order.edit(orderData, req.session.user)
+          .then(async output => {
+
+            if (req.body.tableRef && (oldTableId && req.body.tableRef.toString() === oldTableId.toString())) {
+
+              tableSession.updateCartByOrderId(orderData._id, orderData.restaurantRef, req.body.cart);
+            }
+
+            const finalOutput = output;
+
+            req.workflow.outcome.data = finalOutput;
+            req.workflow.emit('response');
+          })
+          .catch(next);
+
+      })
+      .catch(next);
+
+
+  };
+
   const cancelOrder = (req, res, next) => {
 
     const notPossibleCancelStatus = [
@@ -863,7 +895,8 @@ module.exports = function (app) {
     cancelOrder: cancelOrder,
     syncMaster: syncMaster,
     updateByIdbId: updateByIdbId,
-    getOngoingOrderList: getOngoingOrderList
+    getOngoingOrderList: getOngoingOrderList,
+    updateCartByIdbId: updateCartByIdbId
   };
 
 };

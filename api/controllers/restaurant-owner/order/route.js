@@ -71,6 +71,10 @@ module.exports = function (app, options) {
     controllers.updateByIdbId
   ]);
 
+  router.put('/update-cart-by-idbid/:orderId', [
+    controllers.updateCartByIdbId
+  ]);
+
   router.route('/change-status/:orderId')
     .put([
       options.validateBody(schemaValidator.changeStatus),
