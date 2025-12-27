@@ -113,6 +113,7 @@ module.exports = function (app) {
         "orderRef.waterDetails": 1,
         "orderRef.idbId": 1,
         createdAt: 1,
+        isRoundOff: 1,
         _id: 1,
         paymentDetails: 1,
         discountDetails: 1,
