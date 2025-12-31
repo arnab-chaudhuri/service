@@ -107,6 +107,7 @@ module.exports = function (/*app*/) {
     TABLE_CANNOT_BE_DELETED: 1802,
 
     TABLE_SESSION_NOT_FOUND: 1850,
+    TABLE_ALREADY_ORDER: 1851,
 
     FEEDBACK_NOT_FOUND: 1900,
 

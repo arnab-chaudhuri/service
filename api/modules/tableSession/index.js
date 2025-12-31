@@ -151,7 +151,7 @@ module.exports = function (app) {
 
     if (tabSesRes && tabSesRes.orderRef) {
       return Promise.reject({
-        'errCode': 'TABLE_SESSION_NOT_FOUND'
+        'errCode': 'TABLE_ALREADY_ORDER'
       });
     }
 
@@ -311,6 +311,8 @@ module.exports = function (app) {
           tableSessionDetails.status = app.config.contentManagement.tableSession.closed;
           tableSessionDetails.endedAt = new Date();
           return tableSessionDetails.save();
+        } else {
+          return Promise.resolve({});
         }
       });
   };
@@ -338,12 +340,27 @@ module.exports = function (app) {
     })
       .then(tableSession => {
         if (tableSession) {
-          tableSession.status = app.config.contentManagement.tableSession.completed;
+          tableSession.status = app.config.contentManagement.tableSession.closed;
           return tableSession.save();
         } else {
           return Promise.resolve(null);
         }
       });
+  };
+
+  const updateStatusByTableRef = (tableRef, restaurantRef) => {
+    return TableSession.updateMany(
+      {
+        status: app.config.contentManagement.tableSession.active,
+        restaurantRef,
+        tableRef
+      },
+      {
+        $set: {
+          status: app.config.contentManagement.tableSession.closed
+        }
+      }
+    );
   };
 
   const getList = async (options) => {
@@ -409,6 +426,7 @@ module.exports = function (app) {
     'edit': editTableSession,
     'list': getList,
     'updateStatus': updateStatus,
-    'createTableSessionFromUser': createTableSessionFromUser
+    'createTableSessionFromUser': createTableSessionFromUser,
+    'updateStatusByTableRef': updateStatusByTableRef
   };
 };
