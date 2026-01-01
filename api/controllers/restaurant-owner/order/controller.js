@@ -964,6 +964,7 @@ module.exports = function (app) {
         }
 
         orderData.status = app.config.contentManagement.order.deleted;
+        orderData.reasonForCancellation = req.body.reasonForCancellation || "";
         orderData.isRestoredWhileCancel = !req.body.noRevertBack;
         order.edit(orderData, req.session.user)
           .then(async output => {
