@@ -80,7 +80,13 @@ module.exports = function (app, mongoose) {
       timestamps: true,
     }
   );
-  schema.index({ 'personalInfo.fullName': 'text' });
+  schema.index(
+    {
+      "personalInfo.phone.countryCode": 1,
+      "personalInfo.phone.number": 1,
+    },
+    { unique: true, sparse: true }
+  );
 
   schema.statics.signup = function (signupData) {
     let newUser = new this({
@@ -192,15 +198,15 @@ module.exports = function (app, mongoose) {
         userDoc
           ? Promise.resolve(userDoc)
           : Promise.reject({
-              errCode: 'USER_NOT_FOUND',
-            })
+            errCode: 'USER_NOT_FOUND',
+          })
       )
       .then((userDoc) =>
         userDoc.accountStatus !== app.config.user.accountStatus.user.blocked
           ? Promise.resolve(userDoc)
           : Promise.reject({
-              errCode: 'USER_HAS_BEEN_SUSPENDED',
-            })
+            errCode: 'USER_HAS_BEEN_SUSPENDED',
+          })
       )
       .then((userDoc) => {
         let savedOTP = {
@@ -262,15 +268,15 @@ module.exports = function (app, mongoose) {
         userDoc
           ? Promise.resolve(userDoc)
           : Promise.reject({
-              errCode: 'USER_NOT_FOUND',
-            })
+            errCode: 'USER_NOT_FOUND',
+          })
       )
       .then((userDoc) =>
         userDoc.accountStatus !== app.config.user.accountStatus.user.blocked
           ? Promise.resolve(userDoc)
           : Promise.reject({
-              errCode: 'USER_HAS_BEEN_SUSPENDED',
-            })
+            errCode: 'USER_HAS_BEEN_SUSPENDED',
+          })
       )
       .then((userDoc) => {
         userDoc.authenticationInfo.otp = {
@@ -303,14 +309,14 @@ module.exports = function (app, mongoose) {
         userDoc
           ? Promise.resolve(userDoc)
           : Promise.reject({
-              errCode: 'USER_NOT_FOUND',
-            })
+            errCode: 'USER_NOT_FOUND',
+          })
       )
       .then((userDoc) =>
         userDoc.accountStatus === app.config.user.accountStatus.user.deleted
           ? Promise.reject({
-              errCode: 'USER_DELETED',
-            })
+            errCode: 'USER_DELETED',
+          })
           : Promise.resolve(userDoc)
       )
       .then((userDoc) =>
@@ -318,8 +324,8 @@ module.exports = function (app, mongoose) {
           ? Promise.resolve(userDoc)
           : userDoc.socialInfo && userDoc.socialInfo.length > 0
             ? Promise.reject({
-                errCode: 'USER_IS_SOCIAL_REGISTERED',
-              })
+              errCode: 'USER_IS_SOCIAL_REGISTERED',
+            })
             : Promise.reject({ errCode: 'USER_NOT_FOUND' })
       )
       .then((userDoc) =>
@@ -327,15 +333,15 @@ module.exports = function (app, mongoose) {
           result
             ? Promise.resolve(userDoc)
             : Promise.reject({
-                errCode: 'PASSWORD_MISMATCH',
-              })
+              errCode: 'PASSWORD_MISMATCH',
+            })
         )
       )
       .then((userDoc) =>
         userDoc.accountStatus === app.config.user.accountStatus.user.blocked
           ? Promise.reject({
-              errCode: 'USER_BLOCKED',
-            })
+            errCode: 'USER_BLOCKED',
+          })
           : Promise.resolve(userDoc)
       )
       .then((userDoc) => {
@@ -351,7 +357,7 @@ module.exports = function (app, mongoose) {
 
   schema.statics.socialLoginValidate = async function (socialId, socialType, firstName, lastName, email) {
     let userDoc = await this.findOne({ 'personalInfo.email': email }).exec();
-  
+
     if (userDoc) {
       if (userDoc.accountStatus === app.config.user.accountStatus.user.deleted) {
         return Promise.reject({ errCode: 'USER_DELETED' });
@@ -359,7 +365,7 @@ module.exports = function (app, mongoose) {
       if (userDoc.accountStatus === app.config.user.accountStatus.user.blocked) {
         return Promise.reject({ errCode: 'USER_BLOCKED' });
       }
-  
+
       const exists = userDoc.socialInfo.some(
         (s) => s.socialId === socialId && s.socialType === socialType
       );
@@ -367,17 +373,17 @@ module.exports = function (app, mongoose) {
         (s) => s.socialType === socialType
       )[0];
 
-      if(socialExists && socialExists.socialId && socialExists.socialId!==socialId) {
+      if (socialExists && socialExists.socialId && socialExists.socialId !== socialId) {
         return Promise.reject({ errCode: 'USER_ALREADY_REGISTERED_DIFFERENT_SOCIAL_ACCOUNT' });
       }
-  
+
       if (!exists) {
         userDoc.socialInfo.push({ socialId, socialType });
       }
-  
+
       userDoc.loginType = app.config.user.loginType[socialType];
       userDoc.accountStatus = app.config.user.accountStatus.user.active;
-  
+
     } else {
       // create new user
       userDoc = new this({
@@ -391,14 +397,14 @@ module.exports = function (app, mongoose) {
         accountStatus: app.config.user.accountStatus.user.active,
       });
     }
-  
+
     await userDoc.save();
     return {
       userDoc,
       userType: app.config.user.role.user,
     };
   };
-  
+
 
   schema.statics.forgotPasswordCreateOTP = function (email) {
     return this.findOne({
@@ -412,15 +418,15 @@ module.exports = function (app, mongoose) {
         userDoc
           ? Promise.resolve(userDoc)
           : Promise.reject({
-              errCode: 'USER_NOT_FOUND',
-            })
+            errCode: 'USER_NOT_FOUND',
+          })
       )
       .then((userDoc) =>
         userDoc.accountStatus !== app.config.user.accountStatus.user.blocked
           ? Promise.resolve(userDoc)
           : Promise.reject({
-              errCode: 'USER_HAS_BEEN_SUSPENDED',
-            })
+            errCode: 'USER_HAS_BEEN_SUSPENDED',
+          })
       )
       .then((userDoc) => {
         userDoc.authenticationInfo.otp = {
@@ -430,14 +436,14 @@ module.exports = function (app, mongoose) {
 
         return userDoc.save().then((userDoc) => {
           // if (process.env.ENABLE_EMAIL_COMMUNICATIONS.trim().toUpperCase() === 'TRUE') {
-            sendEmailOtp({
-              otp: userDoc.authenticationInfo.otp.code,
-              emailId: userDoc.personalInfo.email,
-              userType: app.config.user.role.user,
-              userId: userDoc._id,
-              firstName: userDoc.personalInfo.firstName,
-              emailName: 'forgotPassword',
-            });
+          sendEmailOtp({
+            otp: userDoc.authenticationInfo.otp.code,
+            emailId: userDoc.personalInfo.email,
+            userType: app.config.user.role.user,
+            userId: userDoc._id,
+            firstName: userDoc.personalInfo.firstName,
+            emailName: 'forgotPassword',
+          });
           // }
 
           return Promise.resolve(userDoc.authenticationInfo.otp);
@@ -667,7 +673,7 @@ module.exports = function (app, mongoose) {
             errCode: 'USER_HAS_BEEN_DELETED',
           });
         }
-         let sessionIndex = userDoc.sessionInfo.findIndex(eachSession => {
+        let sessionIndex = userDoc.sessionInfo.findIndex(eachSession => {
           return (eachSession.deviceId.toString() === deviceId.toString() && eachSession.deviceType.toString() === deviceType.toString());
         });
         if (notificationKey) {
@@ -724,22 +730,22 @@ module.exports = function (app, mongoose) {
 
   schema.statics.removeSession = function (token, deviceType, deviceId) {
     return this.updateOne({
-        'sessionInfo': {
-          $elemMatch: {
-            'deviceId': deviceId,
-            'accessToken': token,
-            'deviceType': deviceType,
-          }
+      'sessionInfo': {
+        $elemMatch: {
+          'deviceId': deviceId,
+          'accessToken': token,
+          'deviceType': deviceType,
         }
-      }, {
-        $pull: {
-          sessionInfo: {
-            'deviceId': deviceId,
-            'accessToken': token,
-            'deviceType': deviceType
-          }
+      }
+    }, {
+      $pull: {
+        sessionInfo: {
+          'deviceId': deviceId,
+          'accessToken': token,
+          'deviceType': deviceType
         }
-      })
+      }
+    })
       .exec();
   };
 
@@ -794,22 +800,22 @@ module.exports = function (app, mongoose) {
         userDoc
           ? Promise.resolve(userDoc)
           : Promise.reject({
-              errCode: 'USER_NOT_FOUND',
-            })
+            errCode: 'USER_NOT_FOUND',
+          })
       )
       .then((userDoc) =>
         userDoc.accountStatus !== app.config.user.accountStatus.user.blocked
           ? Promise.resolve(userDoc)
           : Promise.reject({
-              errCode: 'USER_HAS_BEEN_SUSPENDED',
-            })
+            errCode: 'USER_HAS_BEEN_SUSPENDED',
+          })
       )
       .then((userDoc) =>
         userDoc.accountStatus !== app.config.user.accountStatus.user.pending
           ? Promise.resolve(userDoc)
           : Promise.reject({
-              errCode: 'USER_IS_NOT_ONBOARD',
-            })
+            errCode: 'USER_IS_NOT_ONBOARD',
+          })
       );
   };
 
@@ -825,22 +831,22 @@ module.exports = function (app, mongoose) {
         userDoc
           ? Promise.resolve(userDoc)
           : Promise.reject({
-              errCode: 'USER_NOT_FOUND',
-            })
+            errCode: 'USER_NOT_FOUND',
+          })
       )
       .then((userDoc) =>
         userDoc.accountStatus !== app.config.user.accountStatus.user.blocked
           ? Promise.resolve(userDoc)
           : Promise.reject({
-              errCode: 'USER_HAS_BEEN_SUSPENDED',
-            })
+            errCode: 'USER_HAS_BEEN_SUSPENDED',
+          })
       )
       .then((userDoc) =>
         userDoc.accountStatus !== app.config.user.accountStatus.user.pending
           ? Promise.resolve(userDoc)
           : Promise.reject({
-              errCode: 'USER_IS_NOT_ONBOARD',
-            })
+            errCode: 'USER_IS_NOT_ONBOARD',
+          })
       );
   };
 

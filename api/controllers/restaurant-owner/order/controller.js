@@ -17,6 +17,7 @@ module.exports = function (app) {
   const sse = app.module.sse;
   const notification = app.module.notification;
   const menu = app.module.menu;
+  const user = app.module.user;
 
   /**
    * Adds a order
@@ -42,10 +43,24 @@ module.exports = function (app) {
                   serviceTaxDetails: req.body.serviceTaxDetails,
                   paymentDetails: req.body.paymentDetails
                 }, req.session.user)
-                  .then(output2 => {
+                  .then(async output2 => {
                     output.billDetails = output2;
 
-                    order.updateBillDetails(output._id, output2).catch(err => {
+                    const userData = req.body.contactDetails;
+                    let dbUser = undefined;
+
+                    if (userData && userData.phone &&
+                      userData.phone.number
+                    ) {
+                      dbUser = await user.crud.findOrCreateUserByPhone(
+                        userData.phone.countryCode || "+91",
+                        userData.phone.number,
+                        userData.fullName
+                      );
+
+                    }
+
+                    order.updateBillDetails(output._id, output2, dbUser).catch(err => {
                       console.log("err updateBillDetails ", err)
                     });
 
@@ -149,7 +164,7 @@ module.exports = function (app) {
 
       const newOrders = orders.filter(o => !o.orderId);
       const updateOrders = orders.filter(o => o.orderId);
-      
+
       console.log("newOrders ", newOrders, updateOrders)
 
       // handle new orders
@@ -844,12 +859,27 @@ module.exports = function (app) {
   const updateByIdbId = (req, res, next) => {
 
     order.getOrderByIdbId(req.params.orderId, req.session.user)
-      .then(orderData => {
+      .then(async orderData => {
         const oldTableId = orderData.tableRef;
 
         if (req.body && Object.keys(req.body).length) {
           for (let item in req.body) {
             orderData[item] = req.body[item];
+          }
+        }
+
+        const userData = req.body.contactDetails;
+
+        if (userData && userData.phone &&
+          userData.phone.number
+        ) {
+          const dbUser = await user.crud.findOrCreateUserByPhone(
+            userData.phone.countryCode || "+91",
+            userData.phone.number,
+            userData.fullName
+          );
+          if (dbUser) {
+            orderData.userRef = dbUser._id;
           }
         }
 
