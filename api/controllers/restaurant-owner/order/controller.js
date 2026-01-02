@@ -17,6 +17,7 @@ module.exports = function (app) {
   const sse = app.module.sse;
   const notification = app.module.notification;
   const menu = app.module.menu;
+  const user = app.module.user;
 
   /**
    * Adds a order
@@ -42,10 +43,24 @@ module.exports = function (app) {
                   serviceTaxDetails: req.body.serviceTaxDetails,
                   paymentDetails: req.body.paymentDetails
                 }, req.session.user)
-                  .then(output2 => {
+                  .then(async output2 => {
                     output.billDetails = output2;
 
-                    order.updateBillDetails(output._id, output2).catch(err => {
+                    const userData = req.body.contactDetails;
+                    let dbUser = undefined;
+
+                    if (userData && userData.phone &&
+                      userData.phone.number
+                    ) {
+                      dbUser = await user.crud.findOrCreateUserByPhone(
+                        userData.phone.countryCode || "+91",
+                        userData.phone.number,
+                        userData.fullName
+                      );
+
+                    }
+
+                    order.updateBillDetails(output._id, output2, dbUser).catch(err => {
                       console.log("err updateBillDetails ", err)
                     });
 
@@ -119,6 +134,23 @@ module.exports = function (app) {
     return Array.from(inventoryMap.values());
   }
 
+  function getLatestFromEachTable(orders) {
+    const result = orders.reduce((acc, curr) => {
+      const { tableRef, lastUpdated } = curr;
+
+      if (
+        !acc[tableRef] ||
+        lastUpdated > acc[tableRef].lastUpdated
+      ) {
+        acc[tableRef] = curr;
+      }
+
+      return acc;
+    }, {});
+
+    return result
+  }
+
   const syncMaster = async (req, res, next) => {
     try {
       const { orders } = req.body;
@@ -133,9 +165,12 @@ module.exports = function (app) {
       const newOrders = orders.filter(o => !o.orderId);
       const updateOrders = orders.filter(o => o.orderId);
 
+      console.log("newOrders ", newOrders, updateOrders)
+
       // handle new orders
       if (newOrders.length) {
         const outputOrders = await order.createMulti(newOrders, req.session.user);
+        console.log("outputOrders ", outputOrders)
         // update inventory - await in case returns a promise
         await inventory.updateInventoryCountSync(aggregateItems(outputOrders, req.session.user));
 
@@ -189,6 +224,7 @@ module.exports = function (app) {
           return each;
         });
 
+        console.log("responseOrders ", responseOrders)
         syncedIds.push(...responseOrders);
       }
 
@@ -197,6 +233,8 @@ module.exports = function (app) {
         await inventory.rollbackInventorySync(aggregateItems(updateOrders, req.session.user));
 
         const outputOrders = await order.bulkUpdateOrders(updateOrders, req.session.user);
+
+        console.log("outputOrders updte ", outputOrders)
 
         const carts = [];
         // collect all cart items from outputOrders
@@ -209,7 +247,7 @@ module.exports = function (app) {
           }
         });
 
-        console.log("carts ", carts)
+        // console.log("carts ", carts)
         if (carts.length) {
           await menu.updateBulkOrderCount(carts);
         }
@@ -241,6 +279,159 @@ module.exports = function (app) {
 
         syncedIds.push(...responseOrders);
       }
+
+      console.log("syncedIds ", syncedIds)
+
+
+      // should be different for update and create
+      console.log("Incoming orders count:", orders.length);
+
+      const tableWiseLatestOrder = getLatestFromEachTable(
+        orders.filter(each => each.tableRef)
+      );
+      console.log("tableWiseLatestOrder:", tableWiseLatestOrder);
+
+      let tableQuery = {
+        skip: 0,
+        limit: 1500,
+        filters: {
+          restaurantRef: req.session.user.restaurantRef.toString()
+        },
+        sort: {},
+        populate: [{
+          path: 'currentSessionRef',
+          select: 'status orderRef',
+          populate: [{
+            path: 'orderRef',
+            select: 'createdAt orderId status idbId updatedAt'
+          }]
+        }]
+      };
+
+      console.log("Table list query:", tableQuery);
+
+      await table.list(tableQuery)
+        .then(async tableList => {
+          console.log("Fetched tableList count:", tableList?.data?.length || 0);
+
+          if (!tableList || !tableList?.data?.length) {
+            console.log("No tables found");
+            return;
+          }
+
+          if (!tableWiseLatestOrder || !Object.keys(tableWiseLatestOrder).length) {
+            console.log("No tableWiseLatestOrder found");
+            return;
+          }
+
+          for (let tblRef in tableWiseLatestOrder) {
+            const lstOrder = tableWiseLatestOrder[tblRef];
+            const latestOrder = syncedIds.find(each => each.idbId === lstOrder.idbId);
+
+            console.log(`\nProcessing tableRef: ${tblRef}`);
+            console.log("Latest order:", latestOrder, lstOrder);
+
+            if (
+              !latestOrder ||
+              !Object.keys(latestOrder).length
+            ) {
+              console.log("Invalid latest order, skipping");
+              continue;
+            }
+
+            if (
+              latestOrder.status === app.config.contentManagement.order.completed ||
+              latestOrder.status === app.config.contentManagement.order.deleted
+            ) {
+              console.log("Order is completed or deleted");
+              tableSession.updateStatusByOrderId(
+                latestOrder._id,
+                req.session.user.restaurantRef
+              );
+              continue;
+            }
+
+            const dbTableData = tableList.data.find(each => each._id.toString() === tblRef.toString());
+            console.log("DB table data:", dbTableData);
+
+            let sessionType = '';
+
+            if (dbTableData && !dbTableData.currentSessionRef) {
+              sessionType = 'ADD';
+              console.log("No currentSessionRef → ADD");
+            }
+
+            if (
+              dbTableData &&
+              dbTableData.currentSessionRef &&
+              !dbTableData.currentSessionRef.orderRef
+            ) {
+              sessionType = 'ADD';
+              console.log("Session exists but no orderRef → ADD");
+            }
+
+            if (
+              dbTableData &&
+              dbTableData.currentSessionRef &&
+              dbTableData.currentSessionRef.orderRef &&
+              dbTableData.currentSessionRef.orderRef.idbId !== latestOrder.idbId &&
+              dbTableData.currentSessionRef.orderRef.updatedAt &&
+              lstOrder.lastUpdated &&
+              new Date(dbTableData.currentSessionRef.orderRef.updatedAt).getTime() <=
+              new Date(lstOrder.lastUpdated).getTime()
+            ) {
+              sessionType = 'UPDATE';
+              console.log("Existing session older than latest order → UPDATE");
+            }
+
+            console.log("Final sessionType:", sessionType);
+
+            if (sessionType === 'UPDATE') {
+              console.log(
+                "Updating table session for orderId:",
+                dbTableData.currentSessionRef.orderRef._id
+              );
+
+              tableSession.updateStatusByOrderId(
+                dbTableData.currentSessionRef.orderRef._id,
+                req.session.user.restaurantRef
+              );
+            }
+
+            if (sessionType) {
+              console.log("Creating table session with payload:", {
+                tableRef: tblRef,
+                cart: latestOrder.cart,
+                restaurantRef: req.session.user.restaurantRef,
+                orderRef: latestOrder._id
+              });
+
+              const tableSessionRes =
+                await tableSession.createTableSessionFromOwner(
+                  {
+                    tableRef: tblRef,
+                    cart: latestOrder.cart,
+                    restaurantRef: req.session.user.restaurantRef,
+                    orderRef: latestOrder._id
+                  },
+                  req.session.user
+                );
+
+              console.log("Table session created:", tableSessionRes);
+
+              console.log("Marking table as unavailable:", tblRef);
+              table.markAsUnavailable(tblRef, tableSessionRes._id);
+            } else {
+              console.log("No session action required for table:", tblRef);
+            }
+          }
+        })
+        .catch(err => {
+          console.error("Error while processing table sessions:", err);
+        });
+
+
+
 
       req.workflow.outcome.data = syncedIds;
       req.workflow.emit('response');
@@ -668,12 +859,27 @@ module.exports = function (app) {
   const updateByIdbId = (req, res, next) => {
 
     order.getOrderByIdbId(req.params.orderId, req.session.user)
-      .then(orderData => {
+      .then(async orderData => {
         const oldTableId = orderData.tableRef;
 
         if (req.body && Object.keys(req.body).length) {
           for (let item in req.body) {
             orderData[item] = req.body[item];
+          }
+        }
+
+        const userData = req.body.contactDetails;
+
+        if (userData && userData.phone &&
+          userData.phone.number
+        ) {
+          const dbUser = await user.crud.findOrCreateUserByPhone(
+            userData.phone.countryCode || "+91",
+            userData.phone.number,
+            userData.fullName
+          );
+          if (dbUser) {
+            orderData.userRef = dbUser._id;
           }
         }
 
@@ -788,6 +994,7 @@ module.exports = function (app) {
         }
 
         orderData.status = app.config.contentManagement.order.deleted;
+        orderData.reasonForCancellation = req.body.reasonForCancellation || "";
         orderData.isRestoredWhileCancel = !req.body.noRevertBack;
         order.edit(orderData, req.session.user)
           .then(async output => {

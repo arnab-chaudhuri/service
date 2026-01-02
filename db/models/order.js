@@ -72,6 +72,13 @@ module.exports = function (app, mongoose) {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Bill',
     },
+    reasonForCancellation: {
+      type: String
+    },
+    userRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
     parcelDetails: {
       items: [{
         name: String,

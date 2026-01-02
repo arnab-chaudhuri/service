@@ -107,11 +107,12 @@ module.exports = function(app) {
       }
     }
     table.edit(req.tableId, req.session.user)
-      .then(output => {
+      .then(async output => {
+        console.log("req.body ", req.body)
         if (req.body.status === app.config.contentManagement.table.active &&
           oldStatus !== req.body.status
         ) {
-          tableSession.updateStatusByOrderId(req.body.orderRef, req.session.user.restaurantRef);
+          await tableSession.updateStatusByTableRef(req.tableId._id, req.session.user.restaurantRef);
         }
         req.workflow.outcome.data = output;
         req.workflow.emit('response');

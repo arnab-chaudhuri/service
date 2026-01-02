@@ -163,15 +163,17 @@ module.exports = function (app) {
   };
 
   const getOrderByIdbId = function (orderId, userRef) {
-    console.log("orderId-- ", orderId)
     return Order.findOne({
       idbId: orderId
     })
       .populate({
         path: 'billRef'
       })
+      .populate({
+        path: 'userRef',
+        select: '_id personalInfo'
+      })
       .then(orderDetails => {
-        console.log("orderDetails-- ", orderDetails)
         if (!orderDetails || (orderDetails && userRef &&
           orderDetails.restaurantRef.toString() !== userRef.restaurantRef.toString())) {
           return Promise.reject({
@@ -236,13 +238,16 @@ module.exports = function (app) {
       });
   };
 
-  const updateBillDetails = (orderId, billDetails) => {
+  const updateBillDetails = (orderId, billDetails, userData) => {
     return Order.findOne({
       _id: orderId
     })
       .then(order => {
         if (order) {
           order.billRef = billDetails._id;
+          if (userData && userData._id) {
+            order.userRef = userData._id;
+          }
           return order.save();
         } else {
           return Promise.resolve(null);
