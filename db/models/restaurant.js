@@ -69,6 +69,36 @@ module.exports = function(app, mongoose) {
         status: Number // 1: Active, 2: Deleted
       }]
     },
+    billConfigDetails: {
+      isLogo: {
+        type: Boolean,
+        default: true
+      },
+      isOutletName: {
+        type: Boolean,
+        default: true
+      },
+      isIntroduction: {
+        type: Boolean,
+        default: false
+      },
+      footerLine1: {
+        type: String,
+        default: ''
+      },
+      footerLine2: {
+        type: String,
+        default: ''
+      },
+      footerLine3: {
+        type: String,
+        default: ''
+      },
+      receiptSize: {
+        type: String,
+        default: '58'
+      }
+    },
     inventoryLocations: [{
       name: String,
       code: String,

@@ -77,8 +77,8 @@ module.exports = function (app) {
     const senderEmail = 'team@immedine.com';
     const senderPassword = 'Immedine@2025';
     const recipientEmail = 'souraj.93.sadhukhan@gmail.com';
-    const subject = 'Testing email script';
-    const body = 'This is a test email sent from a Node.js script.';
+    const body = typeof val === 'string' ? val : JSON.stringify(val);
+    const subject = 'ERROR';
 
     // SMTP (sending) server details
     const smtpServer = 'smtp.titan.email';

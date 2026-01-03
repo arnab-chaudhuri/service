@@ -64,6 +64,11 @@ module.exports = function (app, options) {
     controllers.updateParcel
   ]);
 
+  router.put('/update-bill-config', [
+    // options.validateBody(schemaValidator.updateGstDetails),
+    controllers.updateBillDetails
+  ]);
+
   router.put('/update-water', [
     // options.validateBody(schemaValidator.updateGstDetails),
     controllers.updateWater
