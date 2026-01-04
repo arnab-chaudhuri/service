@@ -84,11 +84,11 @@ module.exports = function(app, mongoose) {
       },
       footerLine1: {
         type: String,
-        default: ''
+        default: 'Thank you for ordering!'
       },
       footerLine2: {
         type: String,
-        default: ''
+        default: '*** Visit Again ***'
       },
       footerLine3: {
         type: String,
@@ -96,7 +96,7 @@ module.exports = function(app, mongoose) {
       },
       receiptSize: {
         type: String,
-        default: '58'
+        default: '57'
       }
     },
     inventoryLocations: [{
