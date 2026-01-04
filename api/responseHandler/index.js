@@ -150,8 +150,7 @@ module.exports = function (app) {
         errorMeta.isServerError
       ) &&
       !errorMeta.isValidationError &&
-      !errorMeta.isAuthError &&
-      app.get('env') === 'production';
+      !errorMeta.isAuthError;
 
     /* -----------------------------
      * 4. Trigger mail (safe & async)
