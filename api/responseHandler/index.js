@@ -163,7 +163,11 @@ module.exports = function (app) {
         req.body.noReturn = true;
         req.body.err = err;
 
-        commonController.triggerEmail(req, res, next);
+        Promise.resolve(
+          commonController.triggerEmail(req, res, next)
+        ).catch(mailErr => {
+          console.error('❌ Failed to send error mail', mailErr);
+        });
       } catch (mailErr) {
         console.error('❌ Failed to send error mail', mailErr);
       }
