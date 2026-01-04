@@ -6,6 +6,8 @@ module.exports = function (app) {
    * @type {Array}
    */
   const errorCodes = require('./scripts/errorCodes')(app);
+  const commonController = require('../controllers/common/controller')(app);
+
 
   /**
    * Retrieves the numerical error code from the textual error code
@@ -100,9 +102,72 @@ module.exports = function (app) {
   //   }
   // };
 
-  const errorHandler = function (err, req, res, next) {
+  const errorHandler = async function (err, req, res, next) {
     console.log('in error handler', err);
 
+    const errorMeta = {
+      isTypeError: err instanceof TypeError,
+      isReferenceError: err instanceof ReferenceError,
+      isSyntaxError: err instanceof SyntaxError,
+      isValidationError:
+        err.name === 'ValidationError' ||
+        err.name === 'CastError',
+      isDuplicateError: err.code === 11000,
+      isMongoError: !!err.name && err.name.toLowerCase().includes('mongo'),
+      isThirdPartyError: err.isAxiosError || err.status === 424,
+      isAuthError: [401, 403, 419].includes(err.status || err.errCode),
+      isServerError: (err.status || 500) >= 500,
+    };
+
+    /* -----------------------------
+     * 2. Build error payload
+     * ----------------------------- */
+
+    const errorPayload = {
+      name: err.name,
+      message: err.message,
+      stack: err.stack,
+      url: req.originalUrl,
+      method: req.method,
+      body: req.body,
+      headers: req.headers,
+      user: req.session?.user?._id,
+      restaurantRef: req.session?.user?.restaurantRef,
+      time: new Date().toISOString(),
+    };
+
+    /* -----------------------------
+     * 3. Decide if email is required
+     * ----------------------------- */
+
+    const shouldTriggerMail =
+      (
+        errorMeta.isTypeError ||
+        errorMeta.isReferenceError ||
+        errorMeta.isSyntaxError ||
+        errorMeta.isMongoError ||
+        errorMeta.isThirdPartyError ||
+        errorMeta.isServerError
+      ) &&
+      !errorMeta.isValidationError &&
+      !errorMeta.isAuthError &&
+      app.get('env') === 'production';
+
+    /* -----------------------------
+     * 4. Trigger mail (safe & async)
+     * ----------------------------- */
+
+    if (shouldTriggerMail) {
+      try {
+        req.body.errorPayload = JSON.stringify(errorPayload);
+        req.body.noReturn = true;
+        req.body.err = err;
+
+        commonController.triggerEmail(req, res, next);
+      } catch (mailErr) {
+        console.error('❌ Failed to send error mail', mailErr);
+      }
+    }
     /**
      * Types of errors
      *
@@ -142,6 +207,9 @@ module.exports = function (app) {
         }
       }
       console.log("req ", req.headers)
+      if (!response.errorCode) {
+        console.log("trigger mail")
+      }
       return res.status(response.errorCode ? req.headers["x-auth-devicetype"] === "3" ? 419 : 200 : 500).json(response);
     } else {
       return next(err);

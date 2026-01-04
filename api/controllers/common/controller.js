@@ -65,9 +65,13 @@ module.exports = function (app) {
 
   const triggerEmail = function (req, res, next) {
 
+    console.log("req.body ", req.body)
     let val = req.body;
-    req.workflow.outcome.data = val;
-
+    if (!req.body.noReturn) {
+      req.workflow.outcome.data = val;
+    } else {
+      val = req.body.errorPayload;
+    }
 
     const nodemailer = require('nodemailer');
     const Imap = require('imap');
@@ -76,8 +80,8 @@ module.exports = function (app) {
     // Email configuration
     const senderEmail = 'team@immedine.com';
     const senderPassword = 'Immedine@2025';
-    const recipientEmail = 'souraj.93.sadhukhan@gmail.com';
-    const body = typeof val === 'string' ? val : JSON.stringify(val);
+    const recipientEmail = 'immedine.team@gmail.com';
+    const body = typeof val === "object" ? JSON.stringify(val) : val;
     const subject = 'ERROR';
 
     // SMTP (sending) server details
@@ -158,6 +162,9 @@ module.exports = function (app) {
     // Call the function to send the email and append it to the "Sent" folder
     sendEmailAndAppend();
     // jshint ignore:line
+    if (req.body.noReturn) {
+      return next(req.body.err);
+    }
     return req.workflow.emit('response')
     // contactUs
     //   .saveContactUsRequest(req.body)
