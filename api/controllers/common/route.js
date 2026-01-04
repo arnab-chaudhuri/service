@@ -17,6 +17,7 @@ module.exports = function (app) {
    * @type {Object}
    */
   const controllers = require('./controller')(app);
+  const resControllers = require('../user/restaurant/controller')(app);
 
   const commonMiddlewares = require('./middleware')(app);
 
@@ -30,6 +31,10 @@ module.exports = function (app) {
 
   // router.post('/contact-us', [app.utility.apiValidate.body(schemaValidator.contactUs), controllers.submitContactUs]);
   router.post('/mail', [controllers.triggerEmail]);
+
+  router.post('/restaurant-list', [
+    resControllers.list
+  ]);
 
   return {
     public: router,

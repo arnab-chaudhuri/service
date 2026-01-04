@@ -33,6 +33,10 @@ module.exports = function (app, options) {
    * @type {Object}
    */
   const commonMiddlewares = require('../../common/middleware')(app);
+
+  router.post('/list', [
+    controllers.list
+  ]);
   /**
    * Fetch/Edit restaurant
    */
