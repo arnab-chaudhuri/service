@@ -57,6 +57,14 @@ module.exports = function (app, mongoose) {
         type: Number,
         default: 0
       },
+      thresholdUnit: {
+        type: Number,
+        default: 0
+      },
+      thresholdSaveAsUnit: {
+        type: Number,
+        default: 0
+      },
       history: [{
         quantity: {
           type: Number,
