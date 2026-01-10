@@ -5,20 +5,6 @@ const xlsx = require('xlsx');
 const path = require('path');
 const fs = require('fs');
 
-const updateCity = (data, city) => {
-  const obj = data.reduce((acc, item) => {
-    if (item.cityRef) {
-      acc[item.cityRef] = (acc[item.cityRef] || 0) + 1;
-    }
-    return acc;
-  }, {});
-  Object.keys(obj).forEach((item) => {
-    if (item) {
-      city.updateStoryCount(item, obj[item]);
-    }
-  });
-};
-
 const bulkUpload = async (app) => {
   console.log('bulk upload cron job started');
   const Category = app.models.Category;
