@@ -50,7 +50,15 @@ module.exports = function (app, mongoose) {
         quantity: {
           type: Number,
           default: 0
-        }
+        },
+        quantityUnit: {
+          type: Number,
+          default: 0
+        },
+        quantitySaveAsUnit: {
+          type: Number,
+          default: 0
+        },
       }]
     }]
   }, {
