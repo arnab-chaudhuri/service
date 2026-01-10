@@ -82,6 +82,10 @@ module.exports = function(app, mongoose) {
         type: Boolean,
         default: false
       },
+      isGST: {
+        type: Boolean,
+        default: false
+      },
       footerLine1: {
         type: String,
         default: 'Thank you for ordering!'
@@ -128,6 +132,10 @@ module.exports = function(app, mongoose) {
         type: Number,
         default: 2.5
       },
+      gstNo: {
+        type: String,
+        default: ''
+      }
     },
     serviceTaxDetails: {
       serviceTaxEnabled: {
