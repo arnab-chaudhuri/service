@@ -104,4 +104,8 @@ module.exports = {
     list: 1,
     card: 2
   },
+  vendor: {
+    active: 1,
+    deleted: 2
+  },
 };

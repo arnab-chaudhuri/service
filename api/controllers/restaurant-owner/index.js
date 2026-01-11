@@ -30,6 +30,7 @@ const controllers = {
    */
   globalConfig: require('./global-config/route'),
   restaurant: require('./restaurant/route'),
+  vendor: require('./vendor/route'),
   restaurantMember: require('./restaurant-member/route'),
 
   // /**
@@ -156,6 +157,7 @@ module.exports = function(app) {
   privateRouter.use('/expense', controllers.expense(app, options));
   privateRouter.use('/feedback', controllers.feedback(app, options));
   privateRouter.use('/table', controllers.table(app, options));
+  privateRouter.use('/vendor', controllers.vendor(app, options));
   privateRouter.use('/table-session', controllers.tableSession(app, options));
 
   // /**

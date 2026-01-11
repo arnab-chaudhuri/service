@@ -1,13 +1,9 @@
 'use strict';
 
 module.exports = function(app) {
-  const addExpense = {
-    'vendorName': {
+  const addVendor = {
+    'name': {
       type: 'string',
-      allowEmpty: false,
-    },
-    'amount': {
-      type: 'number',
       allowEmpty: false,
       required: true
     }
@@ -29,7 +25,7 @@ module.exports = function(app) {
   };
 
   const param = {
-    'expenseId': {
+    'vendorId': {
       type: 'string',
       required: true,
       'conform': function(value) {
@@ -54,14 +50,18 @@ module.exports = function(app) {
         'name': {
           type: 'string',
           allowEmpty: false
-        }
+        },
+        'moduleName': {
+          type: 'string',
+          allowEmpty: false
+        },
       }
     }
   };
 
   return {
-    add: addExpense,
-    edit: addExpense,
+    add: addVendor,
+    edit: addVendor,
     listQuery: listQuery,
     param: param,
     list: list,

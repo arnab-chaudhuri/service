@@ -10,6 +10,7 @@ module.exports = function(app) {
    * @type {Object}
    */
   const expense = app.module.expense;
+  const vendor = app.module.vendor;
   const menu = app.module.menu;
   const inventory = app.module.inventory;
 
@@ -20,9 +21,15 @@ module.exports = function(app) {
    * @param  {Function} next Next is used to pass control to the next middleware function
    * @return {Promise}       The Promise
    */
-  const addExpense = (req, res, next) => {
+  const addExpense = async (req, res, next) => {
+    if (!req.body.vendorRef) {
+      req.body.vendorRef = await vendor.createOrGetVendor({
+        name: req.body.vendorName,
+        restaurantRef: req.session.user.restaurantRef
+      });
+    }
     expense.create({
-      vendorName: req.body.vendorName,
+      vendorRef: req.body.vendorRef,
       amount: req.body.amount,
       items: req.body.items
     }, req.session.user)
@@ -70,6 +77,9 @@ module.exports = function(app) {
       },
       populate: [{
         path: 'items.itemRef',
+        select: 'name _id'
+      }, {
+        path: 'vendorRef',
         select: 'name _id'
       }]
     };

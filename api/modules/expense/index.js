@@ -34,6 +34,10 @@ module.exports = function (app) {
       path: 'items.itemRef',
       select: 'name _id unit saveAsUnit'
     })
+    .populate({
+      path: 'vendorRef',
+      select: 'name _id'
+    })
       .then(expenseDetails => {
         if (!expenseDetails || (expenseDetails &&
           expenseDetails.restaurantRef.toString() !== userRef.restaurantRef.toString())) {

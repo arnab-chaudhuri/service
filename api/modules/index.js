@@ -21,6 +21,7 @@ module.exports = function(app) {
   const table = require('./table')(app);
   const sse = require('./sse')(app);
   const feedback = require('./feedback')(app);
+  const vendor = require('./vendor')(app);
   const query = require('./query')(app);
   const expense = require('./expense')(app);
   const tableSession = require('./tableSession')(app);
@@ -32,6 +33,7 @@ module.exports = function(app) {
     query,
     globalConfig,
     session,
+    vendor,
     admin,
     restaurantOwner,
     restaurant,

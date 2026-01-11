@@ -1,8 +1,9 @@
 'use strict';
 module.exports = function (app, mongoose) {
   const schema = new mongoose.Schema({
-    vendorName: {
-      type: String,
+    vendorRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Vendor',
       required: true
     },
     amount: {
