@@ -581,6 +581,7 @@ module.exports = function (app) {
         orderId: 1,
         orderType: 1,
         idbId: 1,
+        note: 1,
         cart: 1,
         status: 1,
         isOnline: 1,
@@ -657,6 +658,7 @@ module.exports = function (app) {
         orderType: 1,
         idbId: 1,
         cart: 1,
+        note: 1,
         status: 1,
         isOnline: 1,
         restaurantRef: 1,
@@ -744,6 +746,7 @@ module.exports = function (app) {
         orderId: 1,
         orderType: 1,
         idbId: 1,
+        note: 1,
         cart: 1,
         status: 1,
         isOnline: 1,
@@ -1074,6 +1077,22 @@ module.exports = function (app) {
 
   };
 
+  const updateNote = (req, res, next) => {
+    order.getOrderByIdbId(req.params.orderId, req.session.user)
+      .then(orderData => {
+        orderData.note = req.body.note;
+
+        order.edit(orderData, req.session.user)
+          .then(output => {
+
+            req.workflow.outcome.data = output;
+            req.workflow.emit('response');
+          })
+          .catch(next);
+      }).catch(next);
+
+  };
+
   /**
    * Deletes a order
    * @param  {Object}   req  Request 
@@ -1103,7 +1122,8 @@ module.exports = function (app) {
     syncMaster: syncMaster,
     updateByIdbId: updateByIdbId,
     getOngoingOrderList: getOngoingOrderList,
-    updateCartByIdbId: updateCartByIdbId
+    updateCartByIdbId: updateCartByIdbId,
+    updateNote: updateNote
   };
 
 };

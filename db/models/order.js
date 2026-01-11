@@ -9,6 +9,9 @@ module.exports = function (app, mongoose) {
       type: String,
       required: true
     },
+    note: {
+      type: String
+    },
     status: {
       type: Number,
       default: app.config.contentManagement.order.active

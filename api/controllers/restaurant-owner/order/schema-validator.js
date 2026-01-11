@@ -56,6 +56,14 @@ module.exports = function(app) {
     },
   };
 
+  const updateNote = {
+    'note': {
+      type: 'string',
+      allowEmpty: false,
+      required: true
+    },
+  };
+
   const listQuery = {
     'skip': {
       type: 'string',
@@ -108,7 +116,8 @@ module.exports = function(app) {
     listQuery: listQuery,
     param: param,
     list: list,
-    changeStatus: changeStatus
+    changeStatus: changeStatus,
+    updateNote: updateNote
   };
 
 };

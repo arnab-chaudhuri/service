@@ -81,6 +81,12 @@ module.exports = function (app, options) {
       controllers.changeStatus
     ]);
 
+  router.route('/update-note/:orderId')
+    .put([
+      options.validateBody(schemaValidator.updateNote),
+      controllers.updateNote
+    ]);
+
   router.route('/accept/:orderId')
     .put([
       controllers.acceptOrder
