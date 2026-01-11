@@ -65,7 +65,9 @@ module.exports = function(app) {
         status: app.config.contentManagement.expense.active,
         restaurantRef: req.session.user.restaurantRef
       },
-      sort: {},
+      sort: {
+        createdAt: -1
+      },
       populate: [{
         path: 'items.itemRef',
         select: 'name _id'
