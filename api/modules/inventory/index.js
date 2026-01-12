@@ -143,9 +143,9 @@ module.exports = function (app) {
                 //     'errCode': 'NOT_ENOUGH_STOCK'
                 //   });
                 // }
-
+                
                 const locationList = ing.inventoryRef.locationList;
-                const locationData = locationList.find(each => each.location === ing.location);
+                const locationData = locationList.find(each => each.location.toString() === ing.location.toString());
                 if (locationData && Object.keys(locationData).length) {
                   if (locationData.quantity < requiredQty) {
                     await session.abortTransaction();
@@ -171,12 +171,12 @@ module.exports = function (app) {
                 // Push to bulk update list
                 bulkUpdates.push({
                   updateOne: {
-                    filter: { _id: ing.inventoryRef._id },
+                    filter: { _id: new mongoose.Types.ObjectId(ing.inventoryRef._id) },
                     update: {
                       $inc: { 'locationList.$[loc].quantity': -requiredQty, quantity: -requiredQty },
                       $push: { 'locationList.$[loc].history': historyEntry }
                     },
-                    arrayFilters: [{ 'loc.location': ing.location }]
+                    arrayFilters: [{ 'loc.location': new mongoose.Types.ObjectId(ing.location) }]
                   }
                 });
               }
@@ -246,12 +246,12 @@ module.exports = function (app) {
                 // Push to bulk update list
                 bulkUpdates.push({
                   updateOne: {
-                    filter: { _id: ing.inventoryRef._id },
+                    filter: { _id: new mongoose.Types.ObjectId(ing.inventoryRef._id) },
                     update: {
                       $inc: { 'locationList.$[loc].quantity': -requiredQty, quantity: -requiredQty },
                       $push: { 'locationList.$[loc].history': historyEntry }
                     },
-                    arrayFilters: [{ 'loc.location': ing.location }]
+                    arrayFilters: [{ 'loc.location': new mongoose.Types.ObjectId(ing.location) }]
                   }
                 });
               }
