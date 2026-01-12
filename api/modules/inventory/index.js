@@ -388,14 +388,14 @@ module.exports = function (app) {
           };
           return {
             updateOne: {
-              filter: { _id: invId },
+              filter: { _id: new mongoose.Types.ObjectId(invId) },
               update: {
                 $inc: {
                   'locationList.$[loc].quantity': qty, quantity: qty,
                 },
                 $push: { 'locationList.$[loc].history': historyEntry }
               },
-              arrayFilters: [{ 'loc.location': restoreUsageLoc[invId] }]
+              arrayFilters: [{ 'loc.location': new mongoose.Types.ObjectId(restoreUsageLoc[invId]) }]
             }
           }
         });
@@ -442,7 +442,7 @@ module.exports = function (app) {
             const inv = await Inventory.findById(invId).session(session);
 
             const locationList = inv.locationList;
-            const locationData = locationList.find(each => each.location === newIngredientLoc[invId]);
+            const locationData = locationList.find(each => each.location.toString() === newIngredientLoc[invId].toString());
             if (locationData && Object.keys(locationData).length) {
               if (locationData.quantity < qty) {
                 await session.abortTransaction();
@@ -480,12 +480,12 @@ module.exports = function (app) {
 
             return {
               updateOne: {
-                filter: { _id: invId },
+                filter: { _id: new mongoose.Types.ObjectId(invId) },
                 update: {
                   $inc: { 'locationList.$[loc].quantity': -qty, quantity: -qty },
                   $push: { 'locationList.$[loc].history': historyEntry }
                 },
-                arrayFilters: [{ 'loc.location': newIngredientLoc[invId] }]
+                arrayFilters: [{ 'loc.location': new mongoose.Types.ObjectId(newIngredientLoc[invId]) }]
               }
             };
           });
@@ -563,14 +563,14 @@ module.exports = function (app) {
             };
             return {
               updateOne: {
-                filter: { _id: invId },
+                filter: { _id: new mongoose.Types.ObjectId(invId) },
                 update: {
                   $inc: {
                     'locationList.$[loc].quantity': qty, quantity: qty,
                   },
                   $push: { 'locationList.$[loc].history': historyEntry }
                 },
-                arrayFilters: [{ 'loc.location': restoreUsageLoc[invId] }]
+                arrayFilters: [{ 'loc.location': new mongoose.Types.ObjectId(restoreUsageLoc[invId]) }]
               }
             }
           });
@@ -625,12 +625,12 @@ module.exports = function (app) {
 
               return {
                 updateOne: {
-                  filter: { _id: invId },
+                  filter: { _id: new mongoose.Types.ObjectId(invId) },
                   update: {
                     $inc: { 'locationList.$[loc].quantity': -qty, quantity: -qty },
                     $push: { 'locationList.$[loc].history': historyEntry }
                   },
-                  arrayFilters: [{ 'loc.location': newIngredientLoc[invId] }]
+                  arrayFilters: [{ 'loc.location': new mongoose.Types.ObjectId(newIngredientLoc[invId]) }]
                 }
               };
             });
