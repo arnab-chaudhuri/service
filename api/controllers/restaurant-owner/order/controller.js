@@ -540,10 +540,24 @@ module.exports = function (app) {
 
       if (paymentStatus) {
         andFilters.push({ "billRef.paymentDetails.status": Number(paymentStatus) });
+      } else {
+        andFilters.push({ "billRef.paymentDetails.status": {
+          '$in': [
+            app.config.contentManagement.paymentStatus.paid,
+            app.config.contentManagement.paymentStatus.cancelled
+          ]
+        } });
       }
 
       if (orderStatus) {
         andFilters.push({ "status": Number(orderStatus) });
+      } else {
+        andFilters.push({ "status": {
+          '$in': [
+            app.config.contentManagement.order.completed,
+            app.config.contentManagement.order.deleted,
+          ]
+        } });
       }
 
       if (offline) {
