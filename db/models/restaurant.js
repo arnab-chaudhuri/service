@@ -25,6 +25,14 @@ module.exports = function(app, mongoose) {
       type: Boolean,
       default: false
     },
+    accessModules: [{
+      'moduleKey': {
+        'type': String
+      },
+      'moduleName': {
+        'type': String
+      },
+    }],
     config: {
       hideCardView: {
         type: Boolean,
