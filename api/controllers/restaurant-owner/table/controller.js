@@ -3,7 +3,7 @@
  * This Controller handles all functionality of admin table
  * @module Controllers/Admin/table
  */
-module.exports = function(app) {
+module.exports = function (app) {
 
   /**
    * table module
@@ -36,7 +36,7 @@ module.exports = function(app) {
    * @return {Promise}       The Promise
    */
   const getTable = (req, res, next) => {
-    table.get(req.params.tableId,req.session.user)
+    table.get(req.params.tableId, req.session.user)
       .then(output => {
         req.workflow.outcome.data = output;
         req.workflow.emit('response');
@@ -128,12 +128,17 @@ module.exports = function(app) {
    * @return {Promise}       The Promise
    */
   const deleteTable = async (req, res, next) => {
-    const tbSessionData = await tableSession.getByTableId(req.tableId._id, req.tableId.restaurantRef, true);
+    const tbSessionData = await tableSession.getByTableId(
+      {
+        tableRef: req.tableId._id,
+        restaurantRef: req.tableId.restaurantRef,
+        noError: true
+      });
 
     if (tbSessionData && !tbSessionData.noData) {
       return next({ 'errCode': 'TABLE_CANNOT_BE_DELETED' });
     }
-    
+
     req.tableId.status = app.config.contentManagement.table.deleted;
     table.edit(req.tableId, req.session.user)
       .then(output => {
