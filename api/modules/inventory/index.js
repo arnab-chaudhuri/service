@@ -438,7 +438,7 @@ module.exports = function (app) {
 
         // Step 3a: Validate stock before deduction
         if (newIngredientUsage && Object.keys(newIngredientUsage).length) {
-          for (const [invId, qty] of Object.entries(newIngredientUsage)) {
+          // for (const [invId, qty] of Object.entries(newIngredientUsage)) {
             // const inv = await Inventory.findById(invId).session(session);
 
             // const locationList = inv.locationList;
@@ -462,7 +462,7 @@ module.exports = function (app) {
             //       'errCode': 'NOT_ENOUGH_STOCK'
             //     });
             //   }
-          }
+          // }
 
           // const deductOps = Object.entries(newIngredientUsage).map(([invId, qty]) => ({
           //   updateOne: { filter: { _id: invId }, update: { $inc: { 
