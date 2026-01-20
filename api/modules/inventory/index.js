@@ -144,17 +144,17 @@ module.exports = function (app) {
                 //   });
                 // }
                 
-                const locationList = ing.inventoryRef.locationList;
-                const locationData = locationList.find(each => each.location.toString() === ing.location.toString());
-                if (locationData && Object.keys(locationData).length) {
-                  if (locationData.quantity < requiredQty) {
-                    await session.abortTransaction();
-                    session.endSession();
-                    return Promise.reject({
-                      'errCode': 'NOT_ENOUGH_STOCK'
-                    });
-                  }
-                }
+                // const locationList = ing.inventoryRef.locationList;
+                // const locationData = locationList.find(each => each.location.toString() === ing.location.toString());
+                // if (locationData && Object.keys(locationData).length) {
+                //   if (locationData.quantity < requiredQty) {
+                //     await session.abortTransaction();
+                //     session.endSession();
+                //     return Promise.reject({
+                //       'errCode': 'NOT_ENOUGH_STOCK'
+                //     });
+                //   }
+                // }
 
                 const historyEntry = {
                   quantity: requiredQty,
@@ -439,19 +439,19 @@ module.exports = function (app) {
         // Step 3a: Validate stock before deduction
         if (newIngredientUsage && Object.keys(newIngredientUsage).length) {
           for (const [invId, qty] of Object.entries(newIngredientUsage)) {
-            const inv = await Inventory.findById(invId).session(session);
+            // const inv = await Inventory.findById(invId).session(session);
 
-            const locationList = inv.locationList;
-            const locationData = locationList.find(each => each.location.toString() === newIngredientLoc[invId].toString());
-            if (locationData && Object.keys(locationData).length) {
-              if (locationData.quantity < qty) {
-                await session.abortTransaction();
-                session.endSession();
-                return Promise.reject({
-                  'errCode': 'NOT_ENOUGH_STOCK'
-                });
-              }
-            }
+            // const locationList = inv.locationList;
+            // const locationData = locationList.find(each => each.location.toString() === newIngredientLoc[invId].toString());
+            // if (locationData && Object.keys(locationData).length) {
+            //   if (locationData.quantity < qty) {
+            //     await session.abortTransaction();
+            //     session.endSession();
+            //     return Promise.reject({
+            //       'errCode': 'NOT_ENOUGH_STOCK'
+            //     });
+            //   }
+            // }
 
 
             //   if (!inv || inv.quantity < qty) {
