@@ -143,7 +143,7 @@ module.exports = function (app) {
                 //     'errCode': 'NOT_ENOUGH_STOCK'
                 //   });
                 // }
-                
+
                 // const locationList = ing.inventoryRef.locationList;
                 // const locationData = locationList.find(each => each.location.toString() === ing.location.toString());
                 // if (locationData && Object.keys(locationData).length) {
@@ -439,29 +439,29 @@ module.exports = function (app) {
         // Step 3a: Validate stock before deduction
         if (newIngredientUsage && Object.keys(newIngredientUsage).length) {
           // for (const [invId, qty] of Object.entries(newIngredientUsage)) {
-            // const inv = await Inventory.findById(invId).session(session);
+          // const inv = await Inventory.findById(invId).session(session);
 
-            // const locationList = inv.locationList;
-            // const locationData = locationList.find(each => each.location.toString() === newIngredientLoc[invId].toString());
-            // if (locationData && Object.keys(locationData).length) {
-            //   if (locationData.quantity < qty) {
-            //     await session.abortTransaction();
-            //     session.endSession();
-            //     return Promise.reject({
-            //       'errCode': 'NOT_ENOUGH_STOCK'
-            //     });
-            //   }
-            // }
+          // const locationList = inv.locationList;
+          // const locationData = locationList.find(each => each.location.toString() === newIngredientLoc[invId].toString());
+          // if (locationData && Object.keys(locationData).length) {
+          //   if (locationData.quantity < qty) {
+          //     await session.abortTransaction();
+          //     session.endSession();
+          //     return Promise.reject({
+          //       'errCode': 'NOT_ENOUGH_STOCK'
+          //     });
+          //   }
+          // }
 
 
-            //   if (!inv || inv.quantity < qty) {
-            //     await session.abortTransaction();
-            //     session.endSession();
-            //     // throw new Error(`Insufficient stock for ingredient ${inv?.name || invId}`);
-            //     return Promise.reject({
-            //       'errCode': 'NOT_ENOUGH_STOCK'
-            //     });
-            //   }
+          //   if (!inv || inv.quantity < qty) {
+          //     await session.abortTransaction();
+          //     session.endSession();
+          //     // throw new Error(`Insufficient stock for ingredient ${inv?.name || invId}`);
+          //     return Promise.reject({
+          //       'errCode': 'NOT_ENOUGH_STOCK'
+          //     });
+          //   }
           // }
 
           // const deductOps = Object.entries(newIngredientUsage).map(([invId, qty]) => ({
@@ -850,6 +850,197 @@ module.exports = function (app) {
     }
   }
 
+  const downloadReport = async ({
+    startDate,
+    endDate
+  }) => {
+    const start = new Date(startDate);
+
+    const end = new Date(endDate);
+
+    console.log("start", start, startDate);
+    console.log("end", end, endDate);
+
+    return await Inventory.aggregate([
+      // 1️⃣ Exclude docs with null or empty locationList early (performance)
+      {
+        $match: {
+          locationList: { $exists: true, $ne: [], $ne: null },
+          "locationList.history.date": { $gte: start, $lte: end },
+        },
+      },
+
+      // 2️⃣ Filter history per location
+      {
+        $addFields: {
+          locationList: {
+            $map: {
+              input: "$locationList",
+              as: "loc",
+              in: {
+                $mergeObjects: [
+                  "$$loc",
+                  {
+                    history: {
+                      $filter: {
+                        input: "$$loc.history",
+                        as: "hist",
+                        cond: {
+                          $and: [
+                            { $gte: ["$$hist.date", start] },
+                            { $lte: ["$$hist.date", end] },
+                          ],
+                        },
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+
+      // 3️⃣ Remove locations with empty history
+      {
+        $addFields: {
+          locationList: {
+            $filter: {
+              input: "$locationList",
+              as: "loc",
+              cond: { $gt: [{ $size: "$$loc.history" }, 0] },
+            },
+          },
+        },
+      },
+
+      // 4️⃣ Final guard: remove docs where locationList became empty
+      {
+        $match: {
+          locationList: { $ne: [] },
+        },
+      },
+      {
+      $lookup: {
+        from: "orders",
+        let: {
+          orderIds: {
+            $reduce: {
+              input: "$locationList",
+              initialValue: [],
+              in: {
+                $concatArrays: [
+                  "$$value",
+                  {
+                    $map: {
+                      input: "$$this.history",
+                      as: "h",
+                      in: {
+                        $cond: [
+                          {
+                            $and: [
+                              { $ne: ["$$h.orderRef", null] },
+                              { $ne: ["$$h.orderRef", ""] },
+                            ],
+                          },
+                          { $toObjectId: "$$h.orderRef" },
+                          null,
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $in: ["$_id", "$$orderIds"] },
+            },
+          },
+          {
+        $project: {
+          _id: 1,
+          idbId: 1,
+          orderId: 1
+        },
+      },
+        ],
+        as: "orders",
+      },
+    },
+
+    // 6️⃣ Inject populated order into each history item
+    {
+      $addFields: {
+        locationList: {
+          $map: {
+            input: "$locationList",
+            as: "loc",
+            in: {
+              $mergeObjects: [
+                "$$loc",
+                {
+                  history: {
+                    $map: {
+                      input: "$$loc.history",
+                      as: "hist",
+                      in: {
+                        $mergeObjects: [
+                          "$$hist",
+                          {
+                            order: {
+                              $arrayElemAt: [
+                                {
+                                  $filter: {
+                                    input: "$orders",
+                                    as: "ord",
+                                    cond: {
+                                      $eq: [
+                                        "$$ord._id",
+                                        {
+                                          $cond: [
+                                            {
+                                              $and: [
+                                                { $ne: ["$$hist.orderRef", null] },
+                                                { $ne: ["$$hist.orderRef", ""] },
+                                              ],
+                                            },
+                                            { $toObjectId: "$$hist.orderRef" },
+                                            null,
+                                          ],
+                                        },
+                                      ],
+                                    },
+                                  },
+                                },
+                                0,
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
+
+    // 7️⃣ Cleanup helper array
+    {
+      $project: {
+        orders: 0,
+      },
+    },
+    ]);
+  };
+
 
 
   return {
@@ -865,6 +1056,7 @@ module.exports = function (app) {
     'updateHistoryOrderRef': updateHistoryOrderRef,
     updateInventoryCountSync: updateInventoryCountSync,
     updateInventoryWithPurchase: updateInventoryWithPurchase,
-    seedInventoryForRestaurant: seedInventoryForRestaurant
+    seedInventoryForRestaurant: seedInventoryForRestaurant,
+    downloadReport: downloadReport
   };
 };

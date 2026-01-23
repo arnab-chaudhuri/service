@@ -56,6 +56,10 @@ module.exports = function (app, options) {
     controllers.list
   ]);
 
+  router.post('/download-report', [
+    controllers.downloadReport
+  ]);
+
   /**
    * Fetches a inventory, edits a inventory and removes a inventory
    */

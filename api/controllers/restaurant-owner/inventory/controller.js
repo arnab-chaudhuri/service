@@ -80,7 +80,22 @@ module.exports = function(app) {
 
     inventory.list(query)
       .then(output => {
-        req.workflow.outcome.data = output;
+        
+        const filteredOutput = {
+          ...output,
+          data: output.data.map(item => {
+            return {
+              ...item._doc,
+              locationList: item._doc.locationList?.length ? item._doc.locationList.map(location => {
+                return {
+                  ...location._doc,
+                  history: []
+                };
+              }) : []
+            }
+          })
+        };
+        req.workflow.outcome.data = filteredOutput;
         req.workflow.emit('response');
       })
       .catch(next);
@@ -136,13 +151,84 @@ module.exports = function(app) {
       .catch(next);
   };
 
+  const downloadReport = (req, res, next) => {
+    // let query = {
+    //   skip: Number(req.query.skip) || app.config.page.defaultSkip,
+    //   limit: Number(req.query.limit) || app.config.page.defaultLimit,
+    //   filters: {
+    //     status: app.config.contentManagement.inventory.active,
+    //     restaurantRef: req.session.user.restaurantRef
+    //   },
+    //   sort: {}
+    // };
+
+    let { startDate, endDate } = req.body.filters;
+
+    // if (req.body.filters) {
+    //   let { startDate, endDate } = req.body.filters;
+    //   let andFilters = [{
+    //     restaurantRef: req.session.user.restaurantRef
+    //   }];
+
+    //   if (startDate && endDate) {
+    //     andFilters.push({
+    //       'locationList.history.date': {
+    //         $gte: new Date(startDate),
+    //         $lte: new Date(endDate)
+    //       }
+    //     });
+    //   } else if (startDate) {
+    //     andFilters.push({
+    //       'locationList.history.date': {
+    //         $gte: new Date(startDate)
+    //       }
+    //     });
+    //   } else if (endDate) {
+    //     andFilters.push({
+    //       'locationList.history.date': {
+    //         $lte: new Date(endDate)
+    //       }
+    //     });
+    //   }
+
+    //   if (andFilters.length > 0) {
+    //     query.filters = { $and: andFilters };
+    //   }
+
+    //   query.select = {
+    //     name: 1,
+    //     code: 1,
+    //     preCode: 1,
+    //     locationList: 1,
+    //     quantity: 1,
+    //     unit: 1,
+    //     saveAsUnit: 1,
+    //     updatedAt: 1,
+    //     categoryId: 1
+    //   };
+    // }
+
+
+    inventory.downloadReport({
+      startDate,
+      endDate
+    })
+      .then(output => {
+        console.log("output ", output)
+        req.workflow.outcome.data = output;
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+
   return {
     add: addInventory,
     get: getInventory,
     edit: editInventory,
     list: getInventoryList,
     delete: deleteInventory,
-    seedInventory: seedInventory
+    seedInventory: seedInventory,
+    downloadReport: downloadReport
   };
 
 };
