@@ -69,6 +69,17 @@ module.exports = function (app) {
       .catch(next);
   };
 
+  const updateBranding = (req, res, next) => {
+    restaurant
+      .updateBranding(req.session.user.restaurantRef, req.body)
+      .then((output) => {
+        req.workflow.outcome.data = output;
+
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+
   const updateGstDetails = (req, res, next) => {
     restaurant
       .updateGstDetails(req.session.user.restaurantRef, req.body)
@@ -141,6 +152,7 @@ module.exports = function (app) {
     updateParcel: updateParcel,
     updateServiceTaxDetails: updateServiceTaxDetails,
     updateWater: updateWater,
-    updateBillDetails: updateBillDetails
+    updateBillDetails: updateBillDetails,
+    updateBranding: updateBranding
   };
 };

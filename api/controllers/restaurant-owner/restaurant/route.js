@@ -73,6 +73,11 @@ module.exports = function (app, options) {
     // options.validateBody(schemaValidator.updateGstDetails),
     controllers.updateWater
   ]);
+
+  router.put('/update-branding', [
+    // options.validateBody(schemaValidator.updateGstDetails),
+    controllers.updateBranding
+  ]);
   /**
    * Fetch/Edit restaurant
    */

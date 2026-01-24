@@ -1,5 +1,5 @@
 'use strict';
-module.exports = function(app, mongoose) {
+module.exports = function (app, mongoose) {
   const schema = new mongoose.Schema({
     name: {
       type: String,
@@ -75,7 +75,39 @@ module.exports = function(app, mongoose) {
         name: String,
         price: Number,
         status: Number // 1: Active, 2: Deleted
-      }]
+      }],
+      cardColor: {
+        type: String,
+        default: '#FFFFFF'
+      },
+      bgColor: {
+        type: String,
+        default: '#FFFFFF'
+      },
+      itemHeaderFontSize: {
+        type: String,
+        default: '16'
+      },
+      itemDescFontSize: {
+        type: String,
+        default: '12'
+      },
+      menuFontFamily: {
+        type: String,
+        default: 'Inter'
+      },
+      itemNameFontColor: {
+        type: String,
+        default: '#000000'
+      },
+      itemDescFontColor: {
+        type: String,
+        default: '#000000'
+      },
+      itemPriceFontColor: {
+        type: String,
+        default: '#000000'  
+      },
     },
     billConfigDetails: {
       isLogo: {

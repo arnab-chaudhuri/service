@@ -123,6 +123,27 @@ module.exports = function (app) {
       });
   };
 
+  const updateBranding = (restaurantId, data) => {
+    return Restaurant.findById(restaurantId)
+      .then(restaurant => {
+        if (!restaurant) {
+          return Promise.reject({
+            'errCode': 'RESTAURANT_NOT_FOUND'
+          });
+        }
+
+        for (const key in data) {
+          if (key !== 'primaryColor' && key !== 'secondaryColor') {
+            restaurant.config[key] = data[key];
+          } else {
+            restaurant[key] = data[key];
+          }
+        }
+        
+        return restaurant.save();
+      });
+  };
+
   const updateGstDetails = (restaurantId, data) => {
     return Restaurant.findById(restaurantId)
       .then(restaurant => {
@@ -189,6 +210,7 @@ module.exports = function (app) {
     'updateInventoryCategories': updateInventoryCategories,
     'updateParcel': updateParcel,
     'updateWater': updateWater,
-    'updateBillDetails': updateBillDetails
+    'updateBillDetails': updateBillDetails,
+    'updateBranding': updateBranding
   };
 };
