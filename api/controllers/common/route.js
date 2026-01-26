@@ -18,6 +18,7 @@ module.exports = function (app) {
    */
   const controllers = require('./controller')(app);
   const resControllers = require('../user/restaurant/controller')(app);
+  const restaurantOwnerUserControllers = require('../restaurant-owner/user/controller')(app);
 
   const commonMiddlewares = require('./middleware')(app);
 
@@ -35,6 +36,21 @@ module.exports = function (app) {
   router.post('/restaurant-list', [
     resControllers.list
   ]);
+
+  router.post('/customer-list', [
+    // options.validateQuery(schemaValidator.listQuery),
+    // options.validateBody(schemaValidator.list),
+    restaurantOwnerUserControllers.list
+  ]);
+
+  router.route('/customer/:userId')
+    .all([
+      // options.validateParams(schemaValidator.param),
+      commonMiddlewares.validateId('User', 'userId')
+    ])
+    .get([
+      restaurantOwnerUserControllers.get
+    ]);
 
   return {
     public: router,

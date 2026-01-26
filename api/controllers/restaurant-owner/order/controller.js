@@ -532,10 +532,14 @@ module.exports = function (app) {
     };
 
     if (req.body.filters) {
-      let { paymentStatus, orderStatus, startDate, endDate, search, offline } = req.body.filters;
+      let { paymentStatus, orderStatus, startDate, endDate, search, offline, userRef } = req.body.filters;
       let andFilters = [{
         restaurantRef: req.session.user.restaurantRef
       }];
+
+      if (userRef) {
+        andFilters.push({ "userRef": userRef });
+      }
 
       if (search && search.trim().length) {
         andFilters.push({ "orderId": new RegExp(`^${search.trim()}`, 'ig') });
