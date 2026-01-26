@@ -57,6 +57,7 @@ module.exports = function (app) {
             const restDetails = await restaurant.get(req.body.restaurantRef);
 
             const reqBody = {
+              offlineId: req.body.idbId,
               billNo: output.orderId,
               orderRef: output._id,
               subTotal,
@@ -73,6 +74,14 @@ module.exports = function (app) {
                 sgstInPercentage: restDetails.gstDetails.sgst,
               };
               reqBody.total += cgst + sgst;
+            }
+            if (restDetails.serviceTaxDetails.serviceTaxEnabled) {
+              const serviceTax = Number(((subTotal * (restDetails.serviceTaxDetails.serviceTax || 0)) / 100).toFixed());
+              reqBody.serviceTaxDetails = {
+                serviceTax,
+                serviceTaxInPercentage: restDetails.serviceTaxDetails.serviceTax
+              };
+              reqBody.total += serviceTax;
             }
             // create bill
             bill.create(reqBody)

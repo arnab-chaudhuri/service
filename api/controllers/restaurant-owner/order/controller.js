@@ -162,15 +162,15 @@ module.exports = function (app) {
 
       const syncedIds = [];
 
-      const newOrders = orders.filter(o => !o.orderId);
-      const updateOrders = orders.filter(o => o.orderId);
+      const newOrders = orders.filter(o => !o.orderId).filter(n => n.status !== app.config.contentManagement.order.pending);
+      const updateOrders = orders.filter(o => o.orderId).filter(n => n.status !== app.config.contentManagement.order.pending);
 
-      console.log("newOrders ", newOrders, updateOrders)
+      // console.log("newOrders ", newOrders, updateOrders)
 
       // handle new orders
       if (newOrders.length) {
         const outputOrders = await order.createMulti(newOrders, req.session.user);
-        console.log("outputOrders ", outputOrders)
+        // console.log("outputOrders ", outputOrders)
         // update inventory - await in case returns a promise
         await inventory.updateInventoryCountSync(aggregateItems(outputOrders, req.session.user));
 
@@ -224,7 +224,7 @@ module.exports = function (app) {
           return each;
         });
 
-        console.log("responseOrders ", responseOrders)
+        // console.log("responseOrders ", responseOrders)
         syncedIds.push(...responseOrders);
       }
 
@@ -234,7 +234,7 @@ module.exports = function (app) {
 
         const outputOrders = await order.bulkUpdateOrders(updateOrders, req.session.user);
 
-        console.log("outputOrders updte ", outputOrders)
+        // console.log("outputOrders updte ", outputOrders)
 
         const carts = [];
         // collect all cart items from outputOrders
@@ -280,16 +280,16 @@ module.exports = function (app) {
         syncedIds.push(...responseOrders);
       }
 
-      console.log("syncedIds ", syncedIds)
+      // console.log("syncedIds ", syncedIds)
 
 
       // should be different for update and create
-      console.log("Incoming orders count:", orders.length);
+      // console.log("Incoming orders count:", orders.length);
 
       const tableWiseLatestOrder = getLatestFromEachTable(
         orders.filter(each => each.tableRef)
       );
-      console.log("tableWiseLatestOrder:", tableWiseLatestOrder);
+      // console.log("tableWiseLatestOrder:", tableWiseLatestOrder);
 
       let tableQuery = {
         skip: 0,
@@ -308,19 +308,19 @@ module.exports = function (app) {
         }]
       };
 
-      console.log("Table list query:", tableQuery);
+      // console.log("Table list query:", tableQuery);
 
       await table.list(tableQuery)
         .then(async tableList => {
-          console.log("Fetched tableList count:", tableList?.data?.length || 0);
+          // console.log("Fetched tableList count:", tableList?.data?.length || 0);
 
           if (!tableList || !tableList?.data?.length) {
-            console.log("No tables found");
+            // console.log("No tables found");
             return;
           }
 
           if (!tableWiseLatestOrder || !Object.keys(tableWiseLatestOrder).length) {
-            console.log("No tableWiseLatestOrder found");
+            // console.log("No tableWiseLatestOrder found");
             return;
           }
 
@@ -328,14 +328,14 @@ module.exports = function (app) {
             const lstOrder = tableWiseLatestOrder[tblRef];
             const latestOrder = syncedIds.find(each => each.idbId === lstOrder.idbId);
 
-            console.log(`\nProcessing tableRef: ${tblRef}`);
-            console.log("Latest order:", latestOrder, lstOrder);
+            // console.log(`\nProcessing tableRef: ${tblRef}`);
+            // console.log("Latest order:", latestOrder, lstOrder);
 
             if (
               !latestOrder ||
               !Object.keys(latestOrder).length
             ) {
-              console.log("Invalid latest order, skipping");
+              // console.log("Invalid latest order, skipping");
               continue;
             }
 
@@ -343,7 +343,7 @@ module.exports = function (app) {
               latestOrder.status === app.config.contentManagement.order.completed ||
               latestOrder.status === app.config.contentManagement.order.deleted
             ) {
-              console.log("Order is completed or deleted");
+              // console.log("Order is completed or deleted");
               tableSession.updateStatusByOrderId(
                 latestOrder._id,
                 req.session.user.restaurantRef
@@ -352,13 +352,13 @@ module.exports = function (app) {
             }
 
             const dbTableData = tableList.data.find(each => each._id.toString() === tblRef.toString());
-            console.log("DB table data:", dbTableData);
+            // console.log("DB table data:", dbTableData);
 
             let sessionType = '';
 
             if (dbTableData && !dbTableData.currentSessionRef) {
               sessionType = 'ADD';
-              console.log("No currentSessionRef → ADD");
+              // console.log("No currentSessionRef → ADD");
             }
 
             if (
@@ -367,7 +367,7 @@ module.exports = function (app) {
               !dbTableData.currentSessionRef.orderRef
             ) {
               sessionType = 'ADD';
-              console.log("Session exists but no orderRef → ADD");
+              // console.log("Session exists but no orderRef → ADD");
             }
 
             if (
@@ -381,16 +381,16 @@ module.exports = function (app) {
               new Date(lstOrder.lastUpdated).getTime()
             ) {
               sessionType = 'UPDATE';
-              console.log("Existing session older than latest order → UPDATE");
+              // console.log("Existing session older than latest order → UPDATE");
             }
 
-            console.log("Final sessionType:", sessionType);
+            // console.log("Final sessionType:", sessionType);
 
             if (sessionType === 'UPDATE') {
-              console.log(
-                "Updating table session for orderId:",
-                dbTableData.currentSessionRef.orderRef._id
-              );
+              // console.log(
+              //   "Updating table session for orderId:",
+              //   dbTableData.currentSessionRef.orderRef._id
+              // );
 
               tableSession.updateStatusByOrderId(
                 dbTableData.currentSessionRef.orderRef._id,
@@ -399,12 +399,12 @@ module.exports = function (app) {
             }
 
             if (sessionType) {
-              console.log("Creating table session with payload:", {
-                tableRef: tblRef,
-                cart: latestOrder.cart,
-                restaurantRef: req.session.user.restaurantRef,
-                orderRef: latestOrder._id
-              });
+              // console.log("Creating table session with payload:", {
+              //   tableRef: tblRef,
+              //   cart: latestOrder.cart,
+              //   restaurantRef: req.session.user.restaurantRef,
+              //   orderRef: latestOrder._id
+              // });
 
               const tableSessionRes =
                 await tableSession.createTableSessionFromOwner(
@@ -417,12 +417,12 @@ module.exports = function (app) {
                   req.session.user
                 );
 
-              console.log("Table session created:", tableSessionRes);
+              // console.log("Table session created:", tableSessionRes);
 
-              console.log("Marking table as unavailable:", tblRef);
+              // console.log("Marking table as unavailable:", tblRef);
               table.markAsUnavailable(tblRef, tableSessionRes._id);
             } else {
-              console.log("No session action required for table:", tblRef);
+              // console.log("No session action required for table:", tblRef);
             }
           }
         })
@@ -449,6 +449,9 @@ module.exports = function (app) {
             order.edit(orderData, req.session.user)
               .then(output => {
 
+                // inventory.updateHistoryOrderRef(output1.invIds, output._id).catch(err => {
+                //   console.log("err updateHistoryOrderRef ", err)
+                // });
 
                 let inAppNotification = app.config.notification.inApp(app, app.config.lang.defaultLanguage);
 
