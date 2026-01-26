@@ -159,7 +159,10 @@ module.exports = function (app) {
                 const historyEntry = {
                   quantity: requiredQty,
                   isDebited: true,
-                  reason: 'NEW_ORDER'
+                  reason: 'NEW_ORDER',
+                  prevLocQuantity: ing.inventoryRef.locationList &&
+                    ing.inventoryRef.locationList.length ? ing.inventoryRef.locationList.find(loc => loc.location.toString() === ing.location.toString())?.quantity : 0,
+                  prevTotalQuantity: ing.inventoryRef.quantity || 0
                 };
 
                 if (orderId) {
@@ -234,7 +237,10 @@ module.exports = function (app) {
                 const historyEntry = {
                   quantity: requiredQty,
                   isDebited: true,
-                  reason: 'NEW_ORDER'
+                  reason: 'NEW_ORDER',
+                  prevLocQuantity: ing.inventoryRef.locationList &&
+                    ing.inventoryRef.locationList.length ? ing.inventoryRef.locationList.find(loc => loc.location.toString() === ing.location.toString())?.quantity : 0,
+                  prevTotalQuantity: ing.inventoryRef.quantity || 0
                 };
 
                 if (orderItem.orderId) {
@@ -358,6 +364,7 @@ module.exports = function (app) {
       // Step 2: Restore inventory from old order
       const restoreUsage = {};
       const restoreUsageLoc = {};
+      const restorePrevQuantity = {};
       existingOrder.cart.forEach(item => {
         if (item.menuRef) {
           item.menuRef.ingredients.forEach(ing => {
@@ -368,6 +375,12 @@ module.exports = function (app) {
               }
               restoreUsage[ing.inventoryRef._id] += qty;
               restoreUsageLoc[ing.inventoryRef._id] = ing.location;
+
+              restorePrevQuantity[ing.inventoryRef._id] = {
+                prevLocQuantity: ing.inventoryRef.locationList &&
+                  ing.inventoryRef.locationList.length ? ing.inventoryRef.locationList.find(loc => loc.location.toString() === ing.location.toString())?.quantity : 0,
+                prevTotalQuantity: ing.inventoryRef.quantity || 0
+              }
             }
 
           });
@@ -384,7 +397,9 @@ module.exports = function (app) {
             orderRef: orderId,
             quantity: qty,
             isDebited: false,
-            reason: 'ORDER_UPDATE'
+            reason: 'ORDER_UPDATE',
+            prevLocQuantity: restorePrevQuantity[invId].prevLocQuantity,
+            prevTotalQuantity: restorePrevQuantity[invId].prevTotalQuantity
           };
           return {
             updateOne: {
@@ -410,6 +425,7 @@ module.exports = function (app) {
         // Step 3: Deduct inventory for new items
         const newIngredientUsage = {};
         const newIngredientLoc = {};
+        const newPrevQuantity = {};
         for (const item of updatedItems) {
           if (item.menuRef) {
             const menu = await Menu.findById(item.menuRef).populate("ingredients.inventoryRef").session(session);
@@ -429,6 +445,12 @@ module.exports = function (app) {
                 }
                 newIngredientUsage[ing.inventoryRef._id] += qty;
                 newIngredientLoc[ing.inventoryRef._id] = ing.location;
+
+                newPrevQuantity[ing.inventoryRef._id] = {
+                  prevLocQuantity: ing.inventoryRef.locationList &&
+                    ing.inventoryRef.locationList.length ? ing.inventoryRef.locationList.find(loc => loc.location.toString() === ing.location.toString())?.quantity : 0,
+                  prevTotalQuantity: ing.inventoryRef.quantity || 0
+                }
               }
 
             });
@@ -475,7 +497,9 @@ module.exports = function (app) {
               orderRef: orderId,
               quantity: qty,
               isDebited: true,
-              reason: 'ORDER_UPDATE'
+              reason: 'ORDER_UPDATE',
+              prevLocQuantity: newPrevQuantity[invId].prevLocQuantity,
+              prevTotalQuantity: newPrevQuantity[invId].prevTotalQuantity
             };
 
             return {
@@ -536,6 +560,7 @@ module.exports = function (app) {
         // Step 2: Restore inventory from old order
         const restoreUsage = {};
         const restoreUsageLoc = {};
+        const restorePrevQuantity = {};
         existingOrder.cart.forEach(item => {
           if (item.menuRef) {
             item.menuRef.ingredients.forEach(ing => {
@@ -546,6 +571,12 @@ module.exports = function (app) {
                 }
                 restoreUsage[ing.inventoryRef._id] += qty;
                 restoreUsageLoc[ing.inventoryRef._id] = ing.location;
+
+                restorePrevQuantity[ing.inventoryRef._id] = {
+                  prevLocQuantity: ing.inventoryRef.locationList &&
+                    ing.inventoryRef.locationList.length ? ing.inventoryRef.locationList.find(loc => loc.location.toString() === ing.location.toString())?.quantity : 0,
+                  prevTotalQuantity: ing.inventoryRef.quantity || 0
+                }
               }
 
             });
@@ -559,7 +590,9 @@ module.exports = function (app) {
               orderRef: order.orderId?.toString(),
               quantity: qty,
               isDebited: false,
-              reason: 'ORDER_UPDATE'
+              reason: 'ORDER_UPDATE',
+              prevLocQuantity: restorePrevQuantity[invId].prevLocQuantity,
+              prevTotalQuantity: restorePrevQuantity[invId].prevTotalQuantity
             };
             return {
               updateOne: {
@@ -590,6 +623,7 @@ module.exports = function (app) {
         ) {
           const newIngredientUsage = {};
           const newIngredientLoc = {};
+          const newPrevQuantity = {};
           if (item.menuRef) {
             const menu = await Menu.findById(item.menuRef).populate("ingredients.inventoryRef").session(session);
             if (!menu) {
@@ -607,6 +641,12 @@ module.exports = function (app) {
                 }
                 newIngredientUsage[ing.inventoryRef._id] += qty;
                 newIngredientLoc[ing.inventoryRef._id] = ing.location;
+
+                newPrevQuantity[ing.inventoryRef._id] = {
+                  prevLocQuantity: ing.inventoryRef.locationList &&
+                    ing.inventoryRef.locationList.length ? ing.inventoryRef.locationList.find(loc => loc.location.toString() === ing.location.toString())?.quantity : 0,
+                  prevTotalQuantity: ing.inventoryRef.quantity || 0
+                }
               }
 
             });
@@ -620,7 +660,9 @@ module.exports = function (app) {
                 orderRef: item.orderId?.toString(),
                 quantity: qty,
                 isDebited: true,
-                reason: 'ORDER_UPDATE'
+                reason: 'ORDER_UPDATE',
+                prevLocQuantity: newPrevQuantity[invId].prevLocQuantity,
+                prevTotalQuantity: newPrevQuantity[invId].prevTotalQuantity
               };
 
               return {
@@ -660,7 +702,7 @@ module.exports = function (app) {
     }
   }
 
-  const updateInventoryWithPurchase = async (payload, purchaseId, isDeduct) => {
+  const updateInventoryWithPurchasex = async (payload, purchaseId, isDeduct) => {
     const bulkOps = [];
 
     // 1️⃣ Update main inventory fields + increment total quantity
@@ -738,6 +780,137 @@ module.exports = function (app) {
     return Promise.resolve({ success: true, message: "inventory updated" });
 
   }
+
+  const updateInventoryWithPurchase = async (payload, purchaseId, isDeduct) => {
+    try {
+      const bulkOps = [];
+
+      // 🟢 1. Collect all inventory IDs
+      const itemIds = payload.map(item => item.itemRef);
+
+      // 🟢 2. Fetch existing inventory documents
+      const existingInventories = await Inventory.find({
+        _id: { $in: itemIds }
+      }).lean();
+
+      // 🟢 3. Convert to map for fast lookup
+      const inventoryMap = {};
+      existingInventories.forEach(inv => {
+        inventoryMap[inv._id.toString()] = inv;
+      });
+
+      // 👉 Now you have OLD data available here
+      // console.log(inventoryMap)
+
+      // 🟢 4. Build bulk operations (same logic as before)
+      payload.forEach(item => {
+        const oldInventory = inventoryMap[item.itemRef.toString()];
+
+        console.log("oldInventory ", oldInventory)
+
+
+
+        // 1️⃣ Update main inventory
+        bulkOps.push({
+          updateOne: {
+            filter: { _id: item.itemRef },
+            update: {
+              $set: {
+                unit: item.unit,
+                saveAsUnit: item.saveAsUnit
+              },
+              $inc: {
+                quantity: !isDeduct ? item.quantity : -item.quantity
+              }
+            }
+          }
+        });
+
+        // 2️⃣ Location updates
+        item.locationList.forEach(loc => {
+          const existingLoc = oldInventory?.locationList &&
+              oldInventory.locationList.length ? oldInventory.locationList.find(l => l.location.toString() === loc.location.toString()) : null;
+          let newAvgRate = (existingLoc?.avgRate || 0);
+          if (!isDeduct) {
+            const prevAmount = (existingLoc?.quantity || 0) * (existingLoc?.avgRate || 0);
+
+            newAvgRate = (prevAmount + (item.amount || 0)) / ((existingLoc?.quantity || 0) + loc.quantity || 0);
+          }
+
+          // Update avgRate at location level
+          bulkOps.push({
+            updateOne: {
+              filter: {
+                _id: item.itemRef,
+                "locationList.location": loc.location.toString()
+              },
+              update: {
+                $set: {
+                  "locationList.$.avgRate": newAvgRate
+                },
+                $inc: {
+                  "locationList.$.quantity": !isDeduct ? loc.quantity : -loc.quantity
+                },
+                $push: {
+                  "locationList.$.history": {
+                    prevTotalQuantity: oldInventory?.quantity || 0,
+                    prevLocQuantity: oldInventory?.locationList &&
+                      oldInventory.locationList.length ? oldInventory.locationList.find(l => l.location.toString() === loc.location.toString())?.quantity : 0,
+                    quantity: loc.quantity,
+                    expenseRef: purchaseId,
+                    isDebited: !isDeduct,
+                    reason: !isDeduct
+                      ? "PURCHASE_ADDITION"
+                      : "PURCHASE_DEDUCTION"
+                  }
+                }
+              }
+            }
+          });
+
+          // 3️⃣ Add location if missing
+          bulkOps.push({
+            updateOne: {
+              filter: {
+                _id: item.itemRef,
+                "locationList.location": { $ne: loc.location }
+              },
+              update: {
+                $addToSet: {
+                  locationList: {
+                    avgRate: newAvgRate,
+                    location: loc.location,
+                    quantity: !isDeduct ? loc.quantity : -loc.quantity,
+                    history: [{
+                      prevTotalQuantity: oldInventory?.quantity || 0,
+                      prevLocQuantity: oldInventory?.locationList &&
+                        oldInventory.locationList.length ? oldInventory.locationList.find(l => l.location.toString() === loc.location.toString())?.quantity : 0,
+                      quantity: loc.quantity,
+                      expenseRef: purchaseId,
+                      isDebited: !isDeduct,
+                      reason: !isDeduct
+                        ? "PURCHASE_ADDITION"
+                        : "PURCHASE_DEDUCTION"
+                    }]
+                  }
+                }
+              }
+            }
+          });
+        });
+      });
+
+      // 🟢 5. Execute bulk update
+      await Inventory.bulkWrite(bulkOps);
+
+      return { success: true, message: "Inventory updated", previousData: existingInventories };
+
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  };
+
 
   async function seedInventoryForRestaurant(restaurantId, invCategories, inventoryItems) {
     // console.log("start")
@@ -921,31 +1094,107 @@ module.exports = function (app) {
         },
       },
       {
-      $lookup: {
-        from: "orders",
-        let: {
-          orderIds: {
-            $reduce: {
+        $lookup: {
+          from: "orders",
+          let: {
+            orderIds: {
+              $reduce: {
+                input: "$locationList",
+                initialValue: [],
+                in: {
+                  $concatArrays: [
+                    "$$value",
+                    {
+                      $map: {
+                        input: "$$this.history",
+                        as: "h",
+                        in: {
+                          $cond: [
+                            {
+                              $and: [
+                                { $ne: ["$$h.orderRef", null] },
+                                { $ne: ["$$h.orderRef", ""] },
+                              ],
+                            },
+                            { $toObjectId: "$$h.orderRef" },
+                            null,
+                          ],
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $in: ["$_id", "$$orderIds"] },
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                idbId: 1,
+                orderId: 1
+              },
+            },
+          ],
+          as: "orders",
+        },
+      },
+
+      // 6️⃣ Inject populated order into each history item
+      {
+        $addFields: {
+          locationList: {
+            $map: {
               input: "$locationList",
-              initialValue: [],
+              as: "loc",
               in: {
-                $concatArrays: [
-                  "$$value",
+                $mergeObjects: [
+                  "$$loc",
                   {
-                    $map: {
-                      input: "$$this.history",
-                      as: "h",
-                      in: {
-                        $cond: [
-                          {
-                            $and: [
-                              { $ne: ["$$h.orderRef", null] },
-                              { $ne: ["$$h.orderRef", ""] },
-                            ],
-                          },
-                          { $toObjectId: "$$h.orderRef" },
-                          null,
-                        ],
+                    history: {
+                      $map: {
+                        input: "$$loc.history",
+                        as: "hist",
+                        in: {
+                          $mergeObjects: [
+                            "$$hist",
+                            {
+                              order: {
+                                $arrayElemAt: [
+                                  {
+                                    $filter: {
+                                      input: "$orders",
+                                      as: "ord",
+                                      cond: {
+                                        $eq: [
+                                          "$$ord._id",
+                                          {
+                                            $cond: [
+                                              {
+                                                $and: [
+                                                  { $ne: ["$$hist.orderRef", null] },
+                                                  { $ne: ["$$hist.orderRef", ""] },
+                                                ],
+                                              },
+                                              { $toObjectId: "$$hist.orderRef" },
+                                              null,
+                                            ],
+                                          },
+                                        ],
+                                      },
+                                    },
+                                  },
+                                  0,
+                                ],
+                              },
+                            },
+                          ],
+                        },
                       },
                     },
                   },
@@ -954,90 +1203,14 @@ module.exports = function (app) {
             },
           },
         },
-        pipeline: [
-          {
-            $match: {
-              $expr: { $in: ["$_id", "$$orderIds"] },
-            },
-          },
-          {
+      },
+
+      // 7️⃣ Cleanup helper array
+      {
         $project: {
-          _id: 1,
-          idbId: 1,
-          orderId: 1
+          orders: 0,
         },
       },
-        ],
-        as: "orders",
-      },
-    },
-
-    // 6️⃣ Inject populated order into each history item
-    {
-      $addFields: {
-        locationList: {
-          $map: {
-            input: "$locationList",
-            as: "loc",
-            in: {
-              $mergeObjects: [
-                "$$loc",
-                {
-                  history: {
-                    $map: {
-                      input: "$$loc.history",
-                      as: "hist",
-                      in: {
-                        $mergeObjects: [
-                          "$$hist",
-                          {
-                            order: {
-                              $arrayElemAt: [
-                                {
-                                  $filter: {
-                                    input: "$orders",
-                                    as: "ord",
-                                    cond: {
-                                      $eq: [
-                                        "$$ord._id",
-                                        {
-                                          $cond: [
-                                            {
-                                              $and: [
-                                                { $ne: ["$$hist.orderRef", null] },
-                                                { $ne: ["$$hist.orderRef", ""] },
-                                              ],
-                                            },
-                                            { $toObjectId: "$$hist.orderRef" },
-                                            null,
-                                          ],
-                                        },
-                                      ],
-                                    },
-                                  },
-                                },
-                                0,
-                              ],
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  },
-                },
-              ],
-            },
-          },
-        },
-      },
-    },
-
-    // 7️⃣ Cleanup helper array
-    {
-      $project: {
-        orders: 0,
-      },
-    },
     ]);
   };
 

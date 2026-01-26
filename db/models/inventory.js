@@ -49,6 +49,10 @@ module.exports = function (app, mongoose) {
       location: {
         type: mongoose.Schema.Types.ObjectId,
       },
+      avgRate: {
+        type: Number,
+        default: 0
+      }, // rate by lowest unit
       quantity: {
         type: Number,
         default: 0
@@ -66,6 +70,14 @@ module.exports = function (app, mongoose) {
         default: 0
       },
       history: [{
+        prevLocQuantity: {
+          type: Number,
+          default: 0
+        },
+        prevTotalQuantity: {
+          type: Number,
+          default: 0
+        },
         quantity: {
           type: Number,
           default: 0
