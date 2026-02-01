@@ -133,7 +133,7 @@ module.exports = function (app) {
         }
 
         for (const key in data) {
-          if (key !== 'primaryColor' && key !== 'secondaryColor') {
+          if (key !== 'primaryColor' && key !== 'secondaryColor' && key !== 'footerColor') {
             restaurant.config[key] = data[key];
           } else {
             restaurant[key] = data[key];

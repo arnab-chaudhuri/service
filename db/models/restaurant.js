@@ -14,6 +14,9 @@ module.exports = function (app, mongoose) {
     primaryColor: {
       type: String
     },
+    footerColor: {
+      type: String
+    },
     secondaryColor: {
       type: String
     },
@@ -89,6 +92,10 @@ module.exports = function (app, mongoose) {
         default: '16'
       },
       itemDescFontSize: {
+        type: String,
+        default: '12'
+      },
+      itemPriceFontSize: {
         type: String,
         default: '12'
       },
@@ -186,7 +193,26 @@ module.exports = function (app, mongoose) {
         type: Number,
         default: 0
       }
-    }
+    },
+    subscriptionPlans: [{
+      startDate: {
+        type: Date
+      },
+      endDate: {
+        type: Date
+      },
+      planName: {
+        type: String
+      },
+      accessModules: [{
+        'moduleKey': {
+          'type': String
+        },
+        'moduleName': {
+          'type': String
+        },
+      }],
+    }],
   }, {
     versionKey: false,
     timestamps: true,
