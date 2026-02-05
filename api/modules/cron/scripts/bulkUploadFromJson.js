@@ -49,8 +49,8 @@ const bulkUpload = async (app) => {
       for (const categoryName in obj) {
         let categoryDoc = await Category.findOne({
           name: categoryName,
-          restaurantRef: "68d29ff7ad6c851494ac5307",
-          createdBy: "68d29ff7ad6c851494ac530a"
+          restaurantRef: "697dd57b3d87285d513877c1",
+          createdBy: "697dd57b3d87285d513877c5"
         });
         if (!categoryDoc) {
           catOrder++;
@@ -58,8 +58,8 @@ const bulkUpload = async (app) => {
             order: catOrder,
             name: categoryName,
             filterText: categoryName.split(' ').slice(0, 2).join(' '),
-            restaurantRef: "68d29ff7ad6c851494ac5307",
-            createdBy: "68d29ff7ad6c851494ac530a",
+            restaurantRef: "697dd57b3d87285d513877c1",
+            createdBy: "697dd57b3d87285d513877c5",
             totalMenu: obj[categoryName].length
           });
         }
@@ -91,8 +91,8 @@ const bulkUpload = async (app) => {
             description: description || "",
             price,
             categoryRef: categoryDoc._id,
-            restaurantRef: "68d29ff7ad6c851494ac5307",
-            createdBy: "68d29ff7ad6c851494ac530a",
+            restaurantRef: "697dd57b3d87285d513877c1",
+            createdBy: "697dd57b3d87285d513877c5",
             isCreatedByImmeDine: true
           }], { ordered: false });
 

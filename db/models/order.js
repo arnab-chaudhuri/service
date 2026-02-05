@@ -33,6 +33,14 @@ module.exports = function (app, mongoose) {
       name: String,
       quantity: Number,
       price: Number,
+      isNewToCart: {
+        type: Boolean,
+        default: false
+      },
+      dateTime: {
+        type: Date,
+        default: Date.now
+      },
       served: {
         type: Boolean,
         default: false

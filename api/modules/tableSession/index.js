@@ -197,7 +197,7 @@ module.exports = function (app) {
 
     const tabSesRes = await TableSession.findOne(filter);
 
-    if (tabSesRes && tabSesRes.orderRef) {
+    if (tabSesRes && tabSesRes.orderRef && !config.extOrderId) {
       return Promise.reject({
         'errCode': 'TABLE_SESSION_NOT_FOUND'
       });
@@ -265,6 +265,39 @@ module.exports = function (app) {
       endedAt: { $exists: false }
     };
     return TableSession.findOne(filter)
+      .then(tableSessionDetails => {
+        if (!tableSessionDetails) {
+          if (noError) {
+            return Promise.resolve({
+              noData: true
+            });
+          }
+          return Promise.reject({
+            'errCode': 'TABLE_SESSION_NOT_FOUND'
+          });
+        } else {
+          return Promise.resolve(tableSessionDetails);
+        }
+      });
+  };
+
+  const getByTableIdFromApp = function ({ tableRef, restaurantRef, noError }) {
+
+    if (!tableRef) {
+      return Promise.resolve({});
+    }
+
+    const filter = {
+      tableRef: new mongoose.Types.ObjectId(tableRef),
+      restaurantRef: new mongoose.Types.ObjectId(restaurantRef),
+      status: app.config.contentManagement.tableSession.active,
+      endedAt: { $exists: false }
+    };
+    return TableSession.findOne(filter)
+      .populate({
+        path: 'orderRef',
+        select: 'orderId _id cart'
+      })
       .then(tableSessionDetails => {
         if (!tableSessionDetails) {
           if (noError) {
@@ -420,6 +453,7 @@ module.exports = function (app) {
     'create': createTableSession,
     'createTableSessionFromOwner': createTableSessionFromOwner,
     'getByTableId': getByTableId,
+    'getByTableIdFromApp': getByTableIdFromApp,
     'updateStatusByOrderId': updateStatusByOrderId,
     'updateCartByOrderId': updateCartByOrderId,
     'get': findTableSessionById,

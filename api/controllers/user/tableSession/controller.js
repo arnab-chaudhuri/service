@@ -41,7 +41,7 @@ module.exports = function (app) {
    * @return {Promise}       The Promise
    */
   const getTableSession = (req, res, next) => {
-    tableSession.getByTableId({
+    tableSession.getByTableIdFromApp({
       tableRef: req.params.tableId,
       restaurantRef: req.params.restaurantRef,
       noError: true
