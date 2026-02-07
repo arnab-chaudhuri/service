@@ -874,7 +874,7 @@ module.exports = function (app) {
                       oldInventory.locationList.length ? oldInventory.locationList.find(l => l.location.toString() === loc.location.toString())?.quantity : 0,
                     quantity: loc.quantity,
                     expenseRef: purchaseId,
-                    isDebited: !isDeduct,
+                    isDebited: isDeduct,
                     reason: !isDeduct
                       ? "PURCHASE_ADDITION"
                       : "PURCHASE_DEDUCTION"
@@ -903,7 +903,7 @@ module.exports = function (app) {
                         oldInventory.locationList.length ? oldInventory.locationList.find(l => l.location.toString() === loc.location.toString())?.quantity : 0,
                       quantity: loc.quantity,
                       expenseRef: purchaseId,
-                      isDebited: !isDeduct,
+                      isDebited: isDeduct,
                       reason: !isDeduct
                         ? "PURCHASE_ADDITION"
                         : "PURCHASE_DEDUCTION"
