@@ -353,7 +353,7 @@ module.exports = function (app) {
 
   async function rollbackInventory(orderId, updatedItems, onlyRemove) {
     const session = await app.db.startSession();
-    session.startTransaction();
+    session.startTransaction(); 
 
     try {
       // Step 1: Fetch existing order
@@ -377,24 +377,29 @@ module.exports = function (app) {
       const restoreUsageLoc = {};
       const restorePrevQuantity = {};
       existingOrder.cart.forEach(item => {
-        if (item.menuRef) {
-          item.menuRef.ingredients.forEach(ing => {
-            if (ing.inventoryRef) {
-              const qty = ing.quantity * item.quantity;
-              if (!restoreUsage[ing.inventoryRef._id]) {
-                restoreUsage[ing.inventoryRef._id] = 0;
-              }
-              restoreUsage[ing.inventoryRef._id] += qty;
-              restoreUsageLoc[ing.inventoryRef._id] = ing.location;
+        // console.log('updatedItems ', updatedItems, item)
+        // check if existing item is removed from coming cart or same cart is present but updated
+        if (onlyRemove || (!onlyRemove && (item._id && !updatedItems.find(u => u._id.toString() === item._id.toString())) || (updatedItems.find(u => u._id.toString() === item._id.toString()) && updatedItems.find(u => u._id.toString() === item._id.toString())?.updated))) {
+          
+          if (item.menuRef) {
+            item.menuRef.ingredients.forEach(ing => {
+              if (ing.inventoryRef) {
+                const qty = ing.quantity * item.quantity;
+                if (!restoreUsage[ing.inventoryRef._id]) {
+                  restoreUsage[ing.inventoryRef._id] = 0;
+                }
+                restoreUsage[ing.inventoryRef._id] += qty;
+                restoreUsageLoc[ing.inventoryRef._id] = ing.location;
 
-              restorePrevQuantity[ing.inventoryRef._id] = {
-                prevLocQuantity: ing.inventoryRef.locationList &&
-                  ing.inventoryRef.locationList.length ? ing.inventoryRef.locationList.find(loc => loc.location.toString() === ing.location.toString())?.quantity : 0,
-                prevTotalQuantity: ing.inventoryRef.quantity || 0
+                restorePrevQuantity[ing.inventoryRef._id] = {
+                  prevLocQuantity: ing.inventoryRef.locationList &&
+                    ing.inventoryRef.locationList.length ? ing.inventoryRef.locationList.find(loc => loc.location.toString() === ing.location.toString())?.quantity : 0,
+                  prevTotalQuantity: ing.inventoryRef.quantity || 0
+                }
               }
-            }
 
-          });
+            });
+          }
         }
       });
 
@@ -438,7 +443,7 @@ module.exports = function (app) {
         const newIngredientLoc = {};
         const newPrevQuantity = {};
         for (const item of updatedItems) {
-          if (item.menuRef) {
+          if (item.menuRef && item.updated) {
             const menu = await Menu.findById(item.menuRef).populate("ingredients.inventoryRef").session(session);
             if (!menu) {
               await session.abortTransaction();
