@@ -353,7 +353,7 @@ module.exports = function (app) {
 
   async function rollbackInventory(orderId, updatedItems, onlyRemove) {
     const session = await app.db.startSession();
-    session.startTransaction(); 
+    session.startTransaction();
 
     try {
       // Step 1: Fetch existing order
@@ -380,7 +380,7 @@ module.exports = function (app) {
         // console.log('updatedItems ', updatedItems, item)
         // check if existing item is removed from coming cart or same cart is present but updated
         if (onlyRemove || (!onlyRemove && (item._id && !updatedItems.find(u => u._id.toString() === item._id.toString())) || (updatedItems.find(u => u._id.toString() === item._id.toString()) && updatedItems.find(u => u._id.toString() === item._id.toString())?.updated))) {
-          
+
           if (item.menuRef) {
             item.menuRef.ingredients.forEach(ing => {
               if (ing.inventoryRef) {
@@ -1095,12 +1095,17 @@ module.exports = function (app) {
         $addFields: {
           locationList: {
             $filter: {
-              input: "$locationList",
+              input: { $ifNull: ["$locationList", []] }, // extra safety
               as: "loc",
-              cond: { $gt: [{ $size: "$$loc.history" }, 0] },
-            },
-          },
-        },
+              cond: {
+                $gt: [
+                  { $size: { $ifNull: ["$$loc.history", []] } },
+                  0
+                ]
+              }
+            }
+          }
+        }
       },
 
       // 4️⃣ Final guard: remove docs where locationList became empty
