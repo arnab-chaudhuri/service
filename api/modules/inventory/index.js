@@ -134,54 +134,65 @@ module.exports = function (app) {
           if (menu.ingredients && menu.ingredients.length) {
             for (const ing of menu.ingredients) {
               if (ing.inventoryRef) {
-                const requiredQty = ing.quantity * orderItem.quantity;
+                if ((orderId && orderItem.isNewToCart) || (!orderId)) {
+                  let requiredQty = ing.quantity * orderItem.quantity;
 
-                // if (ing.inventoryRef.quantity < requiredQty) {
-                //   await session.abortTransaction();
-                //   session.endSession();
-                //   return Promise.reject({
-                //     'errCode': 'NOT_ENOUGH_STOCK'
-                //   });
-                // }
 
-                // const locationList = ing.inventoryRef.locationList;
-                // const locationData = locationList.find(each => each.location.toString() === ing.location.toString());
-                // if (locationData && Object.keys(locationData).length) {
-                //   if (locationData.quantity < requiredQty) {
-                //     await session.abortTransaction();
-                //     session.endSession();
-                //     return Promise.reject({
-                //       'errCode': 'NOT_ENOUGH_STOCK'
-                //     });
-                //   }
-                // }
+                  // if (ing.inventoryRef.quantity < requiredQty) {
+                  //   await session.abortTransaction();
+                  //   session.endSession();
+                  //   return Promise.reject({
+                  //     'errCode': 'NOT_ENOUGH_STOCK'
+                  //   });
+                  // }
 
-                const historyEntry = {
-                  quantity: requiredQty,
-                  isDebited: true,
-                  reason: 'NEW_ORDER',
-                  prevLocQuantity: ing.inventoryRef.locationList &&
-                    ing.inventoryRef.locationList.length ? ing.inventoryRef.locationList.find(loc => loc.location.toString() === ing.location.toString())?.quantity : 0,
-                  prevTotalQuantity: ing.inventoryRef.quantity || 0
-                };
+                  // const locationList = ing.inventoryRef.locationList;
+                  // const locationData = locationList.find(each => each.location.toString() === ing.location.toString());
+                  // if (locationData && Object.keys(locationData).length) {
+                  //   if (locationData.quantity < requiredQty) {
+                  //     await session.abortTransaction();
+                  //     session.endSession();
+                  //     return Promise.reject({
+                  //       'errCode': 'NOT_ENOUGH_STOCK'
+                  //     });
+                  //   }
+                  // }
 
-                if (orderId) {
-                  historyEntry.orderRef = orderId;
+                  console.log("orderItem ", orderItem)
+
+                  const historyEntry = {
+                    quantity: requiredQty,
+                    isDebited: true,
+                    reason: 'NEW_ORDER',
+                    prevLocQuantity: ing.inventoryRef.locationList &&
+                      ing.inventoryRef.locationList.length ? ing.inventoryRef.locationList.find(loc => loc.location.toString() === ing.location.toString())?.quantity : 0,
+                    prevTotalQuantity: ing.inventoryRef.quantity || 0
+                  };
+
+                  if (orderId) {
+                    historyEntry.orderRef = orderId;
+                  }
+
+                  const updateObj = {
+                    $inc: { 'locationList.$[loc].quantity': -requiredQty, quantity: -requiredQty },
+                  }
+
+                  if ((orderId && orderItem.isNewToCart) || (!orderId)) {
+                    updateObj["$push"] = { 'locationList.$[loc].history': historyEntry }
+                  }
+
+                  invIds.push(ing.inventoryRef._id.toString());
+
+                  // Push to bulk update list
+                  bulkUpdates.push({
+                    updateOne: {
+                      filter: { _id: new mongoose.Types.ObjectId(ing.inventoryRef._id) },
+                      update: updateObj,
+                      arrayFilters: [{ 'loc.location': new mongoose.Types.ObjectId(ing.location) }]
+                    }
+                  });
                 }
 
-                invIds.push(ing.inventoryRef._id.toString());
-
-                // Push to bulk update list
-                bulkUpdates.push({
-                  updateOne: {
-                    filter: { _id: new mongoose.Types.ObjectId(ing.inventoryRef._id) },
-                    update: {
-                      $inc: { 'locationList.$[loc].quantity': -requiredQty, quantity: -requiredQty },
-                      $push: { 'locationList.$[loc].history': historyEntry }
-                    },
-                    arrayFilters: [{ 'loc.location': new mongoose.Types.ObjectId(ing.location) }]
-                  }
-                });
               }
 
 
@@ -829,7 +840,7 @@ module.exports = function (app) {
         // 2️⃣ Location updates
         item.locationList.forEach(loc => {
           const existingLoc = oldInventory?.locationList &&
-              oldInventory.locationList.length ? oldInventory.locationList.find(l => l.location.toString() === loc.location.toString()) : null;
+            oldInventory.locationList.length ? oldInventory.locationList.find(l => l.location.toString() === loc.location.toString()) : null;
           let newAvgRate = (existingLoc?.avgRate || 0);
           if (!isDeduct) {
             const prevAmount = (existingLoc?.quantity || 0) * (existingLoc?.avgRate || 0);
