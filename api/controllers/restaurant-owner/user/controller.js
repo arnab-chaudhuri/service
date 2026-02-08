@@ -72,10 +72,26 @@ module.exports = function(app) {
       .catch(next);
   };
 
+  const editUser = (req, res, next) => {
+
+    if (req.body && Object.keys(req.body).length) {
+      for (let prop in req.body) {
+        req.userId[prop] = req.body[prop];
+      }
+    }
+    user.crud.edit(req.userId)
+      .then(async output => {
+        req.workflow.outcome.data = output;
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+
 
   return {
     get: getUser,
     list: getUserList,
+    edit: editUser
   };
 
 };

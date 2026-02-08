@@ -54,6 +54,9 @@ module.exports = function (app, options) {
     ])
     .get([
       controllers.get
+    ])
+    .put([
+      controllers.edit
     ]);
 
 

@@ -5,8 +5,6 @@ module.exports = function (app, mongoose) {
   const schema = new mongoose.Schema(
     {
       personalInfo: {
-        firstName: { type: String },
-        lastName: { type: String },
         fullName: { type: String },
         profilePicture: { type: String, default: '' },
         phone: {
@@ -18,6 +16,9 @@ module.exports = function (app, mongoose) {
           type: String,
         },
         dob: {
+          type: Date,
+        },
+        anniversary: {
           type: Date,
         },
         gender: {

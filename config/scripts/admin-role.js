@@ -20,6 +20,7 @@ module.exports = {
     "purchase",
     "roles",
     "members",
+    "customers",
     "printQR",
     "history"
   ],
