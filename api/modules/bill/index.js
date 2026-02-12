@@ -130,7 +130,11 @@ module.exports = function (app) {
       offlineId: billId
     })
       .populate({
-        path: 'orderRef'
+        path: 'orderRef',
+        populate: {
+          path: 'userRef',
+          select: 'personalInfo _id'
+        }
       })
       .then(billDetails => {
         if (!billDetails || (billDetails &&

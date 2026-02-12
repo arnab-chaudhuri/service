@@ -38,8 +38,9 @@ module.exports = function (app) {
    * @return {Promise}              The promise
    */
   const editUser = function (editedUserDoc) {
+    console.log("editedUserDoc ", editedUserDoc)
     return User.exists({
-      'personalInfo.email': editedUserDoc.personalInfo.email,
+      'personalInfo.phone': editedUserDoc.personalInfo.phone.number,
       '_id': {
         $ne: editedUserDoc._id
       },

@@ -35,6 +35,10 @@ module.exports = function (app, options) {
    */
   const commonMiddlewares = require('../../common/middleware')(app);
 
+  router.post('/', [
+    controllers.findOrCreateUserByPhone
+  ]);
+
   /**
    * Fetches a list of categories
    */

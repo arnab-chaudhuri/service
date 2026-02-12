@@ -255,6 +255,22 @@ module.exports = function (app) {
       });
   };
 
+  const updateUserDetails = (orderId, userData) => {
+    return Order.findOne({
+      idbId: orderId
+    })
+      .then(order => {
+        if (order) {
+          if (userData && userData._id) {
+            order.userRef = userData._id;
+          }
+          return order.save();
+        } else {
+          return Promise.resolve(null);
+        }
+      });
+  };
+
   const updateBillDetailsBulk = (updates) => {
     if (!updates) return Promise.resolve(null);
 
@@ -372,6 +388,7 @@ module.exports = function (app) {
     'updateBillDetailsBulk': updateBillDetailsBulk,
     'bulkUpdateOrders': bulkUpdateOrders,
     'isMenuInOrderCart': isMenuInOrderCart,
-    'hasOrderForOwner': hasOrderForOwner
+    'hasOrderForOwner': hasOrderForOwner,
+    'updateUserDetails': updateUserDetails
   };
 };

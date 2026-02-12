@@ -46,21 +46,14 @@ module.exports = function (app) {
                   .then(async output2 => {
                     output.billDetails = output2;
 
-                    const userData = req.body.contactDetails;
-                    let dbUser = undefined;
+                    // const userData = req.body.contactDetails;
+                    // let dbUser = undefined;
 
-                    if (userData && userData.phone &&
-                      userData.phone.number
-                    ) {
-                      dbUser = await user.crud.findOrCreateUserByPhone(
-                        userData.phone.countryCode || "+91",
-                        userData.phone.number,
-                        userData.fullName
-                      );
+                    // if (userData && userData._id) {
+                    //   dbUser = userData;
+                    // }
 
-                    }
-
-                    order.updateBillDetails(output._id, output2, dbUser).catch(err => {
+                    order.updateBillDetails(output._id, output2).catch(err => {
                       console.log("err updateBillDetails ", err)
                     });
 
@@ -892,20 +885,14 @@ module.exports = function (app) {
           }
         }
 
-        const userData = req.body.contactDetails;
+        // const userData = req.body.contactDetails;
 
-        if (userData && userData.phone &&
-          userData.phone.number
-        ) {
-          const dbUser = await user.crud.findOrCreateUserByPhone(
-            userData.phone.countryCode || "+91",
-            userData.phone.number,
-            userData.fullName
-          );
-          if (dbUser) {
-            orderData.userRef = dbUser._id;
-          }
-        }
+        // if (userData && userData._id) {
+        //   const dbUser = userData;
+        //   if (dbUser) {
+        //     orderData.userRef = dbUser._id;
+        //   }
+        // }
 
         inventory.rollbackInventory(orderData._id, req.body.cart)
           .then(output1 => {

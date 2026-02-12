@@ -3,13 +3,14 @@
  * This Controller handles all functionality of admin user
  * @module Controllers/Admin/user
  */
-module.exports = function(app) {
+module.exports = function (app) {
 
   /**
    * user module
    * @type {Object}
    */
   const user = app.module.user;
+  const order = app.module.order;
 
   /**
    * Fetches a user
@@ -73,10 +74,16 @@ module.exports = function(app) {
   };
 
   const editUser = (req, res, next) => {
-
+    console.log("req.body ", req.body)
     if (req.body && Object.keys(req.body).length) {
-      for (let prop in req.body) {
-        req.userId[prop] = req.body[prop];
+      if (req.body.onlyPersonal) {
+        for (let prop in req.body.personalInfo) {
+          req.userId.personalInfo[prop] = req.body.personalInfo[prop];
+        }
+      } else {
+        for (let prop in req.body) {
+          req.userId[prop] = req.body[prop];
+        }
       }
     }
     user.crud.edit(req.userId)
@@ -87,11 +94,29 @@ module.exports = function(app) {
       .catch(next);
   };
 
+  const findOrCreateUserByPhone = (req, res, next) => {
+
+    const userData = req.body.contactDetails;
+
+    user.crud.findOrCreateUserByPhone(
+      userData.phone.countryCode || "+91",
+      userData.phone.number,
+      userData.fullName
+    )
+      .then(async output => {
+        order.updateUserDetails(req.body.orderId, output);
+        req.workflow.outcome.data = output;
+        req.workflow.emit('response');
+      })
+      .catch(next);
+  };
+
 
   return {
     get: getUser,
     list: getUserList,
-    edit: editUser
+    edit: editUser,
+    findOrCreateUserByPhone: findOrCreateUserByPhone
   };
 
 };
