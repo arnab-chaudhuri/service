@@ -57,7 +57,7 @@ module.exports = function (app) {
     }
 
     return Category.countDocuments({
-      name: editedCategory.name,
+      name: new RegExp(`^${editedCategory.name}$`, 'i'),
       status: app.config.contentManagement.category.active,
       restaurantRef: editedCategory.restaurantRef,
       _id: {
@@ -65,7 +65,7 @@ module.exports = function (app) {
       }
     })
       .then(count => count ? Promise.reject({
-        'errCode': 'CATEGORY_ALREADY_EXISTS'
+      'errCode': 'CATEGORY_ALREADY_EXISTS'
       }) : editedCategory.save());
   };
 

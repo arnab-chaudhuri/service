@@ -63,15 +63,15 @@ module.exports = function (app) {
     }
 
     return Menu.countDocuments({
-      name: editedMenu.name,
+      name: new RegExp(`^${editedMenu.name}$`, 'i'),
       status: app.config.contentManagement.menu.active,
       restaurantRef: editedMenu.restaurantRef,
       _id: {
-        $ne: editedMenu._id
+      $ne: editedMenu._id
       }
     })
       .then(count => count ? Promise.reject({
-        'errCode': 'MENU_ALREADY_EXISTS'
+      'errCode': 'MENU_ALREADY_EXISTS'
       }) : editedMenu.save());
   };
 

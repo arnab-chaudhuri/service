@@ -61,7 +61,7 @@ module.exports = function(app, mongoose) {
    */
   schema.statics.exist = function (name, restaurantRef) {
     return this.countDocuments({
-      name: name,
+      name: new RegExp(`^${name}$`, 'i'),
       status: app.config.contentManagement.category.active,
       restaurantRef: restaurantRef
     }).exec();
