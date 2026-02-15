@@ -247,7 +247,7 @@ module.exports = function (app) {
    * @return {Promise}       The Promise
    */
   const getOrder = (req, res, next) => {
-    order.get(req.params.orderId)
+    order.getFromUser(req.params.orderId)
       .then(output => {
         req.workflow.outcome.data = output;
         req.workflow.emit('response');

@@ -162,6 +162,27 @@ module.exports = function (app) {
       });
   };
 
+  const findOrderFromUserById = function (orderId, userRef) {
+    return Order.findById(orderId)
+      .populate({
+        path: 'billRef'
+      })
+      .populate({
+        path: 'restaurantRef',
+        select: 'name _id logo primaryColor secondaryColor config'
+      })
+      .then(orderDetails => {
+        if (!orderDetails || (orderDetails && userRef &&
+          orderDetails.restaurantRef.toString() !== userRef.restaurantRef.toString())) {
+          return Promise.reject({
+            'errCode': 'ORDER_NOT_FOUND'
+          });
+        } else {
+          return Promise.resolve(orderDetails);
+        }
+      });
+  };
+
   const getOrderByIdbId = function (orderId, userRef) {
     return Order.findOne({
       idbId: orderId
@@ -378,6 +399,7 @@ module.exports = function (app) {
     'create': createOrder,
     'createMulti': createMultiOrder,
     'get': findOrderById,
+    'getFromUser': findOrderFromUserById,
     'getOrderByIdbId': getOrderByIdbId,
     'edit': editOrder,
     'list': getList,
