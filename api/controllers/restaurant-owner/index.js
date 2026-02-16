@@ -32,6 +32,7 @@ const controllers = {
   restaurant: require('./restaurant/route'),
   vendor: require('./vendor/route'),
   restaurantMember: require('./restaurant-member/route'),
+  
 
   // /**
   //  * Admin User Route
@@ -57,6 +58,7 @@ const controllers = {
   feedback: require("./feedback/route"),
   table: require("./table/route"),
   tableSession: require("./table-session/route"),
+  subscriptionPlan: require("./subscription-plan/route"),
   /**
    * User Route
    */
@@ -127,7 +129,7 @@ module.exports = function(app) {
    * Custom Login Module
    */
   publicRouter.use('/auth', controllers.auth(app, options));
-
+  publicRouter.use("/subscription-plan", controllers.subscriptionPlan(app, options));
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //                                                                                                                               //
   // PRIVATE ROUTES                                                                                                                //
