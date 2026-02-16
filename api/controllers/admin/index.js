@@ -58,6 +58,7 @@ const controllers = {
    * FAQ Route
    */
   faq: require("./faq/route"),
+  subscriptionPlan: require("./subscription-plan/route"),
   /**
    * Dashboard Route
    */
@@ -146,6 +147,7 @@ module.exports = function(app) {
    */
   privateRouter.use("/restaurant-owner", controllers.restaurantOwner(app, options));
   privateRouter.use("/restaurant", controllers.restaurant(app, options));
+  privateRouter.use("/subscription-plan", controllers.subscriptionPlan(app, options));
   /**
    * Role Management Route
    */

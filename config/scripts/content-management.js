@@ -108,4 +108,12 @@ module.exports = {
     active: 1,
     deleted: 2
   },
+  subscriptionPlan: {
+    active: 1,
+    deleted: 2,
+  },
+  subscriptionPlanType: {
+    subscription: 1,
+    feature: 2
+  }
 };

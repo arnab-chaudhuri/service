@@ -115,5 +115,6 @@ module.exports = function (/*app*/) {
 
     EXPENSE_NOT_FOUND: 2000,
 
+    PLAN_ALREADY_EXISTS: 2050,
   };
 };

@@ -64,6 +64,7 @@ module.exports = function(app) {
     Feedback: db.model('Feedback', require('./models/feedback')(app, mongoose, plugins)),
     Query: db.model('Query', require('./models/query')(app, mongoose, plugins)),
     Expense: db.model('Expense', require('./models/expense')(app, mongoose, plugins)),
+    SubscriptionPlan: db.model('SubscriptionPlan', require('./models/subscriptionPlan')(app, mongoose, plugins)),
     Vendor: db.model('Vendor', require('./models/vendor')(app, mongoose, plugins)),
   };
 
