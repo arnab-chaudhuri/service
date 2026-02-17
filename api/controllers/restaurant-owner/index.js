@@ -161,6 +161,7 @@ module.exports = function(app) {
   privateRouter.use('/table', controllers.table(app, options));
   privateRouter.use('/vendor', controllers.vendor(app, options));
   privateRouter.use('/table-session', controllers.tableSession(app, options));
+  privateRouter.use("/subscription-plan", controllers.subscriptionPlan(app, options));
 
   // /**
   //  * Admin User Route
