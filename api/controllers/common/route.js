@@ -18,6 +18,7 @@ module.exports = function (app) {
    */
   const controllers = require('./controller')(app);
   const resControllers = require('../user/restaurant/controller')(app);
+  const subsControllers = require('../restaurant-owner/subscription-plan/controller')(app);
 
   const commonMiddlewares = require('./middleware')(app);
 
@@ -34,6 +35,10 @@ module.exports = function (app) {
 
   router.post('/restaurant-list', [
     resControllers.list
+  ]);
+
+  router.post('/subscription-list', [
+    subsControllers.list
   ]);
 
   return {
