@@ -22,6 +22,16 @@ module.exports = function (app, mongoose) {
       required: true,
       default: app.config.contentManagement.subscriptionPlanType.subscription
     },
+    tier: {
+      type: Number,
+      required: true,
+      default: app.config.contentManagement.subscriptionTier.base
+    },
+    features: [{
+      name: String,
+      id: Number
+    }],
+    order: Number,
     accessModules: [{
       'moduleKey': {
         'type': String

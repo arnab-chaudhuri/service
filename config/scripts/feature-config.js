@@ -1,0 +1,10 @@
+"use strict";
+
+module.exports = {
+  "DIGITAL_MENU_WITH_QR": 1,
+  "AI_ENHANCED_MENUS": 2,
+  "BRANDING_AND_CUSTOMIZATION": 3,
+  "MENU_CONTROL_PANEL": 4,
+  "MOBILE_FRIENDLY_INTERFACE": 5,
+};
+

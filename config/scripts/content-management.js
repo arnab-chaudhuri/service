@@ -112,8 +112,13 @@ module.exports = {
     active: 1,
     deleted: 2,
   },
+  subscriptionTier: {
+    base: 1,
+    pro: 2,
+  },
   subscriptionPlanType: {
     subscription: 1,
-    feature: 2
+    addon: 2,
+    usage: 3
   }
 };

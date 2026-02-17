@@ -14,6 +14,7 @@ module.exports = function( /*app*/ ) {
     fileUpload: require('./scripts/fileUpload'),
     notification: require('./scripts/notification'),
     contentManagement: require('./scripts/content-management'),
+    featureConfig: require('./scripts/feature-config'),
     adminRole: require('./scripts/admin-role')
 
   };
