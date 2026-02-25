@@ -61,6 +61,10 @@ module.exports = function (app, mongoose) {
         type: Number,
         default: 0
       },
+      hideIngredientDetails: {
+        type: Boolean,
+        default: false
+      },
       menuEnabled: {
         type: Boolean,
         default: true
@@ -115,6 +119,10 @@ module.exports = function (app, mongoose) {
         type: String,
         default: '#000000'  
       },
+      categoryHeader: {
+        type: String,
+        default: 'Tastes & Plates'
+      }
     },
     billConfigDetails: {
       isLogo: {

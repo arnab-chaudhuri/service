@@ -90,6 +90,14 @@ module.exports = function (app, mongoose) {
     isAvailable: {
       type: Boolean,
       default: false
+    },
+    preparationTime: {
+      type: Number,
+      default: 0
+    },
+    availabilityTime: {
+      type: Number,
+      default: 0
     }
   }, {
     versionKey: false,
