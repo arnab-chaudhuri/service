@@ -96,20 +96,6 @@ module.exports = function (app) {
     return Inventory.removeInventory(inventory._id);
   };
 
-  const updateMenuCount = (inventoryId, value) => {
-    return Inventory.findOne({
-      _id: inventoryId
-    })
-      .then(inventory => {
-        if (inventory) {
-          inventory.totalMenu = value === 1 ? inventory.totalMenu + 1 : inventory.totalMenu - 1;
-          return inventory.save();
-        } else {
-          return Promise.resolve(null);
-        }
-      });
-  };
-
   const updateInventoryCount = async (orderItems, orderId) => {
     const session = await app.db.startSession();
     session.startTransaction();
@@ -1243,7 +1229,6 @@ module.exports = function (app) {
     'edit': editInventory,
     'list': getList,
     'remove': removeInventory,
-    'updateMenuCount': updateMenuCount,
     'updateInventoryCount': updateInventoryCount,
     'rollbackInventory': rollbackInventory,
     'rollbackInventorySync': rollbackInventorySync,

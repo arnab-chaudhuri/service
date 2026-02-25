@@ -245,20 +245,6 @@ module.exports = function (app) {
     return Order.removeOrder(order._id);
   };
 
-  const updateMenuCount = (orderId, value) => {
-    return Order.findOne({
-      _id: orderId
-    })
-      .then(order => {
-        if (order) {
-          order.totalMenu = value === 1 ? order.totalMenu + 1 : order.totalMenu - 1;
-          return order.save();
-        } else {
-          return Promise.resolve(null);
-        }
-      });
-  };
-
   const updateBillDetails = (orderId, billDetails, userData) => {
     return Order.findOne({
       _id: orderId
@@ -404,7 +390,6 @@ module.exports = function (app) {
     'edit': editOrder,
     'list': getList,
     'remove': removeOrder,
-    'updateMenuCount': updateMenuCount,
     'updateBillDetails': updateBillDetails,
     'updateStatus': updateStatus,
     'updateBillDetailsBulk': updateBillDetailsBulk,
