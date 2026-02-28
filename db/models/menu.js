@@ -95,9 +95,13 @@ module.exports = function (app, mongoose) {
       type: Number,
       default: 0
     },
-    availabilityTime: {
-      type: Number,
-      default: 0
+    availability: {
+      startTime: {
+        type: String
+      },
+      endTime: {
+        type: String
+      }
     }
   }, {
     versionKey: false,
