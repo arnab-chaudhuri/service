@@ -103,7 +103,8 @@ module.exports = function (app, mongoose) {
       }]
     }],
     categoryId: {
-      type: mongoose.Schema.Types.ObjectId
+      type: mongoose.Schema.Types.ObjectId,
+      default: null
     }
   }, {
     versionKey: false,

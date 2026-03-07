@@ -365,7 +365,10 @@ module.exports = function (app) {
       existingOrder.cart.forEach(item => {
         // console.log('updatedItems ', updatedItems, item)
         // check if existing item is removed from coming cart or same cart is present but updated
-        if (onlyRemove || (!onlyRemove && (item._id && !updatedItems.find(u => u._id.toString() === item._id.toString())) || (updatedItems.find(u => u._id.toString() === item._id.toString()) && updatedItems.find(u => u._id.toString() === item._id.toString())?.updated))) {
+        const updatedItem = updatedItems.find(
+          u => u &&u._id && item && item._id && u._id.toString() === item._id.toString()
+        );
+        if (onlyRemove || (!onlyRemove && (item._id && !updatedItem) || (updatedItem && updatedItem?.updated))) {
 
           if (item.menuRef) {
             item.menuRef.ingredients.forEach(ing => {
