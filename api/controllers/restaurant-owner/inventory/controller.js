@@ -211,10 +211,11 @@ module.exports = function(app) {
 
     inventory.downloadReport({
       startDate,
-      endDate
+      endDate,
+      restaurantId: req.session.user.restaurantRef
     })
       .then(output => {
-        console.log("output ", output)
+        // console.log("output ", output)
         req.workflow.outcome.data = output;
         req.workflow.emit('response');
       })

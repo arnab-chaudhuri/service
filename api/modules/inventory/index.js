@@ -144,7 +144,7 @@ module.exports = function (app) {
                   //   }
                   // }
 
-                  console.log("orderItem ", orderItem)
+                  // console.log("orderItem ", orderItem)
 
                   const historyEntry = {
                     quantity: requiredQty,
@@ -169,6 +169,8 @@ module.exports = function (app) {
 
                   invIds.push(ing.inventoryRef._id.toString());
 
+                  console.log("updateObj ", updateObj)
+
                   // Push to bulk update list
                   bulkUpdates.push({
                     updateOne: {
@@ -183,13 +185,16 @@ module.exports = function (app) {
 
 
             }
+
           }
           // Perform all inventory updates in bulk
-          if (bulkUpdates.length > 0) {
-            await Inventory.bulkWrite(bulkUpdates, { session });
-          }
+
         }
 
+      }
+
+      if (bulkUpdates.length > 0) {
+        await Inventory.bulkWrite(bulkUpdates, { session });
       }
 
 
@@ -206,7 +211,7 @@ module.exports = function (app) {
   };
 
   const updateInventoryCountSync = async (orderItems) => {
-    // console.log("updateInventoryCountSync",orderItems)
+    // console.log("updateInventoryCountSync", orderItems)
 
     const session = await app.db.startSession();
     session.startTransaction();
@@ -230,6 +235,8 @@ module.exports = function (app) {
             for (const ing of menu.ingredients) {
               if (ing.inventoryRef) {
                 const requiredQty = ing.quantity * orderItem.quantity;
+
+                console.log("here called")
 
                 const historyEntry = {
                   quantity: requiredQty,
@@ -263,11 +270,12 @@ module.exports = function (app) {
             }
           }
           // Perform all inventory updates in bulk
-          if (bulkUpdates.length > 0) {
-            await Inventory.bulkWrite(bulkUpdates, { session });
-          }
+
         }
 
+        if (bulkUpdates.length > 0) {
+          await Inventory.bulkWrite(bulkUpdates, { session });
+        }
       }
 
       await session.commitTransaction();
@@ -362,11 +370,13 @@ module.exports = function (app) {
       const restoreUsage = {};
       const restoreUsageLoc = {};
       const restorePrevQuantity = {};
+
       existingOrder.cart.forEach(item => {
         // console.log('updatedItems ', updatedItems, item)
+
         // check if existing item is removed from coming cart or same cart is present but updated
         const updatedItem = updatedItems.find(
-          u => u &&u._id && item && item._id && u._id.toString() === item._id.toString()
+          u => u && u._id && item && item._id && u._id.toString() === item._id.toString()
         );
         if (onlyRemove || (!onlyRemove && (item._id && !updatedItem) || (updatedItem && updatedItem?.updated))) {
 
@@ -432,7 +442,7 @@ module.exports = function (app) {
         const newIngredientLoc = {};
         const newPrevQuantity = {};
         for (const item of updatedItems) {
-          if (item.menuRef && item.updated) {
+          if (item.menuRef && (item.updated || !item._id)) {
             const menu = await Menu.findById(item.menuRef).populate("ingredients.inventoryRef").session(session);
             if (!menu) {
               await session.abortTransaction();
@@ -1030,14 +1040,15 @@ module.exports = function (app) {
 
   const downloadReport = async ({
     startDate,
-    endDate
+    endDate,
+    restaurantId
   }) => {
     const start = new Date(startDate);
 
     const end = new Date(endDate);
 
-    console.log("start", start, startDate);
-    console.log("end", end, endDate);
+    // console.log("start", start, startDate);
+    // console.log("end", end, endDate);
 
     return await Inventory.aggregate([
       // 1️⃣ Exclude docs with null or empty locationList early (performance)
@@ -1045,6 +1056,7 @@ module.exports = function (app) {
         $match: {
           locationList: { $exists: true, $ne: [], $ne: null },
           "locationList.history.date": { $gte: start, $lte: end },
+          restaurantRef: restaurantId
         },
       },
 
