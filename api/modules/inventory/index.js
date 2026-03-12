@@ -345,7 +345,7 @@ module.exports = function (app) {
   };
 
 
-  async function rollbackInventory(orderId, updatedItems, onlyRemove) {
+  async function rollbackInventory(orderId, updatedItems, onlyRemove, reOrderCount) {
     const session = await app.db.startSession();
     session.startTransaction();
 
@@ -416,6 +416,9 @@ module.exports = function (app) {
             prevLocQuantity: restorePrevQuantity[invId].prevLocQuantity,
             prevTotalQuantity: restorePrevQuantity[invId].prevTotalQuantity
           };
+          if (!onlyRemove) {
+            historyEntry.reOrderCount = reOrderCount;
+          }
           return {
             updateOne: {
               filter: { _id: new mongoose.Types.ObjectId(invId) },
@@ -516,6 +519,8 @@ module.exports = function (app) {
               prevLocQuantity: newPrevQuantity[invId].prevLocQuantity,
               prevTotalQuantity: newPrevQuantity[invId].prevTotalQuantity
             };
+
+            historyEntry.reOrderCount = reOrderCount;
 
             return {
               updateOne: {

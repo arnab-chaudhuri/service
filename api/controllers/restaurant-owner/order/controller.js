@@ -879,6 +879,8 @@ module.exports = function (app) {
       .then(async orderData => {
         const oldTableId = orderData.tableRef;
 
+        orderData.reOrderCount = orderData.reOrderCount + 1;
+
         if (req.body && Object.keys(req.body).length) {
           for (let item in req.body) {
             orderData[item] = req.body[item];
@@ -894,7 +896,7 @@ module.exports = function (app) {
         //   }
         // }
 
-        inventory.rollbackInventory(orderData._id, req.body.cart)
+        inventory.rollbackInventory(orderData._id, req.body.cart, false, orderData.reOrderCount)
           .then(output1 => {
             order.edit(orderData, req.session.user)
               .then(async output => {

@@ -15,6 +15,10 @@ module.exports = function (app, mongoose) {
     noteByCustomer: {
       type: String
     },
+    reOrderCount: {
+      type: Number,
+      default: 1
+    },
     status: {
       type: Number,
       default: app.config.contentManagement.order.active

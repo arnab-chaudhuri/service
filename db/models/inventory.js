@@ -74,6 +74,10 @@ module.exports = function (app, mongoose) {
           type: Number,
           default: 0
         },
+        reOrderCount: {
+          type: Number,
+          default: 1
+        },
         prevTotalQuantity: {
           type: Number,
           default: 0
